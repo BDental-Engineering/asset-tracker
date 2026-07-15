@@ -1,7 +1,6 @@
 const https = require('https');
 
 module.exports = async (req, res) => {
-
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
@@ -37,7 +36,7 @@ module.exports = async (req, res) => {
       sm8Res.on('end', () => {
         try {
           res.status(sm8Res.statusCode).json(JSON.parse(data || '[]'));
-        } catch(e) {
+        } catch (e) {
           res.status(500).json({ error: 'Invalid JSON from ServiceM8' });
         }
         resolve();
