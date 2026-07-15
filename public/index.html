@@ -31,7 +31,7 @@
     .btn-sm { padding: 5px 11px; font-size: 0.78rem; }
     .screen { display: none; padding: 32px; max-width: 1400px; margin: 0 auto; }
     .screen.active { display: block; }
-    #screen-auth { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 70px); }
+    #screen-auth { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 70px); }
     #screen-auth.active { display: flex; }
     .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; width: 100%; max-width: 440px; text-align: center; }
     .auth-card h2 { margin-bottom: 8px; font-size: 1.5rem; }
@@ -248,9 +248,7 @@ function sm8Get(endpoint) {
   }).then(function(res) {
     return res.json().then(function(data) {
       console.log('Response from', endpoint, data);
-      if (!res.ok) {
-        throw new Error(JSON.stringify(data));
-      }
+      if (!res.ok) { throw new Error(JSON.stringify(data)); }
       return data;
     });
   });
@@ -360,10 +358,10 @@ function logout() {
   fieldMappings = {};
   apiKey  = '';
   apiPass = '';
-  document.getElementById('nav-tabs').style.display        = 'none';
-  document.getElementById('btn-sync').style.display        = 'none';
-  document.getElementById('btn-logout').style.display      = 'none';
-  document.getElementById('sync-status').style.display     = 'none';
+  document.getElementById('nav-tabs').style.display    = 'none';
+  document.getElementById('btn-sync').style.display    = 'none';
+  document.getElementById('btn-logout').style.display  = 'none';
+  document.getElementById('sync-status').style.display = 'none';
   showScreen('auth');
 }
 
@@ -415,11 +413,17 @@ function syncAssets() {
 }
 
 function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.screen').forEach(function(s) {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  var target = document.getElementById('screen-' + name);
+  target.style.display = '';
+  target.classList.add('active');
 }
 
 function showDashboard() {
+  document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('nav-tabs').style.display    = 'flex';
   document.getElementById('btn-sync').style.display    = 'inline-block';
   document.getElementById('btn-logout').style.display  = 'inline-block';
@@ -628,7 +632,7 @@ function renderSettings() {
     return;
   }
   grid.innerHTML = keys.map(function(uuid) {
-    var t        = assetTypes[uuid];
+    var t         = assetTypes[uuid];
     var fieldOpts = t.fields.map(function(f) {
       return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' + esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
     }).join('');
