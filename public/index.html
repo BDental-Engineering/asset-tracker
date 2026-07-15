@@ -866,18 +866,18 @@ function renderCharts() {
   var weekLabels = [];
   var buckets = {};
   for (var w = 0; w < 13; w++) {
-    var label = 'W' + (w + 1);
-    weekLabels.push(label);
-    buckets[label] = { overdue: 0, soon: 0, ok: 0 };
+    var lbl = 'W' + (w + 1);
+    weekLabels.push(lbl);
+    buckets[lbl] = { overdue: 0, soon: 0, ok: 0 };
   }
   all.forEach(function(a) {
     if (a.days === null || a.days < 0 || a.days > 90) return;
     var weekIdx = Math.floor(a.days / 7);
     if (weekIdx < 13) {
-      var lbl = weekLabels[weekIdx];
-      if (a.status === 'overdue') buckets[lbl].overdue++;
-      else if (a.status === 'due-soon') buckets[lbl].soon++;
-      else buckets[lbl].ok++;
+      var l = weekLabels[weekIdx];
+      if (a.status === 'overdue') buckets[l].overdue++;
+      else if (a.status === 'due-soon') buckets[l].soon++;
+      else buckets[l].ok++;
     }
   });
 
@@ -920,6 +920,7 @@ function renderCharts() {
     }
   });
 }
+
 
 function renderAssets() {
   var data = filteredAssets();
