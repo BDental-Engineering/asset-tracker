@@ -600,4 +600,481 @@ function esc(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace
+    .replace(/"/g, '&quot;');
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  var d = new Date(str);
+  if (isNaN(d.getTime())) return str;
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function toast(msg, isError) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = isError ? 'var(--red)' : 'var(--accent)';
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 3200);
+}
+
+function saveLocal() {
+  localStorage.setItem('sm8_key', apiKey);
+  localStorage.setItem('sm8_pass', apiPass);
+  localStorage.setItem('sm8_assets', JSON.stringify(assets));
+  localStorage.setItem('sm8_types', JSON.stringify(assetTypes));
+  localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
+}
+
+function loadLocal() {
+  apiKey        = localStorage.getItem('sm8_key') || '';
+  apiPass       = localStorage.getItem('sm8_pass') || '';
+  assets        = JSON.parse(localStorage.getItem('sm8_assets') || '[]');
+  assetTypes    = JSON.parse(localStorage.getItem('sm8_types') || '{}');
+  fieldMappings = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
+}
+
+function connect() {
+  apiKey  = document.getElementById('auth-key').value.trim();
+  apiPass = document.getElementById('auth-pass').value.trim();
+
+  var errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+
+  if (!apiKey || !apiPass) {
+    errEl.textContent = 'Please enter your API key and password.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.getElementById('btn-connect');
+  btn.innerHTML = '<span class="loader"></span> Connecting…';
+  btn.disabled = true;
+
+  fetchAll().then(function() {
+    saveLocal();
+    showDashboard();
+    toast('Connected successfully!');
+  }).catch(function(e) {
+    errEl.textContent = 'Connection failed: ' + e.message;
+    errEl.style.display = 'block';
+    btn.innerHTML = 'Connect &amp; Load Assets';
+    btn.disabled = false;
+  });
+}
+
+function logout() {
+  localStorage.clear();
+  assets = [];
+  assetTypes = {};
+  fieldMappings = {};
+  apiKey = '';
+  apiPass = '';
+  document.getElementById('nav-tabs').style.display = 'none';
+  document.getElementById('btn-sync').style.display = 'none';
+  document.getElementById('btn-logout').style.display = 'none';
+  document.getElementById('sync-status').style.display = 'none';
+  showScreen('auth');
+}
+
+function fetchAll() {
+  return sm8Get('/assettype').then(function(types) {
+    assetTypes = {};
+    types.forEach(function(t) {
+      if (String(t.active) === '1') {
+        assetTypes[t.uuid] = { name: t.name, fields: [] };
+      }
+    });
+    return sm8Get('/assettypefield');
+  }).then(function(fields) {
+    fields.forEach(function(f) {
+      if (assetTypes[f.asset_type_uuid]) {
+        assetTypes[f.asset_type_uuid].fields.push({
+          name: f.name,
+          uuid: f.uuid,
+          field_type: f.field_type
+        });
+      }
+    });
+    return sm8Get('/asset');
+  }).then(function(raw) {
+    assets = raw.filter(function(a) { return String(a.active) === '1'; });
+    Object.keys(assetTypes).forEach(function(typeUuid) {
+      if (!fieldMappings[typeUuid]) {
+        var typeData = assetTypes[typeUuid];
+        var guess = typeData.fields.find(function(f) {
+          return /due|expir|next.service|service.date|renewal|review/i.test(f.name);
+        });
+        if (guess) fieldMappings[typeUuid] = guess.name;
+      }
+    });
+  });
+}
+
+function syncAssets() {
+  var btn = document.getElementById('btn-sync');
+  btn.innerHTML = '<span class="loader"></span>';
+  btn.disabled = true;
+  fetchAll().then(function() {
+    saveLocal();
+    renderAll();
+    document.getElementById('sync-status').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+    toast('Assets synced!');
+  }).catch(function(e) {
+    toast('Sync failed: ' + e.message, true);
+  }).finally(function() {
+    btn.innerHTML = '↻ Sync';
+    btn.disabled = false;
+  });
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function showDashboard() {
+  document.getElementById('nav-tabs').style.display = 'flex';
+  document.getElementById('btn-sync').style.display = 'inline-block';
+  document.getElementById('btn-logout').style.display = 'inline-block';
+  document.getElementById('sync-status').style.display = 'inline-block';
+  showScreen('dashboard');
+  document.getElementById('tab-dashboard').classList.add('active');
+  document.getElementById('tab-settings').classList.remove('active');
+  renderAll();
+}
+
+function showTab(tab) {
+  document.getElementById('tab-dashboard').classList.toggle('active', tab === 'dashboard');
+  document.getElementById('tab-settings').classList.toggle('active', tab === 'settings');
+  if (tab === 'dashboard') {
+    showScreen('dashboard');
+    renderAll();
+  } else {
+    showScreen('settings');
+    renderSettings();
+  }
+}
+
+function enrichedAssets() {
+  return assets.map(function(a) {
+    var typeUuid = a.asset_type_uuid;
+    var typeName = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
+    var dueDateField = fieldMappings[typeUuid];
+    var dueDate = null;
+
+    if (dueDateField) {
+      if (Array.isArray(a.custom_fields)) {
+        var cf = a.custom_fields.find(function(f) {
+          return f.name === dueDateField || f.field_name === dueDateField;
+        });
+        dueDate = (cf && cf.value) || null;
+      } else if (a.custom_fields && typeof a.custom_fields === 'object') {
+        dueDate = a.custom_fields[dueDateField] || null;
+      }
+      if (!dueDate && a[dueDateField]) {
+        dueDate = a[dueDateField];
+      }
+    }
+
+    var days = daysUntil(dueDate);
+    var status = statusOf(days);
+    return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status });
+  });
+}
+
+function renderAll() {
+  populateFilters();
+  renderStats();
+  renderCharts();
+  renderAssets();
+}
+
+function populateFilters() {
+  var sel = document.getElementById('filter-type');
+  var current = sel.value;
+  sel.innerHTML = '<option value="">All Types</option>';
+  Object.keys(assetTypes).forEach(function(uuid) {
+    var opt = document.createElement('option');
+    opt.value = uuid;
+    opt.textContent = assetTypes[uuid].name;
+    if (uuid === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function filteredAssets() {
+  var search = document.getElementById('search-input').value.toLowerCase();
+  var typeFilter = document.getElementById('filter-type').value;
+  var statusFilter = document.getElementById('filter-status').value;
+  return enrichedAssets().filter(function(a) {
+    if (search &&
+      String(a.name || '').toLowerCase().indexOf(search) === -1 &&
+      String(a.typeName || '').toLowerCase().indexOf(search) === -1) return false;
+    if (typeFilter && a.asset_type_uuid !== typeFilter) return false;
+    if (statusFilter && a.status !== statusFilter) return false;
+    return true;
+  });
+}
+
+function renderStats() {
+  var all = enrichedAssets();
+  var overdue = all.filter(function(a) { return a.status === 'overdue'; }).length;
+  var soon    = all.filter(function(a) { return a.status === 'due-soon'; }).length;
+  var ok      = all.filter(function(a) { return a.status === 'ok'; }).length;
+  var noDate  = all.filter(function(a) { return a.status === 'no-date'; }).length;
+  document.getElementById('stats-bar').innerHTML =
+    '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">' + all.length + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">' + overdue + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">' + soon + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">' + ok + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + noDate + '</span></div>';
+}
+
+function renderCharts() {
+  var all = enrichedAssets();
+  var overdue = all.filter(function(a) { return a.status === 'overdue'; }).length;
+  var soon    = all.filter(function(a) { return a.status === 'due-soon'; }).length;
+  var ok      = all.filter(function(a) { return a.status === 'ok'; }).length;
+  var noDate  = all.filter(function(a) { return a.status === 'no-date'; }).length;
+
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(document.getElementById('chart-donut'), {
+    type: 'doughnut',
+    {
+      labels: ['Overdue', 'Due Soon', 'OK', 'No Date'],
+      datasets: [{
+        [overdue, soon, ok, noDate],
+        backgroundColor: ['#ef4444', '#f59e0b', '#22c55e', '#4b5563'],
+        borderWidth: 0,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#8892b0', boxWidth: 12, padding: 14 }
+        }
+      },
+      cutout: '68%'
+    }
+  });
+
+  var weekLabels = [];
+  var buckets = {};
+  for (var w = 0; w < 13; w++) {
+    var label = 'W' + (w + 1);
+    weekLabels.push(label);
+    buckets[label] = { overdue: 0, soon: 0, ok: 0 };
+  }
+  all.forEach(function(a) {
+    if (a.days === null || a.days < 0 || a.days > 90) return;
+    var weekIdx = Math.floor(a.days / 7);
+    if (weekIdx < 13) {
+      var lbl = weekLabels[weekIdx];
+      if (a.status === 'overdue') buckets[lbl].overdue++;
+      else if (a.status === 'due-soon') buckets[lbl].soon++;
+      else buckets[lbl].ok++;
+    }
+  });
+
+  if (timelineChart) timelineChart.destroy();
+  timelineChart = new Chart(document.getElementById('chart-timeline'), {
+    type: 'bar',
+    {
+      labels: weekLabels,
+      datasets: [
+        {
+          label: 'Overdue',
+          weekLabels.map(function(l) { return buckets[l].overdue; }),
+          backgroundColor: '#ef4444',
+          borderRadius: 4
+        },
+        {
+          label: 'Due Soon',
+          weekLabels.map(function(l) { return buckets[l].soon; }),
+          backgroundColor: '#f59e0b',
+          borderRadius: 4
+        },
+        {
+          label: 'OK',
+          weekLabels.map(function(l) { return buckets[l].ok; }),
+          backgroundColor: '#22c55e',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#8892b0', boxWidth: 12 } }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#8892b0' }, grid: { color: '#2e3350' } },
+        y: { stacked: true, ticks: { color: '#8892b0', stepSize: 1 }, grid: { color: '#2e3350' } }
+      }
+    }
+  });
+}
+
+function renderAssets() {
+  var data = filteredAssets();
+  var cols = { overdue: [], 'due-soon': [], ok: [], 'no-date': [] };
+  data.forEach(function(a) { cols[a.status].push(a); });
+
+  var colMap = { overdue: 'overdue', 'due-soon': 'soon', ok: 'ok', 'no-date': 'nodate' };
+  Object.keys(colMap).forEach(function(status) {
+    var colId = colMap[status];
+    var el = document.getElementById('col-' + colId);
+    var count = document.getElementById('count-' + colId);
+    count.textContent = cols[status].length;
+    if (cols[status].length === 0) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>';
+    } else {
+      el.innerHTML = cols[status].map(function(a) { return assetCard(a); }).join('');
+    }
+  });
+
+  var tbody = document.getElementById('list-body');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
+  } else {
+    tbody.innerHTML = data.map(function(a) {
+      return '<tr onclick="openModal(\'' + a.uuid + '\')">' +
+        '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
+        '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
+        '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
+        '<td style="color:var(--' + statusColor(a.status) + ')">' +
+          (a.days !== null ? (a.days < 0 ? Math.abs(a.days) + 'd ago' : a.days + 'd') : '—') +
+        '</td>' +
+        '<td><span class="due-badge ' + statusColor(a.status) + '">' + statusLabel(a.days) + '</span></td>' +
+        '</tr>';
+    }).join('');
+  }
+}
+
+function assetCard(a) {
+  var color = statusColor(a.status);
+  var pct = progressPct(a.days);
+  var barColor = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
+  return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
+    '<div class="asset-card-name">' + esc(a.name || 'Unnamed Asset') + '</div>' +
+    '<div class="asset-card-type">' + esc(a.typeName) + '</div>' +
+    '<div class="asset-card-footer">' +
+      '<span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span>' +
+      '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
+    '</div>' +
+    '<div class="progress-wrap">' +
+      '<div class="progress-bar-bg">' +
+        '<div class="progress-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function openModal(uuid) {
+  var all = enrichedAssets();
+  var a = null;
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].uuid === uuid) { a = all[i]; break; }
+  }
+  if (!a) return;
+
+  var color = statusColor(a.status);
+  var cfRows = '';
+
+  if (a.custom_fields) {
+    var cf = Array.isArray(a.custom_fields)
+      ? a.custom_fields
+      : Object.keys(a.custom_fields).map(function(k) { return { name: k, value: a.custom_fields[k] }; });
+    cf.forEach(function(f) {
+      var val = f.value !== undefined ? f.value : (f.field_value !== undefined ? f.field_value : '—');
+      cfRows += '<div class="field-row">' +
+        '<span class="field-label">' + esc(f.name || f.field_name || '') + '</span>' +
+        '<span class="field-value">' + esc(String(val)) + '</span>' +
+        '</div>';
+    });
+  }
+  if (!cfRows) cfRows = '<p style="color:var(--muted);font-size:0.85rem">No custom fields found.</p>';
+
+  document.getElementById('modal-body').innerHTML =
+    '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
+    '<div class="modal-type"><span class="tag">' + esc(a.typeName) + '</span></div>' +
+    '<div class="big-due">' +
+      '<div class="days-num" style="color:var(--' + color + ')">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
+      '<div class="days-label">' +
+        (a.days === null ? 'No due date set' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') +
+      '</div>' +
+      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge ' + color + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
+    '</div>' +
+    '<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">Custom Fields</h3>' +
+    cfRows +
+    '<div style="margin-top:16px;font-size:0.75rem;color:var(--muted)">UUID: ' + esc(a.uuid) + '</div>';
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function renderSettings() {
+  var grid = document.getElementById('settings-grid');
+  var keys = Object.keys(assetTypes);
+  if (keys.length === 0) {
+    grid.innerHTML = '<p style="color:var(--muted)">No asset types loaded. Connect and sync first.</p>';
+    return;
+  }
+  grid.innerHTML = keys.map(function(uuid) {
+    var t = assetTypes[uuid];
+    var fieldOpts = t.fields.map(function(f) {
+      return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' +
+        esc(f.name) + ' (' + esc(f.field_type || 'text') + ')' +
+        '</option>';
+    }).join('');
+    return '<div class="settings-card">' +
+      '<h3>' + esc(t.name) + '</h3>' +
+      '<div class="mapping-row">' +
+        '<label>Due Date Field</label>' +
+        '<select id="map-' + uuid + '">' +
+          '<option value="">— Not mapped —</option>' +
+          fieldOpts +
+        '</select>' +
+      '</div>' +
+      '<div style="font-size:0.78rem;color:var(--muted)">' + t.fields.length + ' custom field(s) available</div>' +
+    '</div>';
+  }).join('');
+}
+
+function saveSettings() {
+  Object.keys(assetTypes).forEach(function(uuid) {
+    var sel = document.getElementById('map-' + uuid);
+    if (sel) fieldMappings[uuid] = sel.value;
+  });
+  saveLocal();
+  toast('Settings saved!');
+}
+
+function setView(v) {
+  document.getElementById('kanban-view').classList.toggle('active', v === 'kanban');
+  document.getElementById('list-view').classList.toggle('active', v === 'list');
+  document.getElementById('btn-kanban').classList.toggle('active', v === 'kanban');
+  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+}
+
+loadLocal();
+if (apiKey && apiPass && assets.length > 0) {
+  showDashboard();
+  document.getElementById('sync-status').textContent = 'Loaded from cache';
+}
+</script>
+</body>
+</html>
