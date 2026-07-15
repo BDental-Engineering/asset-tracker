@@ -230,10 +230,11 @@
 <div id="toast"></div>
 
 <script>
-var apiKey  = '';
-var apiPass = '';
-var assets = [];
-var assetTypes = {};
+var apiKey      = '';
+var apiPass     = '';
+var assets      = [];
+var assetTypes  = {};
+var assetFields = {}; // keyed by asset uuid → { fieldName: value }
 var fieldMappings = {};
 
 function authHeader() {
@@ -256,7 +257,9 @@ function sm8Get(endpoint) {
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  var due = new Date(dateStr);
+  // Handle ServiceM8 date formats: "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"
+  var clean = String(dateStr).trim().substring(0, 10);
+  var due = new Date(clean + 'T00:00:00');
   if (isNaN(due.getTime())) return null;
   var today = new Date();
   today.setHours(0,0,0,0);
@@ -297,7 +300,8 @@ function esc(str) {
 
 function formatDate(str) {
   if (!str) return '—';
-  var d = new Date(str);
+  var clean = String(str).trim().substring(0, 10);
+  var d = new Date(clean + 'T00:00:00');
   if (isNaN(d.getTime())) return str;
   return d.toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' });
 }
@@ -311,11 +315,12 @@ function toast(msg, isError) {
 }
 
 function saveLocal() {
-  localStorage.setItem('sm8_key',      apiKey);
-  localStorage.setItem('sm8_pass',     apiPass);
-  localStorage.setItem('sm8_assets',   JSON.stringify(assets));
-  localStorage.setItem('sm8_types',    JSON.stringify(assetTypes));
-  localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
+  localStorage.setItem('sm8_key',          apiKey);
+  localStorage.setItem('sm8_pass',         apiPass);
+  localStorage.setItem('sm8_assets',       JSON.stringify(assets));
+  localStorage.setItem('sm8_types',        JSON.stringify(assetTypes));
+  localStorage.setItem('sm8_fields',       JSON.stringify(assetFields));
+  localStorage.setItem('sm8_mappings',     JSON.stringify(fieldMappings));
 }
 
 function loadLocal() {
@@ -323,6 +328,7 @@ function loadLocal() {
   apiPass       = localStorage.getItem('sm8_pass')     || '';
   assets        = JSON.parse(localStorage.getItem('sm8_assets')   || '[]');
   assetTypes    = JSON.parse(localStorage.getItem('sm8_types')    || '{}');
+  assetFields   = JSON.parse(localStorage.getItem('sm8_fields')   || '{}');
   fieldMappings = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
 }
 
@@ -353,8 +359,9 @@ function connect() {
 
 function logout() {
   localStorage.clear();
-  assets = [];
-  assetTypes = {};
+  assets      = [];
+  assetTypes  = {};
+  assetFields = {};
   fieldMappings = {};
   apiKey  = '';
   apiPass = '';
@@ -377,12 +384,15 @@ function fetchAll() {
   }).then(function(fields) {
     fields.forEach(function(f) {
       if (assetTypes[f.asset_type_uuid]) {
-        assetTypes[f.asset_type_uuid].fields.push({ name: f.name, uuid: f.uuid, field_type: f.field_type });
+        assetTypes[f.asset_type_uuid].fields.push({
+          name: f.name, uuid: f.uuid, field_type: f.field_type
+        });
       }
     });
     return sm8Get('/asset');
   }).then(function(raw) {
     assets = raw.filter(function(a) { return String(a.active) === '1'; });
+    // Auto-guess field mappings
     Object.keys(assetTypes).forEach(function(typeUuid) {
       if (!fieldMappings[typeUuid]) {
         var guess = assetTypes[typeUuid].fields.find(function(f) {
@@ -391,6 +401,21 @@ function fetchAll() {
         if (guess) { fieldMappings[typeUuid] = guess.name; }
       }
     });
+    // Fetch all asset field values in one call
+    return sm8Get('/assetfield');
+  }).then(function(fieldValues) {
+    // Build a lookup: assetFields[asset_uuid][field_name] = value
+    assetFields = {};
+    fieldValues.forEach(function(fv) {
+      var aUuid = fv.asset_uuid;
+      if (!aUuid) return;
+      if (!assetFields[aUuid]) { assetFields[aUuid] = {}; }
+      // ServiceM8 field value records have: name or field_name, and value or field_value
+      var name  = fv.name || fv.field_name || '';
+      var value = fv.value !== undefined ? fv.value : (fv.field_value !== undefined ? fv.field_value : '');
+      if (name) { assetFields[aUuid][name] = value; }
+    });
+    console.log('Asset fields loaded:', Object.keys(assetFields).length, 'assets with field data');
   });
 }
 
@@ -443,19 +468,31 @@ function showTab(tab) {
 
 function enrichedAssets() {
   return assets.map(function(a) {
-    var typeUuid = a.asset_type_uuid;
-    var typeName = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
+    var typeUuid     = a.asset_type_uuid;
+    var typeName     = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
     var dueDateField = fieldMappings[typeUuid];
-    var dueDate = null;
+    var dueDate      = null;
+
     if (dueDateField) {
-      if (Array.isArray(a.custom_fields)) {
-        var cf = a.custom_fields.find(function(f) { return f.name === dueDateField || f.field_name === dueDateField; });
-        dueDate = (cf && cf.value) || null;
-      } else if (a.custom_fields && typeof a.custom_fields === 'object') {
+      // 1. Check our separately-fetched assetFields lookup
+      if (assetFields[a.uuid] && assetFields[a.uuid][dueDateField] !== undefined) {
+        dueDate = assetFields[a.uuid][dueDateField] || null;
+      }
+      // 2. Fall back to inline custom_fields array
+      if (!dueDate && Array.isArray(a.custom_fields)) {
+        var cf = a.custom_fields.find(function(f) {
+          return f.name === dueDateField || f.field_name === dueDateField;
+        });
+        dueDate = (cf && (cf.value || cf.field_value)) || null;
+      }
+      // 3. Fall back to inline custom_fields object
+      if (!dueDate && a.custom_fields && typeof a.custom_fields === 'object') {
         dueDate = a.custom_fields[dueDateField] || null;
       }
+      // 4. Fall back to top-level asset property
       if (!dueDate && a[dueDateField]) { dueDate = a[dueDateField]; }
     }
+
     var days   = daysUntil(dueDate);
     var status = statusOf(days);
     return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status });
@@ -487,7 +524,8 @@ function filteredAssets() {
   var typeFilter   = document.getElementById('filter-type').value;
   var statusFilter = document.getElementById('filter-status').value;
   return enrichedAssets().filter(function(a) {
-    if (search && String(a.name||'').toLowerCase().indexOf(search) === -1 && String(a.typeName||'').toLowerCase().indexOf(search) === -1) { return false; }
+    if (search && String(a.name||'').toLowerCase().indexOf(search) === -1 &&
+        String(a.typeName||'').toLowerCase().indexOf(search) === -1) { return false; }
     if (typeFilter   && a.asset_type_uuid !== typeFilter)   { return false; }
     if (statusFilter && a.status          !== statusFilter) { return false; }
     return true;
@@ -502,9 +540,9 @@ function renderStats() {
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
     '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">' + all.length + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'        + ov         + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'     + so         + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'           + ok         + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'        + ov + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'     + so + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'           + ok + '</span></div>' +
     '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + nd + '</span></div>';
 }
 
@@ -524,10 +562,8 @@ function renderSummaryBar() {
   document.getElementById('summary-chart').innerHTML =
     '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview</div>' +
     '<div class="summary-bar">' +
-      seg(ov, '#ef4444', 'Overdue') +
-      seg(so, '#f59e0b', 'Due Soon') +
-      seg(ok, '#22c55e', 'OK') +
-      seg(nd, '#4b5563', 'No Date') +
+      seg(ov, '#ef4444', 'Overdue') + seg(so, '#f59e0b', 'Due Soon') +
+      seg(ok, '#22c55e', 'OK')      + seg(nd, '#4b5563', 'No Date') +
     '</div>' +
     '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem;color:var(--muted)">' +
       (ov ? '<span style="color:#ef4444">&#9632; Overdue</span>'  : '') +
@@ -547,27 +583,23 @@ function renderAssets() {
     var el      = document.getElementById('col-'   + colId);
     var countEl = document.getElementById('count-' + colId);
     countEl.textContent = cols[status].length;
-    if (cols[status].length === 0) {
-      el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>';
-    } else {
-      el.innerHTML = cols[status].map(function(a) { return assetCard(a); }).join('');
-    }
+    el.innerHTML = cols[status].length === 0
+      ? '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
+      : cols[status].map(function(a) { return assetCard(a); }).join('');
   });
   var tbody = document.getElementById('list-body');
-  if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
-  } else {
-    tbody.innerHTML = data.map(function(a) {
-      var color = statusColor(a.status);
-      return '<tr onclick="openModal(\'' + a.uuid + '\')">' +
-        '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
-        '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
-        '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
-        '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days) + 'd ago' : a.days + 'd') : '—') + '</td>' +
-        '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
-        '</tr>';
-    }).join('');
-  }
+  tbody.innerHTML = data.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>'
+    : data.map(function(a) {
+        var color = statusColor(a.status);
+        return '<tr onclick="openModal(\'' + a.uuid + '\')">' +
+          '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
+          '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
+          '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
+          '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days) + 'd ago' : a.days + 'd') : '—') + '</td>' +
+          '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
+          '</tr>';
+      }).join('');
 }
 
 function assetCard(a) {
@@ -592,7 +624,14 @@ function openModal(uuid) {
   if (!a) { return; }
   var color  = statusColor(a.status);
   var cfRows = '';
-  if (a.custom_fields) {
+  // Show fields from our assetFields lookup
+  var fieldData = assetFields[a.uuid] || {};
+  var fieldKeys = Object.keys(fieldData);
+  if (fieldKeys.length > 0) {
+    fieldKeys.forEach(function(k) {
+      cfRows += '<div class="field-row"><span class="field-label">' + esc(k) + '</span><span class="field-value">' + esc(String(fieldData[k] || '—')) + '</span></div>';
+    });
+  } else if (a.custom_fields) {
     var cf = Array.isArray(a.custom_fields)
       ? a.custom_fields
       : Object.keys(a.custom_fields).map(function(k) { return { name: k, value: a.custom_fields[k] }; });
@@ -634,7 +673,8 @@ function renderSettings() {
   grid.innerHTML = keys.map(function(uuid) {
     var t         = assetTypes[uuid];
     var fieldOpts = t.fields.map(function(f) {
-      return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' + esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
+      return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' +
+        esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
     }).join('');
     return '<div class="settings-card"><h3>' + esc(t.name) + '</h3>' +
       '<div class="mapping-row"><label>Due Date Field</label>' +
