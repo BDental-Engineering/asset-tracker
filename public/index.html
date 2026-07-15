@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceM8 Asset Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #4f6ef7;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .logo svg { width: 32px; height: 32px; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    button:hover { opacity: 0.85; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-sm { padding: 5px 11px; font-size: 0.78rem; }
+
+    .screen { display: none; padding: 32px; max-width: 1400px; margin: 0 auto; }
+    .screen.active { display: block; }
+
+    #screen-auth {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 70px);
+    }
+    #screen-auth.active { display: flex; }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+    }
+    .auth-card h2 { margin-bottom: 8px; font-size: 1.5rem; }
+    .auth-card p { color: var(--muted); margin-bottom: 28px; font-size: 0.9rem; }
+
+    .input-group { text-align: left; margin-bottom: 16px; }
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .hint { font-size: 0.78rem; color: var(--muted); margin-top: 12px; }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat-card .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
+    .stat-card.green .stat-value { color: var(--green); }
+    .stat-card.amber .stat-value { color: var(--amber); }
+    .stat-card.red .stat-value { color: var(--red); }
+    .stat-card.blue .stat-value { color: var(--accent); }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .toolbar input, .toolbar select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .toolbar input { min-width: 220px; }
+    .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
+
+    .view-toggle { display: flex; gap: 4px; margin-left: auto; }
+    .view-toggle button { padding: 7px 12px; }
+    .view-toggle button.active { background: var(--accent); color: #fff; }
+
+    .kanban {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .kanban.active { display: grid; }
+
+    .kanban-col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .kanban-col-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .col-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .col-count {
+      margin-left: auto;
+      background: var(--surface2);
+      border-radius: 20px;
+      padding: 2px 9px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .kanban-cards { display: flex; flex-direction: column; gap: 10px; min-height: 60px; }
+
+    .asset-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .asset-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      border-radius: 10px 0 0 10px;
+    }
+    .asset-card.green::before { background: var(--green); }
+    .asset-card.amber::before { background: var(--amber); }
+    .asset-card.red::before { background: var(--red); }
+    .asset-card.grey::before { background: var(--muted); }
+    .asset-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .asset-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; padding-left: 8px; }
+    .asset-card-type { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
+    .asset-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 8px;
+    }
+
+    .due-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .due-badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .due-badge.amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .due-badge.red { background: rgba(239,68,68,0.15); color: var(--red); }
+    .due-badge.grey { background: rgba(136,146,176,0.15); color: var(--muted); }
+
+    .progress-wrap { margin: 8px 8px 0; }
+    .progress-bar-bg { background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+    .list-view { display: none; }
+    .list-view.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 2px solid var(--border); }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+    tbody tr:hover { background: var(--surface2); }
+    td { padding: 12px 14px; font-size: 0.88rem; }
+    .td-name { font-weight: 600; }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .chart-card h3 { font-size: 0.9rem; color: var(--muted); margin-bottom: 16px; }
+    .chart-wrap { position: relative; height: 200px; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal h2 { margin-bottom: 6px; }
+    .modal .modal-type { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 4px 10px;
+      font-size: 1rem;
+    }
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-label { font-size: 0.8rem; color: var(--muted); }
+    .field-value { font-size: 0.88rem; font-weight: 500; text-align: right; max-width: 60%; }
+
+    .big-due { text-align: center; padding: 20px 0; }
+    .big-due .days-num { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+    .big-due .days-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+    .settings-card h3 { margin-bottom: 16px; font-size: 1rem; }
+    .mapping-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .mapping-row label { font-size: 0.85rem; min-width: 140px; color: var(--muted); }
+    .mapping-row select {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 0.88rem;
+      z-index: 300;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+    }
+    .nav-tab.active { background: var(--surface2); color: var(--text); }
+
+    .loader {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .tag {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+
+    .error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: var(--red);
+      margin-top: 12px;
+      text-align: left;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#4f6ef7"/>
+      <path d="M8 22 L16 10 L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="22" r="2.5" fill="white"/>
+    </svg>
+    Asset Tracker
+  </div>
+  <div class="nav-tabs" id="nav-tabs" style="display:none">
+    <button class="nav-tab active" onclick="showTab('dashboard', this)">Dashboard</button>
+    <button class="nav-tab" onclick="showTab('settings', this)">Settings</button>
+  </div>
+  <div class="header-actions">
+    <span id="sync-status" style="font-size:0.8rem;color:var(--muted);display:none"></span>
+    <button class="btn-ghost btn-sm" id="btn-sync" onclick="syncAssets()" style="display:none">↻ Sync</button>
+    <button class="btn-danger btn-sm" id="btn-logout" onclick="logout()" style="display:none">Sign Out</button>
+  </div>
+</header>
+
+<!-- AUTH SCREEN -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-card">
+    <h2>Connect to ServiceM8</h2>
+    <p>Enter your ServiceM8 API credentials to get started.</p>
+    <div class="input-group">
+      <label>API Key (Username)</label>
+      <input type="text" id="auth-key" placeholder="your-api-key" autocomplete="off"/>
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="auth-pass" placeholder="your-password"/>
+    </div>
+    <div class="error-msg" id="auth-error"></div>
+    <hr class="divider"/>
+    <button class="btn-primary" id="btn-connect" style="width:100%;padding:12px" onclick="connect()">
+      Connect &amp; Load Assets
+    </button>
+    <p class="hint">Your credentials are stored only in your browser's local storage and never sent anywhere except directly to the ServiceM8 API.</p>
+  </div>
+</div>
+
+<!-- DASHBOARD SCREEN -->
+<div id="screen-dashboard" class="screen">
+  <div class="stats-bar" id="stats-bar"></div>
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Status Breakdown</h3>
+      <div class="chart-wrap"><canvas id="chart-donut"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Due Dates — Next 90 Days</h3>
+      <div class="chart-wrap"><canvas id="chart-timeline"></canvas></div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <input type="text" id="search-input" placeholder="🔍  Search assets…" oninput="renderAssets()"/>
+    <select id="filter-type" onchange="renderAssets()"><option value="">All Types</option></select>
+    <select id="filter-status" onchange="renderAssets()">
+      <option value="">All Statuses</option>
+      <option value="overdue">Overdue</option>
+      <option value="due-soon">Due Soon (≤30d)</option>
+      <option value="ok">OK</option>
+      <option value="no-date">No Date</option>
+    </select>
+    <div class="view-toggle">
+      <button class="active" id="btn-kanban" onclick="setView('kanban')">⊞ Kanban</button>
+      <button id="btn-list" onclick="setView('list')">☰ List</button>
+    </div>
+  </div>
+  <div class="kanban active" id="kanban-view">
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="col-dot" style="background:var(--red)"></span>Overdue
+        <span class="col-count" id="count-overdue">0</span>
+      </div>
+      <div class="kanban-cards" id="col-overdue"></div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="col-dot" style="background:var(--amber)"></span>Due Soon
+        <span class="col-count" id="count-soon">0</span>
+      </div>
+      <div class="kanban-cards" id="col-soon"></div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="col-dot" style="background:var(--green)"></span>OK
+        <span class="col-count" id="count-ok">0</span>
+      </div>
+      <div class="kanban-cards" id="col-ok"></div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="col-dot" style="background:var(--muted)"></span>No Date
+        <span class="col-count" id="count-nodate">0</span>
+      </div>
+      <div class="kanban-cards" id="col-nodate"></div>
+    </div>
+  </div>
+  <div class="list-view" id="list-view">
+    <table>
+      <thead>
+        <tr>
+          <th>Asset Name</th>
+          <th>Type</th>
+          <th>Due Date</th>
+          <th>Days Remaining</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="list-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div id="screen-settings" class="screen">
+  <h2 style="margin-bottom:8px">Settings</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">
+    Map each Asset Type's due-date custom field so the dashboard knows which field to read.
+  </p>
+  <div class="settings-grid" id="settings-grid"></div>
+  <div style="margin-top:24px">
+    <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let apiKey = '';
+let apiPass = '';
+let assets = [];
+let assetTypes = {};
+let fieldMappings = {};
+let donutChart = null;
+let timelineChart = null;
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function authHeader() {
+  return 'Basic ' + btoa(apiKey + ':' + apiPass);
+}
+
+async function sm8Get(endpoint) {
+  const res = await fetch('/api/proxy?path=' + endpoint + '.json', {
+    headers: {
+      'Authorization': authHeader(),
+      'Accept': 'application/json'
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'HTTP ' + res.status);
+  }
+  return res.json();
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const due = new Date(dateStr);
+  if (isNaN(due)) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((due - today) / 86400000);
+}
+
+function statusOf(days) {
+  if (days === null) return 'no-date';
+  if (days < 0) return 'overdue';
+  if (days <= 30) return 'due-soon';
+  return 'ok';
+}
+
+function statusColor(status) {
+  const map = { overdue: 'red', 'due-soon': 'amber', ok: 'green', 'no-date': 'grey' };
+  return map[status] || 'grey';
+}
+
+function statusLabel(days) {
+  if (days === null) return 'No date';
+  if (days < 0) return Math.abs(days) + 'd overdue';
+  if (days === 0) return 'Due today';
+  return days + 'd left';
+}
+
+function progressPct(days) {
+  if (days === null) return 0;
+  if (days <= 0) return 100;
+  if (days >= 365) return 2;
+  return Math.max(2, Math.round((1 - days / 365) * 100));
+}
+
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = isError ? 'var(--red)' : 'var(--accent)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+function saveLocal() {
+  localStorage.setItem('sm8_key', apiKey);
+  localStorage.setItem('sm8_pass', apiPass);
+  localStorage.setItem('sm8_assets', JSON.stringify(assets));
+  localStorage.setItem('sm8_types', JSON.stringify(assetTypes));
+  localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
+}
+
+function loadLocal() {
+  apiKey        = localStorage.getItem('sm8_key') || '';
+  apiPass       = localStorage.getItem('sm8_pass') || '';
+  assets        = JSON.parse(localStorage.getItem('sm8_assets') || '[]');
+  assetTypes    = JSON.parse(localStorage.getItem('sm8_types') || '{}');
+  fieldMappings = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
+}
+
+// ─────────────────────────────────────────────
+//  AUTH
+// ─────────────────────────────────────────────
+async function connect() {
+  apiKey  = document.getElementById('auth-key').value.trim();
+  apiPass = document.getElementById('auth-pass').value.trim();
+
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+
+  if (!apiKey || !apiPass) {
+    errEl.textContent = 'Please enter your API key and password.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('btn-connect');
+  btn.innerHTML = '<span class="loader"></span> Connecting…';
+  btn.disabled = true;
+
+  try {
+    await fetchAll();
+    saveLocal();
+    showDashboard();
+    toast('Connected successfully!');
+  } catch (e) {
+    errEl.textContent = 'Connection failed: ' + e.message;
+    errEl.style.display = 'block';
+    btn.innerHTML = 'Connect &amp; Load Assets';
+    btn.disabled = false;
+  }
+}
+
+function logout() {
+  localStorage.clear();
+  assets = [];
+  assetTypes = {};
+  fieldMappings = {};
+  apiKey = '';
+  apiPass = '';
+  document.getElementById('nav-tabs').style.display = 'none';
+  document.getElementById('btn-sync').style.display = 'none';
+  document.getElementById('btn-logout').style.display = 'none';
+  document.getElementById('sync-status').style.display = 'none';
+  showScreen('auth');
+}
+
+// ─────────────────────────────────────────────
+//  FETCH
+// ─────────────────────────────────────────────
+async function fetchAll() {
+  // Asset types
+  const types = await sm8Get('/assettype');
+  assetTypes = {};
+  for (const t of types) {
+    if (String(t.active) === '1') {
+      assetTypes[t.uuid] = { name: t.name, fields: [] };
+    }
+  }
+
+  // Asset type fields
+  const fields = await sm8Get('/assettypefield');
+  for (const f of fields) {
+    if (assetTypes[f.asset_type_uuid]) {
+      assetTypes[f.asset_type_uuid].fields.push({
+        name: f.name,
+        uuid: f.uuid,
+        field_type: f.field_type
+      });
+    }
+  }
+
+  // Assets
+  const raw = await sm8Get('/asset');
+  assets = raw.filter(a => String(a.active) === '1');
+
+  // Auto-detect due date fields
+  for (const [typeUuid, typeData] of Object.entries(assetTypes)) {
+    if (!fieldMappings[typeUuid]) {
+      const guess = typeData.fields.find(f =>
+        /due|expir|next.service|service.date|renewal|review/i.test(f.name)
+      );
+      if (guess) fieldMappings[typeUuid] = guess.name;
+    }
+  }
+}
+
+async function syncAssets() {
+  const btn = document.getElementById('btn-sync');
+  btn.innerHTML = '<span class="loader"></span>';
+  btn.disabled = true;
+  try {
+    await fetchAll();
+    saveLocal();
+    renderAll();
+    document.getElementById('sync-status').textContent =
+      'Last sync: ' + new Date().toLocaleTimeString();
+    toast('Assets synced!');
+  } catch (e) {
+    toast('Sync failed: ' + e.message, true);
+  }
+  btn.innerHTML = '↻ Sync';
+  btn.disabled = false;
+}
+
+// ─────────────────────────────────────────────
+//  SCREENS
+// ─────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function showDashboard() {
+  document.getElementById('nav-tabs').style.display = 'flex';
+  document.getElementById('btn-sync').style.display = 'inline-block';
+  document.getElementById('btn-logout').style.display = 'inline-block';
+  document.getElementById('sync-status').style.display = 'inline-block';
+  showScreen('dashboard');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab')[0].classList.add('active');
+  renderAll();
+}
+
+function showTab(tab, el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (tab === 'dashboard') {
+    showScreen('dashboard');
+    renderAll();
+  } else {
+    showScreen('settings');
+    renderSettings();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  ENRICH
+// ─────────────────────────────────────────────
+function enrichedAssets() {
+  return assets.map(a => {
+    const typeUuid = a.asset_type_uuid;
+    const typeName = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
+    const dueDateField = fieldMappings[typeUuid];
+    let dueDate = null;
+
+    if (dueDateField) {
+      if (Array.isArray(a.custom_fields)) {
+        const cf = a.custom_fields.find(f =>
+          f.name === dueDateField || f.field_name === dueDateField
+        );
+        dueDate = (cf && cf.value) || null;
+      } else if (a.custom_fields && typeof a.custom_fields === 'object') {
+        dueDate = a.custom_fields[dueDateField] || null;
+      }
+      if (!dueDate && a[dueDateField]) {
+        dueDate = a[dueDateField];
+      }
+    }
+
+    const days = daysUntil(dueDate);
+    const status = statusOf(days);
+    return Object.assign({}, a, { typeName, dueDate, days, status });
+  });
+}
+
+// ─────────────────────────────────────────────
+//  RENDER ALL
+// ─────────────────────────────────────────────
+function renderAll() {
+  populateFilters();
+  renderStats();
+  renderCharts();
+  renderAssets();
+}
+
+function populateFilters() {
+  const sel = document.getElementById('filter-type');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Types</option>';
+  for (const [uuid, t] of Object.entries(assetTypes)) {
+    const opt = document.createElement('option');
+    opt.value = uuid;
+    opt.textContent = t.name;
+    if (uuid === current) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function filteredAssets() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const typeFilter = document.getElementById('filter-type').value;
+  const statusFilter = document.getElementById('filter-status').value;
+  return enrichedAssets().filter(a => {
+    if (search &&
+      !String(a.name || '').toLowerCase().includes(search) &&
+      !String(a.typeName || '').toLowerCase().includes(search)) return false;
+    if (typeFilter && a.asset_type_uuid !== typeFilter) return false;
+    if (statusFilter && a.status !== statusFilter) return false;
+    return true;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  STATS
+// ─────────────────────────────────────────────
+function renderStats() {
+  const all = enrichedAssets();
+  const overdue = all.filter(a => a.status === 'overdue').length;
+  const soon    = all.filter(a => a.status === 'due-soon').length;
+  const ok      = all.filter(a => a.status === 'ok').length;
+  const noDate  = all.filter(a => a.status === 'no-date').length;
+
+  document.getElementById('stats-bar').innerHTML =
+    '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">' + all.length + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">' + overdue + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon (≤30d)</span><span class="stat-value">' + soon + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">' + ok + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date Set</span><span class="stat-value" style="color:var(--muted)">' + noDate + '</span></div>';
+}
+
+// ─────────────────────────────────────────────
+//  CHARTS
+// ─────────────────────────────────────────────
+function renderCharts() {
+  const all = enrichedAssets();
+  const overdue = all.filter(a => a.status === 'overdue').length;
+  const soon    = all.filter(a => a.status === 'due-soon').length;
+  const ok      = all.filter(a => a.status === 'ok').length;
+  const noDate  = all.filter(a => a.status === 'no-date').length;
+
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(document.getElementById('chart-donut'), {
+    type: 'doughnut',
+    {
+      labels: ['Overdue', 'Due Soon', 'OK', 'No Date'],
+      datasets: [{
+        [overdue, soon, ok, noDate],
+        backgroundColor: ['#ef4444', '#f59e0b', '#22c55e', '#4b5563'],
+        borderWidth: 0,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#8892b0', boxWidth: 12, padding: 14 }
+        }
+      },
+      cutout: '68%'
+    }
+  });
+
+  // Weekly buckets for next 90 days
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekLabels = [];
+  const buckets = {};
+  for (let w = 0; w < 13; w++) {
+    const label = 'W' + (w + 1);
+    weekLabels.push(label);
+    buckets[label] = { overdue: 0, soon: 0, ok: 0 };
+  }
+
+  for (const a of all) {
+    if (a.days === null || a.days < 0 || a.days > 90) continue;
+    const weekIdx = Math.floor(a.days / 7);
+    if (weekIdx < 13) {
+      const label = weekLabels[weekIdx];
+      if (a.status === 'overdue') buckets[label].overdue++;
+      else if (a.status === 'due-soon') buckets[label].soon++;
+      else buckets[label].ok++;
+    }
+  }
+
+  if (timelineChart) timelineChart.destroy();
+  timelineChart = new Chart(document.getElementById('chart-timeline'), {
+    type: 'bar',
+    {
+      labels: weekLabels,
+      datasets: [
+        {
+          label: 'Overdue',
+          weekLabels.map(l => buckets[l].overdue),
+          backgroundColor: '#ef4444',
+          borderRadius: 4
+        },
+        {
+          label: 'Due Soon',
+          weekLabels.map(l => buckets[l].soon),
+          backgroundColor: '#f59e0b',
+          borderRadius: 4
+        },
+        {
+          label: 'OK',
+          weekLabels.map(l => buckets[l].ok),
+          backgroundColor: '#22c55e',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#8892b0', boxWidth: 12 } }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { color: '#8892b0' },
+          grid: { color: '#2e3350' }
+        },
+        y: {
+          stacked: true,
+          ticks: { color: '#8892b0', stepSize: 1 },
+          grid: { color: '#2e3350' }
+        }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  ASSET CARDS
+// ─────────────────────────────────────────────
+function renderAssets() {
+  const data = filteredAssets();
+
+  const cols = { overdue: [], 'due-soon': [], ok: [], 'no-date': [] };
+  for (const a of data) cols[a.status].push(a);
+
+  const colMap = { overdue: 'overdue', 'due-soon': 'soon', ok: 'ok', 'no-date': 'nodate' };
+  for (const [status, colId] of Object.entries(colMap)) {
+    const el = document.getElementById('col-' + colId);
+    const count = document.getElementById('count-' + colId);
+    count.textContent = cols[status].length;
+    if (cols[status].length === 0) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>';
+    } else {
+      el.innerHTML = cols[status].map(a => assetCard(a)).join('');
+    }
+  }
+
+  const tbody = document.getElementById('list-body');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
+  } else {
+    tbody.innerHTML = data.map(a =>
+      '<tr onclick="openModal(\'' + a.uuid + '\')">' +
+      '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
+      '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
+      '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
+      '<td style="color:var(--' + statusColor(a.status) + ')">' +
+        (a.days !== null ? (a.days < 0 ? Math.abs(a.days) + 'd ago' : a.days + 'd') : '—') +
+      '</td>' +
+      '<td><span class="due-badge ' + statusColor(a.status) + '">' + statusLabel(a.days) + '</span></td>' +
+      '</tr>'
+    ).join('');
+  }
+}
+
+function assetCard(a) {
+  const color = statusColor(a.status);
+  const pct = progressPct(a.days);
+  const barColor = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
+  return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
+    '<div class="asset-card-name">' + esc(a.name || 'Unnamed Asset') + '</div>' +
+    '<div class="asset-card-type">' + esc(a.typeName) + '</div>' +
+    '<div class="asset-card-footer">' +
+      '<span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span>' +
+      '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
+    '</div>' +
+    '<div class="progress-wrap">' +
+      '<div class="progress-bar-bg">' +
+        '<div class="progress-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ─────────────────────────────────────────────
+//  MODAL
+// ─────────────────────────────────────────────
+function openModal(uuid) {
+  const a = enrichedAssets().find(x => x.uuid === uuid);
+  if (!a) return;
+  const color = statusColor(a.status);
+
+  let cfRows = '';
+  if (a.custom_fields) {
+    const cf = Array.isArray(a.custom_fields)
+      ? a.custom_fields
+      : Object.entries(a.custom_fields).map(([k, v]) => ({ name: k, value: v }));
+    for (const f of cf) {
+      const val = f.value !== undefined ? f.value : (f.field_value !== undefined ? f.field_value : '—');
+      cfRows += '<div class="field-row">' +
+        '<span class="field-label">' + esc(f.name || f.field_name || '') + '</span>' +
+        '<span class="field-value">' + esc(String(val)) + '</span>' +
+        '</div>';
+    }
+  }
+  if (!cfRows) {
+    cfRows = '<p style="color:var(--muted);font-size:0.85rem">No custom fields found.</p>';
+  }
+
+  document.getElementById('modal-body').innerHTML =
+    '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
+    '<div class="modal-type"><span class="tag">' + esc(a.typeName) + '</span></div>' +
+    '<div class="big-due">' +
+      '<div class="days-num" style="color:var(--' + color + ')">' +
+        (a.days !== null ? Math.abs(a.days) : '—') +
+      '</div>' +
+      '<div class="days-label">' +
+        (a.days === null ? 'No due date set' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') +
+      '</div>' +
+      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge ' + color + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
+    '</div>' +
+    '<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">Custom Fields</h3>' +
+    cfRows +
+    '<div style="margin-top:16px;font-size:0.75rem;color:var(--muted)">Asset UUID: ' + esc(a.uuid) + '</div>';
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ─────────────────────────────────────────────
+//  SETTINGS
+// ─────────────────────────────────────────────
+function renderSettings() {
+  const grid = document.getElementById('settings-grid');
+  if (Object.keys(assetTypes).length === 0) {
+    grid.innerHTML = '<p style="color:var(--muted)">No asset types loaded. Connect and sync first.</p>';
+    return;
+  }
+  grid.innerHTML = Object.entries(assetTypes).map(([uuid, t]) => {
+    const fieldOpts = t.fields.map(f =>
+      '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' +
+      esc(f.name) + ' (' + esc(f.field_type || 'text') + ')' +
+      '</option>'
+    ).join('');
+    return '<div class="settings-card">' +
+      '<h3>' + esc(t.name) + '</h3>' +
+      '<div class="mapping-row">' +
+        '<label>Due Date Field</label>' +
+        '<select id="map-' + uuid + '">' +
+          '<option value="">— Not mapped —</option>' +
+          fieldOpts +
+        '</select>' +
+      '</div>' +
+      '<div style="font-size:0.78rem;color:var(--muted)">' + t.fields.length + ' custom field(s) available</div>' +
+    '</div>';
+  }).join('');
+}
+
+function saveSettings() {
+  for (const uuid of Object.keys(assetTypes)) {
+    const sel = document.getElementById('map-' + uuid);
+    if (sel) fieldMappings[uuid] = sel.value;
+  }
+  saveLocal();
+  toast('Settings saved!');
+}
+
+// ─────────────────────────────────────────────
+//  VIEW TOGGLE
+// ─────────────────────────────────────────────
+function setView(v) {
+  document.getElementById('kanban-view').classList.toggle('active', v === 'kanban');
+  document.getElementById('list-view').classList.toggle('active', v === 'list');
+  document.getElementById('btn-kanban').classList.toggle('active', v === 'kanban');
+  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+(function init() {
+  loadLocal();
+  if (apiKey && apiPass && assets.length > 0) {
+    showDashboard();
+    document.getElementById('sync-status').textContent = 'Loaded from cache';
+  }
+})();
+</script>
+</body>
+</html>
