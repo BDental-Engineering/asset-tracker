@@ -147,21 +147,23 @@
 <div id="screen-auth" class="screen active">
   <div class="auth-card">
     <h2>Connect to ServiceM8</h2>
-    <p>Enter your ServiceM8 API credentials to get started.</p>
-    <div class="input-group">
-      <label>API Key (Username)</label>
-      <input type="text" id="auth-key" placeholder="your-api-key" autocomplete="off"/>
-    </div>
-    <div class="input-group">
-      <label>Password</label>
-      <input type="password" id="auth-pass" placeholder="your-password"/>
-    </div>
-    <div class="error-msg" id="auth-error"></div>
-    <hr class="divider"/>
-    <button class="btn-primary" id="btn-connect" style="width:100%;padding:12px" onclick="connect()">
-      Connect &amp; Load Assets
-    </button>
-    <p class="hint">Credentials are stored only in your browser and sent only to ServiceM8.</p>
+    <p>Sign in with your ServiceM8 email and password.</p>
+    <form onsubmit="connect(); return false;">
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="auth-key" placeholder="you@example.com" autocomplete="username"/>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="auth-pass" placeholder="Your ServiceM8 password" autocomplete="current-password"/>
+      </div>
+      <div class="error-msg" id="auth-error"></div>
+      <hr class="divider"/>
+      <button type="submit" class="btn-primary" id="btn-connect" style="width:100%;padding:12px">
+        Connect &amp; Load Assets
+      </button>
+    </form>
+    <p class="hint">Use your ServiceM8 login email and password. Credentials are stored only in your browser.</p>
   </div>
 </div>
 
@@ -228,14 +230,16 @@
 <div id="toast"></div>
 
 <script>
-var apiKey = '';
+var apiKey  = '';
 var apiPass = '';
 var assets = [];
 var assetTypes = {};
 var fieldMappings = {};
 
 function authHeader() {
-  return 'Basic ' + btoa(apiKey + ':' + apiPass);
+  var credentials = apiKey + ':' + apiPass;
+  var encoded = btoa(unescape(encodeURIComponent(credentials)));
+  return 'Basic ' + encoded;
 }
 
 function sm8Get(endpoint) {
@@ -251,7 +255,7 @@ function sm8Get(endpoint) {
     });
   });
 }
-  
+
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   var due = new Date(dateStr);
@@ -309,28 +313,28 @@ function toast(msg, isError) {
 }
 
 function saveLocal() {
-  localStorage.setItem('sm8_key', apiKey);
-  localStorage.setItem('sm8_pass', apiPass);
-  localStorage.setItem('sm8_assets', JSON.stringify(assets));
-  localStorage.setItem('sm8_types', JSON.stringify(assetTypes));
+  localStorage.setItem('sm8_key',      apiKey);
+  localStorage.setItem('sm8_pass',     apiPass);
+  localStorage.setItem('sm8_assets',   JSON.stringify(assets));
+  localStorage.setItem('sm8_types',    JSON.stringify(assetTypes));
   localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
 }
 
 function loadLocal() {
-  apiKey        = localStorage.getItem('sm8_key') || '';
-  apiPass       = localStorage.getItem('sm8_pass') || '';
-  assets        = JSON.parse(localStorage.getItem('sm8_assets') || '[]');
-  assetTypes    = JSON.parse(localStorage.getItem('sm8_types') || '{}');
+  apiKey        = localStorage.getItem('sm8_key')      || '';
+  apiPass       = localStorage.getItem('sm8_pass')     || '';
+  assets        = JSON.parse(localStorage.getItem('sm8_assets')   || '[]');
+  assetTypes    = JSON.parse(localStorage.getItem('sm8_types')    || '{}');
   fieldMappings = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
 }
 
 function connect() {
   apiKey  = document.getElementById('auth-key').value.trim();
-  apiPass = document.getElementById('auth-pass').value.trim();
+  apiPass = document.getElementById('auth-pass').value;
   var errEl = document.getElementById('auth-error');
   errEl.style.display = 'none';
   if (!apiKey || !apiPass) {
-    errEl.textContent = 'Please enter your API key and password.';
+    errEl.textContent = 'Please enter your email and password.';
     errEl.style.display = 'block';
     return;
   }
@@ -354,12 +358,12 @@ function logout() {
   assets = [];
   assetTypes = {};
   fieldMappings = {};
-  apiKey = '';
+  apiKey  = '';
   apiPass = '';
-  document.getElementById('nav-tabs').style.display = 'none';
-  document.getElementById('btn-sync').style.display = 'none';
-  document.getElementById('btn-logout').style.display = 'none';
-  document.getElementById('sync-status').style.display = 'none';
+  document.getElementById('nav-tabs').style.display        = 'none';
+  document.getElementById('btn-sync').style.display        = 'none';
+  document.getElementById('btn-logout').style.display      = 'none';
+  document.getElementById('sync-status').style.display     = 'none';
   showScreen('auth');
 }
 
@@ -416,9 +420,9 @@ function showScreen(name) {
 }
 
 function showDashboard() {
-  document.getElementById('nav-tabs').style.display = 'flex';
-  document.getElementById('btn-sync').style.display = 'inline-block';
-  document.getElementById('btn-logout').style.display = 'inline-block';
+  document.getElementById('nav-tabs').style.display    = 'flex';
+  document.getElementById('btn-sync').style.display    = 'inline-block';
+  document.getElementById('btn-logout').style.display  = 'inline-block';
   document.getElementById('sync-status').style.display = 'inline-block';
   document.getElementById('tab-dashboard').classList.add('active');
   document.getElementById('tab-settings').classList.remove('active');
@@ -448,7 +452,7 @@ function enrichedAssets() {
       }
       if (!dueDate && a[dueDateField]) { dueDate = a[dueDateField]; }
     }
-    var days = daysUntil(dueDate);
+    var days   = daysUntil(dueDate);
     var status = statusOf(days);
     return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status });
   });
@@ -462,12 +466,12 @@ function renderAll() {
 }
 
 function populateFilters() {
-  var sel = document.getElementById('filter-type');
+  var sel     = document.getElementById('filter-type');
   var current = sel.value;
   sel.innerHTML = '<option value="">All Types</option>';
   Object.keys(assetTypes).forEach(function(uuid) {
     var opt = document.createElement('option');
-    opt.value = uuid;
+    opt.value       = uuid;
     opt.textContent = assetTypes[uuid].name;
     if (uuid === current) { opt.selected = true; }
     sel.appendChild(opt);
@@ -475,39 +479,39 @@ function populateFilters() {
 }
 
 function filteredAssets() {
-  var search = document.getElementById('search-input').value.toLowerCase();
-  var typeFilter = document.getElementById('filter-type').value;
+  var search       = document.getElementById('search-input').value.toLowerCase();
+  var typeFilter   = document.getElementById('filter-type').value;
   var statusFilter = document.getElementById('filter-status').value;
   return enrichedAssets().filter(function(a) {
     if (search && String(a.name||'').toLowerCase().indexOf(search) === -1 && String(a.typeName||'').toLowerCase().indexOf(search) === -1) { return false; }
-    if (typeFilter && a.asset_type_uuid !== typeFilter) { return false; }
-    if (statusFilter && a.status !== statusFilter) { return false; }
+    if (typeFilter   && a.asset_type_uuid !== typeFilter)   { return false; }
+    if (statusFilter && a.status          !== statusFilter) { return false; }
     return true;
   });
 }
 
 function renderStats() {
   var all = enrichedAssets();
-  var ov = all.filter(function(a) { return a.status === 'overdue'; }).length;
-  var so = all.filter(function(a) { return a.status === 'due-soon'; }).length;
-  var ok = all.filter(function(a) { return a.status === 'ok'; }).length;
-  var nd = all.filter(function(a) { return a.status === 'no-date'; }).length;
+  var ov  = all.filter(function(a) { return a.status === 'overdue';  }).length;
+  var so  = all.filter(function(a) { return a.status === 'due-soon'; }).length;
+  var ok  = all.filter(function(a) { return a.status === 'ok';       }).length;
+  var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
     '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">' + all.length + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">' + ov + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">' + so + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">' + ok + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'        + ov         + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'     + so         + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'           + ok         + '</span></div>' +
     '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + nd + '</span></div>';
 }
 
 function renderSummaryBar() {
-  var all = enrichedAssets();
+  var all   = enrichedAssets();
   var total = all.length;
   if (total === 0) { document.getElementById('summary-chart').innerHTML = ''; return; }
-  var ov = all.filter(function(a) { return a.status === 'overdue'; }).length;
+  var ov = all.filter(function(a) { return a.status === 'overdue';  }).length;
   var so = all.filter(function(a) { return a.status === 'due-soon'; }).length;
-  var ok = all.filter(function(a) { return a.status === 'ok'; }).length;
-  var nd = all.filter(function(a) { return a.status === 'no-date'; }).length;
+  var ok = all.filter(function(a) { return a.status === 'ok';       }).length;
+  var nd = all.filter(function(a) { return a.status === 'no-date';  }).length;
   function seg(count, color, label) {
     if (count === 0) { return ''; }
     var pct = Math.round(count / total * 100);
@@ -522,10 +526,10 @@ function renderSummaryBar() {
       seg(nd, '#4b5563', 'No Date') +
     '</div>' +
     '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem;color:var(--muted)">' +
-      (ov ? '<span style="color:#ef4444">&#9632; Overdue</span>' : '') +
+      (ov ? '<span style="color:#ef4444">&#9632; Overdue</span>'  : '') +
       (so ? '<span style="color:#f59e0b">&#9632; Due Soon</span>' : '') +
-      (ok ? '<span style="color:#22c55e">&#9632; OK</span>' : '') +
-      (nd ? '<span style="color:#4b5563">&#9632; No Date</span>' : '') +
+      (ok ? '<span style="color:#22c55e">&#9632; OK</span>'       : '') +
+      (nd ? '<span style="color:#4b5563">&#9632; No Date</span>'  : '') +
     '</div>';
 }
 
@@ -535,8 +539,8 @@ function renderAssets() {
   data.forEach(function(a) { cols[a.status].push(a); });
   var colMap = { 'overdue': 'overdue', 'due-soon': 'soon', 'ok': 'ok', 'no-date': 'nodate' };
   Object.keys(colMap).forEach(function(status) {
-    var colId = colMap[status];
-    var el = document.getElementById('col-' + colId);
+    var colId   = colMap[status];
+    var el      = document.getElementById('col-'   + colId);
     var countEl = document.getElementById('count-' + colId);
     countEl.textContent = cols[status].length;
     if (cols[status].length === 0) {
@@ -563,12 +567,12 @@ function renderAssets() {
 }
 
 function assetCard(a) {
-  var color = statusColor(a.status);
-  var pct = progressPct(a.days);
+  var color    = statusColor(a.status);
+  var pct      = progressPct(a.days);
   var barColor = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
   return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
-    '<div class="asset-card-name">' + esc(a.name || 'Unnamed Asset') + '</div>' +
-    '<div class="asset-card-type">' + esc(a.typeName) + '</div>' +
+    '<div class="asset-card-name">'  + esc(a.name || 'Unnamed Asset') + '</div>' +
+    '<div class="asset-card-type">'  + esc(a.typeName) + '</div>' +
     '<div class="asset-card-footer">' +
       '<span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span>' +
       '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
@@ -579,10 +583,10 @@ function assetCard(a) {
 
 function openModal(uuid) {
   var all = enrichedAssets();
-  var a = null;
+  var a   = null;
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) { return; }
-  var color = statusColor(a.status);
+  var color  = statusColor(a.status);
   var cfRows = '';
   if (a.custom_fields) {
     var cf = Array.isArray(a.custom_fields)
@@ -624,7 +628,7 @@ function renderSettings() {
     return;
   }
   grid.innerHTML = keys.map(function(uuid) {
-    var t = assetTypes[uuid];
+    var t        = assetTypes[uuid];
     var fieldOpts = t.fields.map(function(f) {
       return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' + esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
     }).join('');
@@ -646,9 +650,9 @@ function saveSettings() {
 
 function setView(v) {
   document.getElementById('kanban-view').classList.toggle('active', v === 'kanban');
-  document.getElementById('list-view').classList.toggle('active', v === 'list');
-  document.getElementById('btn-kanban').classList.toggle('active', v === 'kanban');
-  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+  document.getElementById('list-view').classList.toggle('active',   v === 'list');
+  document.getElementById('btn-kanban').classList.toggle('active',  v === 'kanban');
+  document.getElementById('btn-list').classList.toggle('active',    v === 'list');
 }
 
 loadLocal();
