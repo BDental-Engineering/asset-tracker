@@ -21,18 +21,22 @@ module.exports = function(req, res) {
   const options = {
     hostname: 'api.servicem8.com',
     path: '/api_1.0' + sm8Path,
-    method: req.method,
+    method: 'GET',
     headers: {
       'Authorization': authHeader,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      'Accept': 'application/json'
     }
   };
+
+  console.log('Proxying to:', options.hostname + options.path);
+  console.log('Auth header present:', !!authHeader);
 
   const proxy = https.request(options, function(sm8Res) {
     let data = '';
     sm8Res.on('data', function(chunk) { data += chunk; });
     sm8Res.on('end', function() {
+      console.log('SM8 status:', sm8Res.statusCode);
+      console.log('SM8 raw response:', data.substring(0, 300));
       res.setHeader('Content-Type', 'application/json');
       try {
         const parsed = JSON.parse(data);
@@ -48,6 +52,7 @@ module.exports = function(req, res) {
   });
 
   proxy.on('error', function(e) {
+    console.log('Proxy error:', e.message);
     res.status(500).json({ error: e.message });
   });
 
