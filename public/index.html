@@ -234,7 +234,7 @@ var apiKey      = '';
 var apiPass     = '';
 var assets      = [];
 var assetTypes  = {};
-var assetFields = {}; // keyed by asset uuid → { fieldName: value }
+var assetFields = {};
 var fieldMappings = {};
 
 function authHeader() {
@@ -257,7 +257,6 @@ function sm8Get(endpoint) {
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  // Handle ServiceM8 date formats: "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS"
   var clean = String(dateStr).trim().substring(0, 10);
   var due = new Date(clean + 'T00:00:00');
   if (isNaN(due.getTime())) return null;
@@ -315,12 +314,12 @@ function toast(msg, isError) {
 }
 
 function saveLocal() {
-  localStorage.setItem('sm8_key',          apiKey);
-  localStorage.setItem('sm8_pass',         apiPass);
-  localStorage.setItem('sm8_assets',       JSON.stringify(assets));
-  localStorage.setItem('sm8_types',        JSON.stringify(assetTypes));
-  localStorage.setItem('sm8_fields',       JSON.stringify(assetFields));
-  localStorage.setItem('sm8_mappings',     JSON.stringify(fieldMappings));
+  localStorage.setItem('sm8_key',      apiKey);
+  localStorage.setItem('sm8_pass',     apiPass);
+  localStorage.setItem('sm8_assets',   JSON.stringify(assets));
+  localStorage.setItem('sm8_types',    JSON.stringify(assetTypes));
+  localStorage.setItem('sm8_fields',   JSON.stringify(assetFields));
+  localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
 }
 
 function loadLocal() {
@@ -392,7 +391,6 @@ function fetchAll() {
     return sm8Get('/asset');
   }).then(function(raw) {
     assets = raw.filter(function(a) { return String(a.active) === '1'; });
-    // Auto-guess field mappings
     Object.keys(assetTypes).forEach(function(typeUuid) {
       if (!fieldMappings[typeUuid]) {
         var guess = assetTypes[typeUuid].fields.find(function(f) {
@@ -401,21 +399,18 @@ function fetchAll() {
         if (guess) { fieldMappings[typeUuid] = guess.name; }
       }
     });
-    // Fetch all asset field values in one call
-    return sm8Get('/assetfield');
+    return sm8Get('/assetfieldvalue');
   }).then(function(fieldValues) {
-    // Build a lookup: assetFields[asset_uuid][field_name] = value
     assetFields = {};
     fieldValues.forEach(function(fv) {
       var aUuid = fv.asset_uuid;
       if (!aUuid) return;
       if (!assetFields[aUuid]) { assetFields[aUuid] = {}; }
-      // ServiceM8 field value records have: name or field_name, and value or field_value
       var name  = fv.name || fv.field_name || '';
       var value = fv.value !== undefined ? fv.value : (fv.field_value !== undefined ? fv.field_value : '');
       if (name) { assetFields[aUuid][name] = value; }
     });
-    console.log('Asset fields loaded:', Object.keys(assetFields).length, 'assets with field data');
+    console.log('Asset field values loaded:', Object.keys(assetFields).length, 'assets with field data');
   });
 }
 
@@ -474,22 +469,18 @@ function enrichedAssets() {
     var dueDate      = null;
 
     if (dueDateField) {
-      // 1. Check our separately-fetched assetFields lookup
       if (assetFields[a.uuid] && assetFields[a.uuid][dueDateField] !== undefined) {
         dueDate = assetFields[a.uuid][dueDateField] || null;
       }
-      // 2. Fall back to inline custom_fields array
       if (!dueDate && Array.isArray(a.custom_fields)) {
         var cf = a.custom_fields.find(function(f) {
           return f.name === dueDateField || f.field_name === dueDateField;
         });
         dueDate = (cf && (cf.value || cf.field_value)) || null;
       }
-      // 3. Fall back to inline custom_fields object
       if (!dueDate && a.custom_fields && typeof a.custom_fields === 'object') {
         dueDate = a.custom_fields[dueDateField] || null;
       }
-      // 4. Fall back to top-level asset property
       if (!dueDate && a[dueDateField]) { dueDate = a[dueDateField]; }
     }
 
@@ -622,9 +613,8 @@ function openModal(uuid) {
   var a   = null;
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) { return; }
-  var color  = statusColor(a.status);
-  var cfRows = '';
-  // Show fields from our assetFields lookup
+  var color    = statusColor(a.status);
+  var cfRows   = '';
   var fieldData = assetFields[a.uuid] || {};
   var fieldKeys = Object.keys(fieldData);
   if (fieldKeys.length > 0) {
