@@ -95,7 +95,7 @@
     tbody tr.client-first-row td { padding-top: 20px; }
     td { padding: 12px 14px; font-size: 0.88rem; }
     .td-name { font-weight: 600; }
-    .td-client { color: var(--accent); font-size: 0.82rem; font-weight: 600; }
+    .td-client { color: var(--accent); font-size: 0.82rem; font-weight: 500; }
     .client-group-header { background: var(--surface); }
     .client-group-header td { padding: 10px 14px 6px; font-size: 0.78rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
@@ -161,7 +161,8 @@
       </div>
       <div class="input-group">
         <label>Password</label>
-        <input type="password" id="auth-pass" placeholder="Your ServiceM8 password" autocomplete="current-password"/>
+        <input type="password" id="auth
+-pass" placeholder="Your ServiceM8 password" autocomplete="current-password"/>
       </div>
       <div class="error-msg" id="auth-error"></div>
       <hr class="divider"/>
@@ -182,6 +183,7 @@
     <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
     <select id="filter-status" onchange="renderAssets()">
       <option value="">All Statuses</option>
+      <option value="elapsed">Elapsed (&gt;100d overdue)</option>
       <option value="overdue">Overdue</option>
       <option value="due-soon">Due Soon</option>
       <option value="ok">OK</option>
@@ -193,6 +195,10 @@
     </div>
   </div>
   <div class="kanban active" id="kanban-view">
+    <div class="kanban-col">
+      <div class="kanban-col-header"><span class="col-dot" style="background:#7c3aed"></span>Elapsed<span class="col-count" id="count-elapsed">0</span></div>
+      <div class="kanban-cards" id="col-elapsed"></div>
+    </div>
     <div class="kanban-col">
       <div class="kanban-col-header"><span class="col-dot" style="background:var(--red)"></span>Overdue<span class="col-count" id="count-overdue">0</span></div>
       <div class="kanban-cards" id="col-overdue"></div>
@@ -214,12 +220,12 @@
     <table>
       <thead>
         <tr>
-          <th>Client</th>
           <th>Asset Name</th>
           <th>Type</th>
           <th>Due Date</th>
           <th>Days</th>
           <th>Status</th>
+          <th>Elapsed</th>
         </tr>
       </thead>
       <tbody id="list-body"></tbody>
@@ -252,6 +258,8 @@ var assets        = [];
 var assetTypes    = {};
 var fieldMappings = {};
 var clientMap     = {};
+
+var ELAPSED_THRESHOLD = 100; // days overdue to be considered "elapsed"
 
 function authHeader() {
   return 'Basic ' + btoa(unescape(encodeURIComponent(apiKey + ':' + apiPass)));
@@ -295,20 +303,22 @@ function daysUntil(dateStr) {
 }
 
 function statusOf(days) {
-  if (days === null) return 'no-date';
-  if (days < 0)      return 'overdue';
-  if (days <= 30)    return 'due-soon';
+  if (days === null)                    return 'no-date';
+  if (days < -ELAPSED_THRESHOLD)        return 'elapsed';
+  if (days < 0)                         return 'overdue';
+  if (days <= 30)                       return 'due-soon';
   return 'ok';
 }
 
 function statusColor(status) {
-  return { 'overdue':'red', 'due-soon':'amber', 'ok':'green' }[status] || 'grey';
+  return { 'elapsed':'purple', 'overdue':'red', 'due-soon':'amber', 'ok':'green' }[status] || 'grey';
 }
 
-function statusLabel(days) {
-  if (days === null) return 'No date';
-  if (days < 0)      return Math.abs(days) + 'd overdue';
-  if (days === 0)    return 'Due today';
+function statusLabel(days, status) {
+  if (days === null)   return 'No date';
+  if (status === 'elapsed') return Math.abs(days) + 'd elapsed';
+  if (days < 0)        return Math.abs(days) + 'd overdue';
+  if (days === 0)      return 'Due today';
   return days + 'd left';
 }
 
@@ -482,17 +492,14 @@ function enrichedAssets() {
   });
 }
 
-// Sort: by client name A-Z, then within each client by due date ascending
-// Assets with no date go to the bottom of each client group
 function sortedAssets(data) {
   return data.slice().sort(function(a, b) {
     var ca = a.clientName.toLowerCase();
     var cb = b.clientName.toLowerCase();
     if (ca < cb) return -1;
     if (ca > cb) return  1;
-    // same client — sort by days ascending, no-date last
-    var da = a.days === null ?  999999 : a.days;
-    var db = b.days === null ?  999999 : b.days;
+    var da = a.days === null ? 999999 : a.days;
+    var db = b.days === null ? 999999 : b.days;
     return da - db;
   });
 }
@@ -551,21 +558,24 @@ function filteredAssets() {
 
 function renderStats() {
   var all = enrichedAssets();
+  var el  = all.filter(function(a) { return a.status === 'elapsed';  }).length;
   var ov  = all.filter(function(a) { return a.status === 'overdue';  }).length;
   var so  = all.filter(function(a) { return a.status === 'due-soon'; }).length;
   var ok  = all.filter(function(a) { return a.status === 'ok';       }).length;
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
-    '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">' + all.length + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'        + ov  + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'     + so  + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'           + ok  + '</span></div>' +
-    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + nd + '</span></div>';
+    '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">'                          + all.length + '</span></div>' +
+    '<div class="stat-card" style="--val:#7c3aed"><span class="stat-label">Elapsed</span><span class="stat-value" style="color:#7c3aed">' + el  + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                + ov  + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'                             + so  + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                   + ok  + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'         + nd  + '</span></div>';
 }
 
 function renderSummaryBar() {
   var all = enrichedAssets(); var total = all.length;
   if (!total) { document.getElementById('summary-chart').innerHTML = ''; return; }
+  var el = all.filter(function(a){return a.status==='elapsed';}).length;
   var ov = all.filter(function(a){return a.status==='overdue';}).length;
   var so = all.filter(function(a){return a.status==='due-soon';}).length;
   var ok = all.filter(function(a){return a.status==='ok';}).length;
@@ -576,8 +586,12 @@ function renderSummaryBar() {
   }
   document.getElementById('summary-chart').innerHTML =
     '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview</div>' +
-    '<div class="summary-bar">' + seg(ov,'#ef4444','Overdue')+seg(so,'#f59e0b','Due Soon')+seg(ok,'#22c55e','OK')+seg(nd,'#4b5563','No Date') + '</div>' +
+    '<div class="summary-bar">' +
+      seg(el,'#7c3aed','Elapsed') + seg(ov,'#ef4444','Overdue') +
+      seg(so,'#f59e0b','Due Soon') + seg(ok,'#22c55e','OK') + seg(nd,'#4b5563','No Date') +
+    '</div>' +
     '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem">' +
+      (el?'<span style="color:#7c3aed">&#9632; Elapsed</span>':'') +
       (ov?'<span style="color:#ef4444">&#9632; Overdue</span>':'') +
       (so?'<span style="color:#f59e0b">&#9632; Due Soon</span>':'') +
       (ok?'<span style="color:#22c55e">&#9632; OK</span>':'') +
@@ -589,58 +603,65 @@ function renderAssets() {
   var data   = filteredAssets();
   var sorted = sortedAssets(data);
 
-  // Kanban — within each column sort by date asc then client A-Z
-  var cols = { 'overdue':[], 'due-soon':[], 'ok':[], 'no-date':[] };
+  var cols = { 'elapsed':[], 'overdue':[], 'due-soon':[], 'ok':[], 'no-date':[] };
   sorted.forEach(function(a) { cols[a.status].push(a); });
-  var colMap = { 'overdue':'overdue', 'due-soon':'soon', 'ok':'ok', 'no-date':'nodate' };
+  var colMap = { 'elapsed':'elapsed', 'overdue':'overdue', 'due-soon':'soon', 'ok':'ok', 'no-date':'nodate' };
   Object.keys(colMap).forEach(function(status) {
     var id = colMap[status];
     document.getElementById('count-' + id).textContent = cols[status].length;
-    document.getElementById('col-' + id).innerHTML = cols[status].length === 0
+    document.getElementById('col-'   + id).innerHTML   = cols[status].length === 0
       ? '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
       : cols[status].map(assetCard).join('');
   });
 
-  // List — grouped by client, each group sorted by due date asc
   var tbody = document.getElementById('list-body');
   if (sorted.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
     return;
   }
 
-  var html        = '';
-  var lastClient  = null;
+  var html       = '';
+  var lastClient = null;
   sorted.forEach(function(a) {
-    var color = statusColor(a.status);
-    // Insert client group header row when client changes
+    var color   = statusColor(a.status);
+    var cssColor = color === 'purple' ? '#7c3aed' : 'var(--' + color + ')';
+
     if (a.clientName !== lastClient) {
       html += '<tr class="client-group-header"><td colspan="6">📍 ' + esc(a.clientName) + '</td></tr>';
       lastClient = a.clientName;
     }
+
+    // Elapsed column — only populated if status is elapsed
+    var elapsedCell = a.status === 'elapsed'
+      ? '<span style="color:#7c3aed;font-weight:700;font-size:0.82rem">⚠ ' + Math.abs(a.days) + 'd</span>'
+      : '<span style="color:var(--muted)">—</span>';
+
     html += '<tr onclick="openModal(\'' + a.uuid + '\')">' +
       '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
       '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
       '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
-      '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
-      '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
+      '<td style="color:' + cssColor + '">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
+      '<td><span class="due-badge ' + (color === 'purple' ? '' : color) + '" style="' + (color === 'purple' ? 'background:rgba(124,58,237,0.15);color:#7c3aed' : '') + '">' + statusLabel(a.days, a.status) + '</span></td>' +
+      '<td>' + elapsedCell + '</td>' +
       '</tr>';
   });
   tbody.innerHTML = html;
 }
 
 function assetCard(a) {
-  var color = statusColor(a.status);
-  var pct   = progressPct(a.days);
-  var bar   = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
-  return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
-    '<div class="asset-card-name">'   + esc(a.name || 'Unnamed Asset') + '</div>' +
+  var color    = statusColor(a.status);
+  var cssColor = color === 'purple' ? '#7c3aed' : 'var(--' + color + ')';
+  var pct      = progressPct(a.days);
+  return '<div class="asset-card ' + (color === 'purple' ? 'red' : color) + '" style="' + (color === 'purple' ? 'border-left-color:#7c3aed' : '') + '" onclick="openModal(\'' + a.uuid + '\')">' +
+    '<div class="asset-card-name">'    + esc(a.name || 'Unnamed Asset') + '</div>' +
     '<div class="asset-card-client">📍 ' + esc(a.clientName) + '</div>' +
-    '<div class="asset-card-type">'   + esc(a.typeName) + '</div>' +
+    '<div class="asset-card-type">'    + esc(a.typeName) + '</div>' +
+    (a.status === 'elapsed' ? '<div style="padding-left:8px;margin-bottom:6px;font-size:0.75rem;font-weight:700;color:#7c3aed">⚠ Elapsed: ' + Math.abs(a.days) + ' days</div>' : '') +
     '<div class="asset-card-footer">' +
-      '<span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span>' +
+      '<span class="due-badge" style="background:rgba(124,58,237,0.15);color:' + cssColor + '">' + statusLabel(a.days, a.status) + '</span>' +
       '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
     '</div>' +
-    '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + bar + '"></div></div></div>' +
+    '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + cssColor + '"></div></div></div>' +
     '</div>';
 }
 
@@ -649,8 +670,9 @@ function openModal(uuid) {
   var a = null;
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) return;
-  var color = statusColor(a.status);
-  var cfRows = '';
+  var color    = statusColor(a.status);
+  var cssColor = color === 'purple' ? '#7c3aed' : 'var(--' + color + ')';
+  var cfRows   = '';
   if (Array.isArray(a.field_data) && a.field_data.length > 0) {
     a.field_data.slice().sort(function(x,y){ return (x.sortOrder||0)-(y.sortOrder||0); }).forEach(function(f) {
       var val = f.fieldValue || '—';
@@ -660,16 +682,22 @@ function openModal(uuid) {
   } else {
     cfRows = '<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
   }
+
+  var elapsedBanner = a.status === 'elapsed'
+    ? '<div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#7c3aed;font-weight:600">⚠ Elapsed — ' + Math.abs(a.days) + ' days since service was due</div>'
+    : '';
+
   document.getElementById('modal-body').innerHTML =
     '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
     '<div class="modal-type">' +
       '<span class="tag">' + esc(a.typeName) + '</span>' +
       '<span class="tag tag-client">📍 ' + esc(a.clientName) + '</span>' +
     '</div>' +
+    elapsedBanner +
     '<div class="big-due">' +
-      '<div class="days-num" style="color:var(--' + color + ')">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
-      '<div class="days-label">' + (a.days === null ? 'No due date set' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') + '</div>' +
-      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge ' + color + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
+      '<div class="days-num" style="color:' + cssColor + '">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
+      '<div class="days-label">' + (a.days === null ? 'No due date set' : a.status === 'elapsed' ? 'days elapsed' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') + '</div>' +
+      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge" style="background:rgba(124,58,237,0.15);color:' + cssColor + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
     '</div>' +
     '<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">Asset Fields</h3>' +
     cfRows +
@@ -692,7 +720,7 @@ function renderSettings() {
     return;
   }
   grid.innerHTML = keys.map(function(uuid) {
-    var t = assetTypes[uuid];
+    var t    = assetTypes[uuid];
     var opts = t.fields.map(function(f) {
       return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' +
         esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
