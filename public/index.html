@@ -14,6 +14,7 @@
       --green: #22c55e;
       --amber: #f59e0b;
       --red: #ef4444;
+      --purple: #7c3aed;
       --text: #e2e8f0;
       --muted: #8892b0;
       --radius: 14px;
@@ -43,14 +44,15 @@
     .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
     .hint { font-size: 0.78rem; color: var(--muted); margin-top: 12px; }
     .error-msg { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; color: var(--red); margin-top: 12px; text-align: left; display: none; }
-    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 28px; }
     .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 6px; }
     .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .stat-value { font-size: 2rem; font-weight: 700; }
-    .stat-card.green .stat-value { color: var(--green); }
-    .stat-card.amber .stat-value { color: var(--amber); }
-    .stat-card.red .stat-value { color: var(--red); }
-    .stat-card.blue .stat-value { color: var(--accent); }
+    .stat-card.green  .stat-value { color: var(--green); }
+    .stat-card.amber  .stat-value { color: var(--amber); }
+    .stat-card.red    .stat-value { color: var(--red); }
+    .stat-card.blue   .stat-value { color: var(--accent); }
+    .stat-card.purple .stat-value { color: var(--purple); }
     .summary-bar { display: flex; height: 28px; border-radius: 8px; overflow: hidden; margin-bottom: 28px; gap: 2px; }
     .summary-bar-seg { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #fff; transition: flex 0.4s; min-width: 0; overflow: hidden; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
@@ -59,7 +61,7 @@
     .view-toggle { display: flex; gap: 4px; margin-left: auto; }
     .view-toggle button { padding: 7px 12px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .view-toggle button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .kanban { display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .kanban { display: none; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
     .kanban.active { display: grid; }
     .kanban-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
     .kanban-col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-weight: 700; font-size: 0.9rem; }
@@ -68,22 +70,25 @@
     .kanban-cards { display: flex; flex-direction: column; gap: 10px; min-height: 60px; }
     .asset-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: border-color 0.2s; position: relative; overflow: hidden; }
     .asset-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .asset-card.green::before { background: var(--green); }
-    .asset-card.amber::before { background: var(--amber); }
-    .asset-card.red::before { background: var(--red); }
-    .asset-card.grey::before { background: var(--muted); }
+    .asset-card.green::before  { background: var(--green); }
+    .asset-card.amber::before  { background: var(--amber); }
+    .asset-card.red::before    { background: var(--red); }
+    .asset-card.purple::before { background: var(--purple); }
+    .asset-card.grey::before   { background: var(--muted); }
     .asset-card:hover { border-color: var(--accent); }
-    .asset-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; padding-left: 8px; }
+    .asset-card-name   { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; padding-left: 8px; }
     .asset-card-client { font-size: 0.78rem; color: var(--accent); padding-left: 8px; margin-bottom: 2px; font-weight: 500; }
-    .asset-card-type { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
+    .asset-card-type   { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
     .asset-card-footer { display: flex; align-items: center; justify-content: space-between; padding-left: 8px; }
+    .elapsed-tag { display: block; padding-left: 8px; margin-bottom: 6px; font-size: 0.75rem; font-weight: 700; color: var(--purple); }
     .due-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
-    .due-badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
-    .due-badge.amber { background: rgba(245,158,11,0.15); color: var(--amber); }
-    .due-badge.red { background: rgba(239,68,68,0.15); color: var(--red); }
-    .due-badge.grey { background: rgba(136,146,176,0.15); color: var(--muted); }
+    .due-badge.green  { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .due-badge.amber  { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .due-badge.red    { background: rgba(239,68,68,0.15);  color: var(--red); }
+    .due-badge.purple { background: rgba(124,58,237,0.15); color: var(--purple); }
+    .due-badge.grey   { background: rgba(136,146,176,0.15);color: var(--muted); }
     .progress-wrap { margin: 8px 8px 0; }
-    .progress-bar-bg { background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
+    .progress-bar-bg   { background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; border-radius: 4px; }
     .list-view { display: none; }
     .list-view.active { display: block; overflow-x: auto; }
@@ -92,25 +97,24 @@
     th { text-align: left; padding: 10px 14px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
     tbody tr:hover { background: var(--surface2); }
-    tbody tr.client-first-row td { padding-top: 20px; }
     td { padding: 12px 14px; font-size: 0.88rem; }
     .td-name { font-weight: 600; }
-    .td-client { color: var(--accent); font-size: 0.82rem; font-weight: 500; }
-    .client-group-header { background: var(--surface); }
+    .client-group-header { background: var(--surface); pointer-events: none; }
     .client-group-header td { padding: 10px 14px 6px; font-size: 0.78rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; position: relative; }
     .modal h2 { margin-bottom: 6px; }
-    .modal-type { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .modal-type { font-size: 0.85rem; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 10px; font-size: 1rem; }
     .field-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .field-row:last-child { border-bottom: none; }
     .field-label { font-size: 0.8rem; color: var(--muted); }
     .field-value { font-size: 0.88rem; font-weight: 500; text-align: right; max-width: 60%; }
     .big-due { text-align: center; padding: 20px 0; }
-    .big-due .days-num { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+    .big-due .days-num   { font-size: 3.5rem; font-weight: 800; line-height: 1; }
     .big-due .days-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+    .elapsed-banner { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; color: var(--purple); font-weight: 600; }
     .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
     .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
     .settings-card h3 { margin-bottom: 16px; font-size: 1rem; }
@@ -161,8 +165,7 @@
       </div>
       <div class="input-group">
         <label>Password</label>
-        <input type="password" id="auth
--pass" placeholder="Your ServiceM8 password" autocomplete="current-password"/>
+        <input type="password" id="auth-pass" placeholder="Your ServiceM8 password" autocomplete="current-password"/>
       </div>
       <div class="error-msg" id="auth-error"></div>
       <hr class="divider"/>
@@ -194,9 +197,10 @@
       <button id="btn-list" onclick="setView('list')">☰ List</button>
     </div>
   </div>
+
   <div class="kanban active" id="kanban-view">
     <div class="kanban-col">
-      <div class="kanban-col-header"><span class="col-dot" style="background:#7c3aed"></span>Elapsed<span class="col-count" id="count-elapsed">0</span></div>
+      <div class="kanban-col-header"><span class="col-dot" style="background:var(--purple)"></span>Elapsed<span class="col-count" id="count-elapsed">0</span></div>
       <div class="kanban-cards" id="col-elapsed"></div>
     </div>
     <div class="kanban-col">
@@ -216,6 +220,7 @@
       <div class="kanban-cards" id="col-nodate"></div>
     </div>
   </div>
+
   <div class="list-view" id="list-view">
     <table>
       <thead>
@@ -252,14 +257,13 @@
 <div id="toast"></div>
 
 <script>
-var apiKey        = '';
-var apiPass       = '';
-var assets        = [];
-var assetTypes    = {};
-var fieldMappings = {};
-var clientMap     = {};
-
-var ELAPSED_THRESHOLD = 100; // days overdue to be considered "elapsed"
+var apiKey           = '';
+var apiPass          = '';
+var assets           = [];
+var assetTypes       = {};
+var fieldMappings    = {};
+var clientMap        = {};
+var ELAPSED_THRESHOLD = 100;
 
 function authHeader() {
   return 'Basic ' + btoa(unescape(encodeURIComponent(apiKey + ':' + apiPass)));
@@ -303,10 +307,10 @@ function daysUntil(dateStr) {
 }
 
 function statusOf(days) {
-  if (days === null)                    return 'no-date';
-  if (days < -ELAPSED_THRESHOLD)        return 'elapsed';
-  if (days < 0)                         return 'overdue';
-  if (days <= 30)                       return 'due-soon';
+  if (days === null)              return 'no-date';
+  if (days < -ELAPSED_THRESHOLD) return 'elapsed';
+  if (days < 0)                  return 'overdue';
+  if (days <= 30)                return 'due-soon';
   return 'ok';
 }
 
@@ -315,10 +319,10 @@ function statusColor(status) {
 }
 
 function statusLabel(days, status) {
-  if (days === null)   return 'No date';
+  if (days === null)        return 'No date';
   if (status === 'elapsed') return Math.abs(days) + 'd elapsed';
-  if (days < 0)        return Math.abs(days) + 'd overdue';
-  if (days === 0)      return 'Due today';
+  if (days < 0)             return Math.abs(days) + 'd overdue';
+  if (days === 0)           return 'Due today';
   return days + 'd left';
 }
 
@@ -564,12 +568,12 @@ function renderStats() {
   var ok  = all.filter(function(a) { return a.status === 'ok';       }).length;
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
-    '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">'                          + all.length + '</span></div>' +
-    '<div class="stat-card" style="--val:#7c3aed"><span class="stat-label">Elapsed</span><span class="stat-value" style="color:#7c3aed">' + el  + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                + ov  + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'                             + so  + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                   + ok  + '</span></div>' +
-    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'         + nd  + '</span></div>';
+    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                                  + all.length + '</span></div>' +
+    '<div class="stat-card purple"><span class="stat-label">Elapsed</span><span class="stat-value">'                              + el  + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                 + ov  + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'                              + so  + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                    + ok  + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'          + nd  + '</span></div>';
 }
 
 function renderSummaryBar() {
@@ -620,28 +624,23 @@ function renderAssets() {
     return;
   }
 
-  var html       = '';
-  var lastClient = null;
+  var html = ''; var lastClient = null;
   sorted.forEach(function(a) {
-    var color   = statusColor(a.status);
-    var cssColor = color === 'purple' ? '#7c3aed' : 'var(--' + color + ')';
-
+    var color = statusColor(a.status);
+    var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
     if (a.clientName !== lastClient) {
       html += '<tr class="client-group-header"><td colspan="6">📍 ' + esc(a.clientName) + '</td></tr>';
       lastClient = a.clientName;
     }
-
-    // Elapsed column — only populated if status is elapsed
     var elapsedCell = a.status === 'elapsed'
-      ? '<span style="color:#7c3aed;font-weight:700;font-size:0.82rem">⚠ ' + Math.abs(a.days) + 'd</span>'
+      ? '<span style="color:var(--purple);font-weight:700;font-size:0.82rem">⚠ ' + Math.abs(a.days) + 'd</span>'
       : '<span style="color:var(--muted)">—</span>';
-
     html += '<tr onclick="openModal(\'' + a.uuid + '\')">' +
       '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
       '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
       '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
       '<td style="color:' + cssColor + '">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
-      '<td><span class="due-badge ' + (color === 'purple' ? '' : color) + '" style="' + (color === 'purple' ? 'background:rgba(124,58,237,0.15);color:#7c3aed' : '') + '">' + statusLabel(a.days, a.status) + '</span></td>' +
+      '<td><span class="due-badge ' + color + '">' + statusLabel(a.days, a.status) + '</span></td>' +
       '<td>' + elapsedCell + '</td>' +
       '</tr>';
   });
@@ -650,15 +649,15 @@ function renderAssets() {
 
 function assetCard(a) {
   var color    = statusColor(a.status);
-  var cssColor = color === 'purple' ? '#7c3aed' : 'var(--' + color + ')';
+  var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
   var pct      = progressPct(a.days);
-  return '<div class="asset-card ' + (color === 'purple' ? 'red' : color) + '" style="' + (color === 'purple' ? 'border-left-color:#7c3aed' : '') + '" onclick="openModal(\'' + a.uuid + '\')">' +
+  return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
     '<div class="asset-card-name">'    + esc(a.name || 'Unnamed Asset') + '</div>' +
     '<div class="asset-card-client">📍 ' + esc(a.clientName) + '</div>' +
     '<div class="asset-card-type">'    + esc(a.typeName) + '</div>' +
-    (a.status === 'elapsed' ? '<div style="padding-left:8px;margin-bottom:6px;font-size:0.75rem;font-weight:700;color:#7c3aed">⚠ Elapsed: ' + Math.abs(a.days) + ' days</div>' : '') +
+    (a.status === 'elapsed' ? '<span class="elapsed-tag">⚠ Elapsed: ' + Math.abs(a.days) + ' days</span>' : '') +
     '<div class="asset-card-footer">' +
-      '<span class="due-badge" style="background:rgba(124,58,237,0.15);color:' + cssColor + '">' + statusLabel(a.days, a.status) + '</span>' +
+      '<span class="due-badge ' + color + '">' + statusLabel(a.days, a.status) + '</span>' +
       '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
     '</div>' +
     '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + cssColor + '"></div></div></div>' +
@@ -666,12 +665,11 @@ function assetCard(a) {
 }
 
 function openModal(uuid) {
-  var all = enrichedAssets();
-  var a = null;
+  var all = enrichedAssets(); var a = null;
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) return;
   var color    = statusColor(a.status);
-  var cssColor = color === 'purple' ? '#7c3aed' : 'var(--' + color + ')';
+  var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
   var cfRows   = '';
   if (Array.isArray(a.field_data) && a.field_data.length > 0) {
     a.field_data.slice().sort(function(x,y){ return (x.sortOrder||0)-(y.sortOrder||0); }).forEach(function(f) {
@@ -682,10 +680,13 @@ function openModal(uuid) {
   } else {
     cfRows = '<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
   }
-
   var elapsedBanner = a.status === 'elapsed'
-    ? '<div style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#7c3aed;font-weight:600">⚠ Elapsed — ' + Math.abs(a.days) + ' days since service was due</div>'
+    ? '<div class="elapsed-banner">⚠ Elapsed — ' + Math.abs(a.days) + ' days since service was due</div>'
     : '';
+  var daysLabel = a.days === null ? 'No due date set'
+    : a.status === 'elapsed' ? 'days elapsed'
+    : a.days < 0 ? 'days overdue'
+    : a.days === 0 ? 'Due today' : 'days remaining';
 
   document.getElementById('modal-body').innerHTML =
     '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
@@ -696,8 +697,8 @@ function openModal(uuid) {
     elapsedBanner +
     '<div class="big-due">' +
       '<div class="days-num" style="color:' + cssColor + '">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
-      '<div class="days-label">' + (a.days === null ? 'No due date set' : a.status === 'elapsed' ? 'days elapsed' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') + '</div>' +
-      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge" style="background:rgba(124,58,237,0.15);color:' + cssColor + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
+      '<div class="days-label">' + daysLabel + '</div>' +
+      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge ' + color + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
     '</div>' +
     '<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">Asset Fields</h3>' +
     cfRows +
