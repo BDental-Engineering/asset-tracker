@@ -117,10 +117,14 @@
     .elapsed-banner { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; color: var(--purple); font-weight: 600; }
     .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
     .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
-    .settings-card h3 { margin-bottom: 16px; font-size: 1rem; }
+    .settings-card h3 { margin-bottom: 6px; font-size: 1rem; }
+    .settings-card .card-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; }
     .mapping-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .mapping-row label { font-size: 0.85rem; min-width: 140px; color: var(--muted); }
-    .mapping-row select { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.85rem; outline: none; }
+    .mapping-row select, .mapping-row input[type=number] { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.85rem; outline: none; }
+    .mapping-row input[type=number]:focus { border-color: var(--accent); }
+    .threshold-preview { font-size: 0.8rem; color: var(--purple); margin-top: 6px; font-weight: 600; }
+    .due-soon-preview  { font-size: 0.8rem; color: var(--amber); margin-top: 6px; font-weight: 600; }
     #toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; font-size: 0.88rem; z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 320px; }
     #toast.show { transform: translateY(0); opacity: 1; }
     .nav-tabs { display: flex; gap: 4px; }
@@ -186,7 +190,7 @@
     <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
     <select id="filter-status" onchange="renderAssets()">
       <option value="">All Statuses</option>
-      <option value="elapsed">Elapsed (&gt;100d overdue)</option>
+      <option value="elapsed">Elapsed</option>
       <option value="overdue">Overdue</option>
       <option value="due-soon">Due Soon</option>
       <option value="ok">OK</option>
@@ -200,7 +204,7 @@
 
   <div class="kanban active" id="kanban-view">
     <div class="kanban-col">
-      <div class="kanban-col-header"><span class="col-dot" style="background:var(--purple)"></span>Elapsed<span class="col-count" id="count-elapsed">0</span></div>
+      <div class="kanban-col-header"><span class="col-dot" style="background:var(--purple)"></span><span id="kanban-elapsed-label">Elapsed</span><span class="col-count" id="count-elapsed">0</span></div>
       <div class="kanban-cards" id="col-elapsed"></div>
     </div>
     <div class="kanban-col">
@@ -208,7 +212,7 @@
       <div class="kanban-cards" id="col-overdue"></div>
     </div>
     <div class="kanban-col">
-      <div class="kanban-col-header"><span class="col-dot" style="background:var(--amber)"></span>Due Soon<span class="col-count" id="count-soon">0</span></div>
+      <div class="kanban-col-header"><span class="col-dot" style="background:var(--amber)"></span><span id="kanban-soon-label">Due Soon</span><span class="col-count" id="count-soon">0</span></div>
       <div class="kanban-cards" id="col-soon"></div>
     </div>
     <div class="kanban-col">
@@ -240,8 +244,33 @@
 
 <div id="screen-settings" class="screen">
   <h2 style="margin-bottom:8px">Settings</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Map each Asset Type's due-date field.</p>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Configure thresholds and map due-date fields per asset type.</p>
+
+  <!-- Threshold settings -->
+  <div class="settings-grid" style="margin-bottom:24px">
+    <div class="settings-card">
+      <h3>🟣 Elapsed Threshold</h3>
+      <p class="card-desc">Assets overdue by more than this many days are marked <strong style="color:var(--purple)">Elapsed</strong>.</p>
+      <div class="mapping-row">
+        <label>Days overdue</label>
+        <input type="number" id="input-elapsed-threshold" min="1" max="9999" value="100" oninput="updateThresholdPreviews()"/>
+      </div>
+      <div class="threshold-preview" id="preview-elapsed">⚠ Elapsed if overdue by more than 100 days</div>
+    </div>
+    <div class="settings-card">
+      <h3>🟡 Due Soon Threshold</h3>
+      <p class="card-desc">Assets due within this many days are marked <strong style="color:var(--amber)">Due Soon</strong>.</p>
+      <div class="mapping-row">
+        <label>Days ahead</label>
+        <input type="number" id="input-soon-threshold" min="1" max="9999" value="30" oninput="updateThresholdPreviews()"/>
+      </div>
+      <div class="due-soon-preview" id="preview-soon">⚡ Due Soon if within 30 days</div>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:16px;font-size:1rem;color:var(--text)">Due Date Field Mapping</h3>
   <div class="settings-grid" id="settings-grid"></div>
+
   <div style="margin-top:24px">
     <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
   </div>
@@ -257,13 +286,14 @@
 <div id="toast"></div>
 
 <script>
-var apiKey           = '';
-var apiPass          = '';
-var assets           = [];
-var assetTypes       = {};
-var fieldMappings    = {};
-var clientMap        = {};
+var apiKey            = '';
+var apiPass           = '';
+var assets            = [];
+var assetTypes        = {};
+var fieldMappings     = {};
+var clientMap         = {};
 var ELAPSED_THRESHOLD = 100;
+var SOON_THRESHOLD    = 30;
 
 function authHeader() {
   return 'Basic ' + btoa(unescape(encodeURIComponent(apiKey + ':' + apiPass)));
@@ -310,7 +340,7 @@ function statusOf(days) {
   if (days === null)              return 'no-date';
   if (days < -ELAPSED_THRESHOLD) return 'elapsed';
   if (days < 0)                  return 'overdue';
-  if (days <= 30)                return 'due-soon';
+  if (days <= SOON_THRESHOLD)    return 'due-soon';
   return 'ok';
 }
 
@@ -353,21 +383,25 @@ function toast(msg, isError) {
 }
 
 function saveLocal() {
-  localStorage.setItem('sm8_key',      apiKey);
-  localStorage.setItem('sm8_pass',     apiPass);
-  localStorage.setItem('sm8_assets',   JSON.stringify(assets));
-  localStorage.setItem('sm8_types',    JSON.stringify(assetTypes));
-  localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
-  localStorage.setItem('sm8_clients',  JSON.stringify(clientMap));
+  localStorage.setItem('sm8_key',               apiKey);
+  localStorage.setItem('sm8_pass',              apiPass);
+  localStorage.setItem('sm8_assets',            JSON.stringify(assets));
+  localStorage.setItem('sm8_types',             JSON.stringify(assetTypes));
+  localStorage.setItem('sm8_mappings',          JSON.stringify(fieldMappings));
+  localStorage.setItem('sm8_clients',           JSON.stringify(clientMap));
+  localStorage.setItem('sm8_elapsed_threshold', String(ELAPSED_THRESHOLD));
+  localStorage.setItem('sm8_soon_threshold',    String(SOON_THRESHOLD));
 }
 
 function loadLocal() {
-  apiKey        = localStorage.getItem('sm8_key')      || '';
-  apiPass       = localStorage.getItem('sm8_pass')     || '';
-  assets        = JSON.parse(localStorage.getItem('sm8_assets')   || '[]');
-  assetTypes    = JSON.parse(localStorage.getItem('sm8_types')    || '{}');
-  fieldMappings = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
-  clientMap     = JSON.parse(localStorage.getItem('sm8_clients')  || '{}');
+  apiKey            = localStorage.getItem('sm8_key')               || '';
+  apiPass           = localStorage.getItem('sm8_pass')              || '';
+  assets            = JSON.parse(localStorage.getItem('sm8_assets')    || '[]');
+  assetTypes        = JSON.parse(localStorage.getItem('sm8_types')     || '{}');
+  fieldMappings     = JSON.parse(localStorage.getItem('sm8_mappings')  || '{}');
+  clientMap         = JSON.parse(localStorage.getItem('sm8_clients')   || '{}');
+  ELAPSED_THRESHOLD = parseInt(localStorage.getItem('sm8_elapsed_threshold') || '100', 10);
+  SOON_THRESHOLD    = parseInt(localStorage.getItem('sm8_soon_threshold')    || '30',  10);
 }
 
 function connect() {
@@ -399,6 +433,7 @@ function logout() {
   localStorage.clear();
   assets = []; assetTypes = {}; fieldMappings = {}; clientMap = {};
   apiKey = ''; apiPass = '';
+  ELAPSED_THRESHOLD = 100; SOON_THRESHOLD = 30;
   document.getElementById('nav-tabs').style.display    = 'none';
   document.getElementById('btn-sync').style.display    = 'none';
   document.getElementById('btn-logout').style.display  = 'none';
@@ -509,10 +544,16 @@ function sortedAssets(data) {
 }
 
 function renderAll() {
+  updateKanbanLabels();
   populateFilters();
   renderStats();
   renderSummaryBar();
   renderAssets();
+}
+
+function updateKanbanLabels() {
+  document.getElementById('kanban-elapsed-label').textContent = 'Elapsed (>' + ELAPSED_THRESHOLD + 'd)';
+  document.getElementById('kanban-soon-label').textContent    = 'Due Soon (≤' + SOON_THRESHOLD + 'd)';
 }
 
 function populateFilters() {
@@ -568,12 +609,12 @@ function renderStats() {
   var ok  = all.filter(function(a) { return a.status === 'ok';       }).length;
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
-    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                                  + all.length + '</span></div>' +
-    '<div class="stat-card purple"><span class="stat-label">Elapsed</span><span class="stat-value">'                              + el  + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                 + ov  + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'                              + so  + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                    + ok  + '</span></div>' +
-    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'          + nd  + '</span></div>';
+    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                         + all.length + '</span></div>' +
+    '<div class="stat-card purple"><span class="stat-label">Elapsed >&nbsp;' + ELAPSED_THRESHOLD + 'd</span><span class="stat-value">' + el + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                        + ov  + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon ≤&nbsp;' + SOON_THRESHOLD + 'd</span><span class="stat-value">' + so + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                           + ok  + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + nd  + '</span></div>';
 }
 
 function renderSummaryBar() {
@@ -626,7 +667,7 @@ function renderAssets() {
 
   var html = ''; var lastClient = null;
   sorted.forEach(function(a) {
-    var color = statusColor(a.status);
+    var color    = statusColor(a.status);
     var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
     if (a.clientName !== lastClient) {
       html += '<tr class="client-group-header"><td colspan="6">📍 ' + esc(a.clientName) + '</td></tr>';
@@ -713,7 +754,19 @@ function closeModalDirect() {
   document.getElementById('modal-overlay').classList.remove('open');
 }
 
+function updateThresholdPreviews() {
+  var el   = parseInt(document.getElementById('input-elapsed-threshold').value, 10) || 100;
+  var soon = parseInt(document.getElementById('input-soon-threshold').value, 10)    || 30;
+  document.getElementById('preview-elapsed').textContent = '⚠ Elapsed if overdue by more than ' + el   + ' days';
+  document.getElementById('preview-soon').textContent    = '⚡ Due Soon if within '               + soon + ' days';
+}
+
 function renderSettings() {
+  // Populate threshold inputs with current values
+  document.getElementById('input-elapsed-threshold').value = ELAPSED_THRESHOLD;
+  document.getElementById('input-soon-threshold').value    = SOON_THRESHOLD;
+  updateThresholdPreviews();
+
   var grid = document.getElementById('settings-grid');
   var keys = Object.keys(assetTypes);
   if (!keys.length) {
@@ -734,12 +787,22 @@ function renderSettings() {
 }
 
 function saveSettings() {
+  var elVal   = parseInt(document.getElementById('input-elapsed-threshold').value, 10);
+  var soonVal = parseInt(document.getElementById('input-soon-threshold').value, 10);
+  if (elVal   > 0) ELAPSED_THRESHOLD = elVal;
+  if (soonVal > 0) SOON_THRESHOLD    = soonVal;
+
   Object.keys(assetTypes).forEach(function(uuid) {
     var sel = document.getElementById('map-' + uuid);
     if (sel) fieldMappings[uuid] = sel.value;
   });
   saveLocal();
   toast('Settings saved!');
+  // Re-render dashboard with new thresholds immediately
+  updateKanbanLabels();
+  renderStats();
+  renderSummaryBar();
+  renderAssets();
 }
 
 function setView(v) {
