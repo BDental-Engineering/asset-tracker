@@ -73,8 +73,9 @@
     .asset-card.red::before { background: var(--red); }
     .asset-card.grey::before { background: var(--muted); }
     .asset-card:hover { border-color: var(--accent); }
-    .asset-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; padding-left: 8px; }
-    .asset-card-sub { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
+    .asset-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; padding-left: 8px; }
+    .asset-card-client { font-size: 0.78rem; color: var(--accent); padding-left: 8px; margin-bottom: 2px; font-weight: 500; }
+    .asset-card-type { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
     .asset-card-footer { display: flex; align-items: center; justify-content: space-between; padding-left: 8px; }
     .due-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
     .due-badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
@@ -85,19 +86,20 @@
     .progress-bar-bg { background: var(--border); border-radius: 4px; height: 5px; overflow: hidden; }
     .progress-bar-fill { height: 100%; border-radius: 4px; }
     .list-view { display: none; }
-    .list-view.active { display: block; }
+    .list-view.active { display: block; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
     thead tr { border-bottom: 2px solid var(--border); }
-    th { text-align: left; padding: 10px 14px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    th { text-align: left; padding: 10px 14px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
     tbody tr:hover { background: var(--surface2); }
     td { padding: 12px 14px; font-size: 0.88rem; }
     .td-name { font-weight: 600; }
+    .td-client { color: var(--accent); font-size: 0.82rem; font-weight: 500; }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; position: relative; }
     .modal h2 { margin-bottom: 6px; }
-    .modal-type { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+    .modal-type { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 10px; font-size: 1rem; }
     .field-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .field-row:last-child { border-bottom: none; }
@@ -119,8 +121,8 @@
     .nav-tab.active { background: var(--surface2); color: var(--text); }
     .loader { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; color: var(--muted); margin-right: 4px; }
-    .debug-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 0.78rem; color: var(--muted); font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
+    .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; color: var(--muted); }
+    .tag-client { background: rgba(79,110,247,0.12); border-color: rgba(79,110,247,0.3); color: var(--accent); }
   </style>
 </head>
 <body>
@@ -164,23 +166,17 @@
         Connect &amp; Load Assets
       </button>
     </form>
-    <p class="hint">Use your ServiceM8 login email and password. Credentials are stored only in your browser.</p>
+    <p class="hint">Credentials are stored only in your browser.</p>
   </div>
 </div>
 
 <div id="screen-dashboard" class="screen">
-  <div id="debug-panel" style="display:none;margin-bottom:24px">
-    <p style="font-size:0.8rem;color:var(--amber);margin-bottom:8px">⚠ Debug: First company record — paste this and share it</p>
-    <div class="debug-box" id="debug-company"></div>
-    <p style="font-size:0.8rem;color:var(--amber);margin-bottom:8px;margin-top:16px">⚠ Debug: First asset record (company_uuid shown)</p>
-    <div class="debug-box" id="debug-asset"></div>
-    <button class="btn-ghost btn-sm" onclick="document.getElementById('debug-panel').style.display='none'">Hide Debug</button>
-  </div>
   <div class="stats-bar" id="stats-bar"></div>
   <div id="summary-chart" style="margin-bottom:28px"></div>
   <div class="toolbar">
-    <input type="text" id="search-input" placeholder="🔍  Search assets…" oninput="renderAssets()"/>
+    <input type="text" id="search-input" placeholder="🔍  Search assets or clients…" oninput="renderAssets()"/>
     <select id="filter-type" onchange="renderAssets()"><option value="">All Types</option></select>
+    <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
     <select id="filter-status" onchange="renderAssets()">
       <option value="">All Statuses</option>
       <option value="overdue">Overdue</option>
@@ -213,7 +209,16 @@
   </div>
   <div class="list-view" id="list-view">
     <table>
-      <thead><tr><th>Asset Name</th><th>Type</th><th>Client / Site</th><th>Due Date</th><th>Days</th><th>Status</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Asset Name</th>
+          <th>Client</th>
+          <th>Type</th>
+          <th>Due Date</th>
+          <th>Days</th>
+          <th>Status</th>
+        </tr>
+      </thead>
       <tbody id="list-body"></tbody>
     </table>
   </div>
@@ -254,7 +259,7 @@ function sm8Get(endpoint) {
     headers: { 'Authorization': authHeader(), 'Accept': 'application/json' }
   }).then(function(res) {
     return res.json().then(function(data) {
-      if (!res.ok) { throw new Error(JSON.stringify(data)); }
+      if (!res.ok) { throw new Error(data.message || JSON.stringify(data)); }
       return data;
     });
   });
@@ -267,16 +272,13 @@ function getFieldValue(asset, fieldName) {
 }
 
 function getDueDate(asset) {
-  var dueDateField = fieldMappings[asset.asset_type_uuid];
-  if (!dueDateField) return null;
-  return getFieldValue(asset, dueDateField);
+  var field = fieldMappings[asset.asset_type_uuid];
+  if (!field) return null;
+  return getFieldValue(asset, field);
 }
 
 function getClientName(asset) {
-  if (asset.company_uuid && clientMap[asset.company_uuid]) {
-    return clientMap[asset.company_uuid];
-  }
-  return null;
+  return (asset.company_uuid && clientMap[asset.company_uuid]) || 'Unknown Client';
 }
 
 function daysUntil(dateStr) {
@@ -285,29 +287,25 @@ function daysUntil(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(clean)) return null;
   var due = new Date(clean + 'T00:00:00');
   if (isNaN(due.getTime())) return null;
-  var today = new Date();
-  today.setHours(0,0,0,0);
+  var today = new Date(); today.setHours(0,0,0,0);
   return Math.round((due.getTime() - today.getTime()) / 86400000);
 }
 
 function statusOf(days) {
-  if (days === null)  return 'no-date';
-  if (days < 0)       return 'overdue';
-  if (days <= 30)     return 'due-soon';
+  if (days === null) return 'no-date';
+  if (days < 0)      return 'overdue';
+  if (days <= 30)    return 'due-soon';
   return 'ok';
 }
 
 function statusColor(status) {
-  if (status === 'overdue')  return 'red';
-  if (status === 'due-soon') return 'amber';
-  if (status === 'ok')       return 'green';
-  return 'grey';
+  return { 'overdue':'red', 'due-soon':'amber', 'ok':'green' }[status] || 'grey';
 }
 
 function statusLabel(days) {
   if (days === null) return 'No date';
-  if (days < 0)     return Math.abs(days) + 'd overdue';
-  if (days === 0)   return 'Due today';
+  if (days < 0)      return Math.abs(days) + 'd overdue';
+  if (days === 0)    return 'Due today';
   return days + 'd left';
 }
 
@@ -324,8 +322,7 @@ function esc(str) {
 
 function formatDate(str) {
   if (!str) return '—';
-  var clean = String(str).trim().substring(0, 10);
-  var d = new Date(clean + 'T00:00:00');
+  var d = new Date(String(str).trim().substring(0,10) + 'T00:00:00');
   if (isNaN(d.getTime())) return str;
   return d.toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' });
 }
@@ -372,7 +369,7 @@ function connect() {
   fetchAll().then(function() {
     saveLocal();
     showDashboard();
-    toast('Connected successfully!');
+    toast('Connected! ' + assets.length + ' assets loaded.');
   }).catch(function(e) {
     errEl.textContent = 'Connection failed: ' + e.message;
     errEl.style.display = 'block';
@@ -383,12 +380,8 @@ function connect() {
 
 function logout() {
   localStorage.clear();
-  assets        = [];
-  assetTypes    = {};
-  fieldMappings = {};
-  clientMap     = {};
-  apiKey  = '';
-  apiPass = '';
+  assets = []; assetTypes = {}; fieldMappings = {}; clientMap = {};
+  apiKey = ''; apiPass = '';
   document.getElementById('nav-tabs').style.display    = 'none';
   document.getElementById('btn-sync').style.display    = 'none';
   document.getElementById('btn-logout').style.display  = 'none';
@@ -424,29 +417,13 @@ function fetchAll() {
         if (guess) { fieldMappings[typeUuid] = guess.name; }
       }
     });
-    // Now load company/client list for debug
     return sm8Get('/company');
   }).then(function(companies) {
     clientMap = {};
     companies.forEach(function(c) {
-      if (String(c.active) === '1') {
-        clientMap[c.uuid] = c.name;
-      }
+      // store all companies (active or not) so assets always resolve a name
+      clientMap[c.uuid] = c.name;
     });
-
-    // DEBUG: show first company record and first asset record
-    if (companies.length > 0) {
-      console.log('=== FIRST COMPANY RECORD ===');
-      console.log(JSON.stringify(companies[0], null, 2));
-      document.getElementById('debug-company').textContent = JSON.stringify(companies[0], null, 2);
-    }
-    if (assets.length > 0) {
-      var sample = { uuid: assets[0].uuid, name: assets[0].name, company_uuid: assets[0].company_uuid };
-      console.log('=== FIRST ASSET (relevant fields) ===');
-      console.log(JSON.stringify(sample, null, 2));
-      document.getElementById('debug-asset').textContent = JSON.stringify(sample, null, 2);
-    }
-    document.getElementById('debug-panel').style.display = 'block';
   });
 }
 
@@ -458,7 +435,7 @@ function syncAssets() {
     saveLocal();
     renderAll();
     document.getElementById('sync-status').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
-    toast('Assets synced!');
+    toast('Synced! ' + assets.length + ' assets.');
     btn.innerHTML = '↻ Sync';
     btn.disabled = false;
   }).catch(function(e) {
@@ -470,12 +447,10 @@ function syncAssets() {
 
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(function(s) {
-    s.classList.remove('active');
-    s.style.display = 'none';
+    s.classList.remove('active'); s.style.display = 'none';
   });
-  var target = document.getElementById('screen-' + name);
-  target.style.display = '';
-  target.classList.add('active');
+  var t = document.getElementById('screen-' + name);
+  t.style.display = ''; t.classList.add('active');
 }
 
 function showDashboard() {
@@ -504,7 +479,7 @@ function enrichedAssets() {
     var dueDate    = getDueDate(a);
     var days       = daysUntil(dueDate);
     var status     = statusOf(days);
-    var clientName = getClientName(a) || 'Unknown Client';
+    var clientName = getClientName(a);
     return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status, clientName: clientName });
   });
 }
@@ -517,27 +492,51 @@ function renderAll() {
 }
 
 function populateFilters() {
-  var sel     = document.getElementById('filter-type');
-  var current = sel.value;
-  sel.innerHTML = '<option value="">All Types</option>';
-  Object.keys(assetTypes).forEach(function(uuid) {
+  // Type filter
+  var typeSel     = document.getElementById('filter-type');
+  var typeCurrent = typeSel.value;
+  typeSel.innerHTML = '<option value="">All Types</option>';
+  Object.keys(assetTypes).sort(function(a,b) {
+    return assetTypes[a].name.localeCompare(assetTypes[b].name);
+  }).forEach(function(uuid) {
     var opt = document.createElement('option');
-    opt.value       = uuid;
-    opt.textContent = assetTypes[uuid].name;
-    if (uuid === current) { opt.selected = true; }
-    sel.appendChild(opt);
+    opt.value = uuid; opt.textContent = assetTypes[uuid].name;
+    if (uuid === typeCurrent) opt.selected = true;
+    typeSel.appendChild(opt);
+  });
+
+  // Client filter — build from actual assets so only clients with assets appear
+  var clientSel     = document.getElementById('filter-client');
+  var clientCurrent = clientSel.value;
+  clientSel.innerHTML = '<option value="">All Clients</option>';
+  var seen = {};
+  assets.forEach(function(a) {
+    if (a.company_uuid && !seen[a.company_uuid]) {
+      seen[a.company_uuid] = true;
+    }
+  });
+  Object.keys(seen).sort(function(a,b) {
+    return (clientMap[a]||'').localeCompare(clientMap[b]||'');
+  }).forEach(function(uuid) {
+    var opt = document.createElement('option');
+    opt.value = uuid; opt.textContent = clientMap[uuid] || uuid;
+    if (uuid === clientCurrent) opt.selected = true;
+    clientSel.appendChild(opt);
   });
 }
 
 function filteredAssets() {
   var search       = document.getElementById('search-input').value.toLowerCase();
   var typeFilter   = document.getElementById('filter-type').value;
+  var clientFilter = document.getElementById('filter-client').value;
   var statusFilter = document.getElementById('filter-status').value;
   return enrichedAssets().filter(function(a) {
-    if (search && String(a.name||'').toLowerCase().indexOf(search) === -1 &&
+    if (search &&
+        String(a.name||'').toLowerCase().indexOf(search) === -1 &&
         String(a.typeName||'').toLowerCase().indexOf(search) === -1 &&
         String(a.clientName||'').toLowerCase().indexOf(search) === -1) { return false; }
     if (typeFilter   && a.asset_type_uuid !== typeFilter)   { return false; }
+    if (clientFilter && a.company_uuid    !== clientFilter) { return false; }
     if (statusFilter && a.status          !== statusFilter) { return false; }
     return true;
   });
@@ -551,36 +550,31 @@ function renderStats() {
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
     '<div class="stat-card blue"><span class="stat-label">Total Assets</span><span class="stat-value">' + all.length + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'        + ov + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'     + so + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'           + ok + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'        + ov  + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'     + so  + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'           + ok  + '</span></div>' +
     '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + nd + '</span></div>';
 }
 
 function renderSummaryBar() {
-  var all   = enrichedAssets();
-  var total = all.length;
-  if (total === 0) { document.getElementById('summary-chart').innerHTML = ''; return; }
-  var ov = all.filter(function(a) { return a.status === 'overdue';  }).length;
-  var so = all.filter(function(a) { return a.status === 'due-soon'; }).length;
-  var ok = all.filter(function(a) { return a.status === 'ok';       }).length;
-  var nd = all.filter(function(a) { return a.status === 'no-date';  }).length;
-  function seg(count, color, label) {
-    if (count === 0) return '';
-    var pct = Math.round(count / total * 100);
-    return '<div class="summary-bar-seg" style="flex:' + count + ';background:' + color + '" title="' + label + ': ' + count + '">' + pct + '%</div>';
+  var all = enrichedAssets(); var total = all.length;
+  if (!total) { document.getElementById('summary-chart').innerHTML = ''; return; }
+  var ov = all.filter(function(a){return a.status==='overdue';}).length;
+  var so = all.filter(function(a){return a.status==='due-soon';}).length;
+  var ok = all.filter(function(a){return a.status==='ok';}).length;
+  var nd = all.filter(function(a){return a.status==='no-date';}).length;
+  function seg(n,col,lbl) {
+    if (!n) return '';
+    return '<div class="summary-bar-seg" style="flex:'+n+';background:'+col+'" title="'+lbl+': '+n+'">'+Math.round(n/total*100)+'%</div>';
   }
   document.getElementById('summary-chart').innerHTML =
     '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview</div>' +
-    '<div class="summary-bar">' +
-      seg(ov,'#ef4444','Overdue') + seg(so,'#f59e0b','Due Soon') +
-      seg(ok,'#22c55e','OK')      + seg(nd,'#4b5563','No Date') +
-    '</div>' +
-    '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem;color:var(--muted)">' +
-      (ov ? '<span style="color:#ef4444">&#9632; Overdue</span>'  : '') +
-      (so ? '<span style="color:#f59e0b">&#9632; Due Soon</span>' : '') +
-      (ok ? '<span style="color:#22c55e">&#9632; OK</span>'       : '') +
-      (nd ? '<span style="color:#4b5563">&#9632; No Date</span>'  : '') +
+    '<div class="summary-bar">' + seg(ov,'#ef4444','Overdue')+seg(so,'#f59e0b','Due Soon')+seg(ok,'#22c55e','OK')+seg(nd,'#4b5563','No Date') + '</div>' +
+    '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem">' +
+      (ov?'<span style="color:#ef4444">&#9632; Overdue</span>':'') +
+      (so?'<span style="color:#f59e0b">&#9632; Due Soon</span>':'') +
+      (ok?'<span style="color:#22c55e">&#9632; OK</span>':'') +
+      (nd?'<span style="color:#4b5563">&#9632; No Date</span>':'') +
     '</div>';
 }
 
@@ -590,13 +584,11 @@ function renderAssets() {
   data.forEach(function(a) { cols[a.status].push(a); });
   var colMap = { 'overdue':'overdue', 'due-soon':'soon', 'ok':'ok', 'no-date':'nodate' };
   Object.keys(colMap).forEach(function(status) {
-    var colId   = colMap[status];
-    var el      = document.getElementById('col-'   + colId);
-    var countEl = document.getElementById('count-' + colId);
-    countEl.textContent = cols[status].length;
-    el.innerHTML = cols[status].length === 0
+    var id = colMap[status];
+    document.getElementById('count-' + id).textContent = cols[status].length;
+    document.getElementById('col-' + id).innerHTML = cols[status].length === 0
       ? '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
-      : cols[status].map(function(a) { return assetCard(a); }).join('');
+      : cols[status].map(assetCard).join('');
   });
   var tbody = document.getElementById('list-body');
   tbody.innerHTML = data.length === 0
@@ -605,8 +597,8 @@ function renderAssets() {
         var color = statusColor(a.status);
         return '<tr onclick="openModal(\'' + a.uuid + '\')">' +
           '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
+          '<td class="td-client">' + esc(a.clientName) + '</td>' +
           '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
-          '<td>' + esc(a.clientName) + '</td>' +
           '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
           '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
@@ -615,32 +607,32 @@ function renderAssets() {
 }
 
 function assetCard(a) {
-  var color    = statusColor(a.status);
-  var pct      = progressPct(a.days);
-  var barColor = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
+  var color = statusColor(a.status);
+  var pct   = progressPct(a.days);
+  var bar   = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
   return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
-    '<div class="asset-card-name">'  + esc(a.name || 'Unnamed Asset') + '</div>' +
-    '<div class="asset-card-sub">'   + esc(a.typeName) + ' · ' + esc(a.clientName) + '</div>' +
+    '<div class="asset-card-name">'   + esc(a.name || 'Unnamed Asset') + '</div>' +
+    '<div class="asset-card-client">📍 ' + esc(a.clientName) + '</div>' +
+    '<div class="asset-card-type">'   + esc(a.typeName) + '</div>' +
     '<div class="asset-card-footer">' +
       '<span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span>' +
       '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
     '</div>' +
-    '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div></div>' +
+    '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + bar + '"></div></div></div>' +
     '</div>';
 }
 
 function openModal(uuid) {
   var all = enrichedAssets();
-  var a   = null;
+  var a = null;
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) return;
   var color = statusColor(a.status);
   var cfRows = '';
   if (Array.isArray(a.field_data) && a.field_data.length > 0) {
-    var sorted = a.field_data.slice().sort(function(x, y) { return (x.sortOrder||0) - (y.sortOrder||0); });
-    sorted.forEach(function(f) {
+    a.field_data.slice().sort(function(x,y){ return (x.sortOrder||0)-(y.sortOrder||0); }).forEach(function(f) {
       var val = f.fieldValue || '—';
-      if (f.fieldType === 'Date' && f.fieldValue) { val = formatDate(f.fieldValue); }
+      if (f.fieldType === 'Date' && f.fieldValue) val = formatDate(f.fieldValue);
       cfRows += '<div class="field-row"><span class="field-label">' + esc(f.fieldName) + '</span><span class="field-value">' + esc(val) + '</span></div>';
     });
   } else {
@@ -648,7 +640,10 @@ function openModal(uuid) {
   }
   document.getElementById('modal-body').innerHTML =
     '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
-    '<div class="modal-type"><span class="tag">' + esc(a.typeName) + '</span> <span class="tag">📍 ' + esc(a.clientName) + '</span></div>' +
+    '<div class="modal-type">' +
+      '<span class="tag">' + esc(a.typeName) + '</span>' +
+      '<span class="tag tag-client">📍 ' + esc(a.clientName) + '</span>' +
+    '</div>' +
     '<div class="big-due">' +
       '<div class="days-num" style="color:var(--' + color + ')">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
       '<div class="days-label">' + (a.days === null ? 'No due date set' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') + '</div>' +
@@ -670,19 +665,19 @@ function closeModalDirect() {
 function renderSettings() {
   var grid = document.getElementById('settings-grid');
   var keys = Object.keys(assetTypes);
-  if (keys.length === 0) {
+  if (!keys.length) {
     grid.innerHTML = '<p style="color:var(--muted)">No asset types loaded. Connect and sync first.</p>';
     return;
   }
   grid.innerHTML = keys.map(function(uuid) {
-    var t         = assetTypes[uuid];
-    var fieldOpts = t.fields.map(function(f) {
+    var t = assetTypes[uuid];
+    var opts = t.fields.map(function(f) {
       return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' +
         esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
     }).join('');
     return '<div class="settings-card"><h3>' + esc(t.name) + '</h3>' +
       '<div class="mapping-row"><label>Due Date Field</label>' +
-      '<select id="map-' + uuid + '"><option value="">— Not mapped —</option>' + fieldOpts + '</select></div>' +
+      '<select id="map-' + uuid + '"><option value="">— Not mapped —</option>' + opts + '</select></div>' +
       '<div style="font-size:0.78rem;color:var(--muted)">' + t.fields.length + ' field(s) available</div></div>';
   }).join('');
 }
