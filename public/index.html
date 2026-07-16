@@ -44,7 +44,7 @@
     .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
     .hint { font-size: 0.78rem; color: var(--muted); margin-top: 12px; }
     .error-msg { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; color: var(--red); margin-top: 12px; text-align: left; display: none; }
-    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 28px; }
     .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 6px; }
     .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .stat-value { font-size: 2rem; font-weight: 700; }
@@ -78,9 +78,17 @@
     .asset-card:hover { border-color: var(--accent); }
     .asset-card-name   { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; padding-left: 8px; }
     .asset-card-client { font-size: 0.78rem; color: var(--accent); padding-left: 8px; margin-bottom: 2px; font-weight: 500; }
-    .asset-card-type   { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
+    .asset-card-type   { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 6px; }
+    .asset-card-checks { padding-left: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 3px; }
+    .check-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.73rem; }
+    .check-label { color: var(--muted); }
+    .check-badge { font-weight: 700; padding: 1px 7px; border-radius: 10px; font-size: 0.7rem; }
+    .check-badge.green  { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .check-badge.amber  { background: rgba(245,158,11,0.15); color: var(--amber); }
+    .check-badge.red    { background: rgba(239,68,68,0.15);  color: var(--red); }
+    .check-badge.purple { background: rgba(124,58,237,0.15); color: var(--purple); }
+    .check-badge.grey   { background: rgba(136,146,176,0.15);color: var(--muted); }
     .asset-card-footer { display: flex; align-items: center; justify-content: space-between; padding-left: 8px; }
-    .elapsed-tag { display: block; padding-left: 8px; margin-bottom: 6px; font-size: 0.75rem; font-weight: 700; color: var(--purple); }
     .due-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
     .due-badge.green  { background: rgba(34,197,94,0.15);  color: var(--green); }
     .due-badge.amber  { background: rgba(245,158,11,0.15); color: var(--amber); }
@@ -97,32 +105,35 @@
     th { text-align: left; padding: 10px 14px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
     tbody tr:hover { background: var(--surface2); }
-    td { padding: 12px 14px; font-size: 0.88rem; }
+    td { padding: 10px 14px; font-size: 0.85rem; vertical-align: middle; }
     .td-name { font-weight: 600; }
     .client-group-header { background: var(--surface); pointer-events: none; }
     .client-group-header td { padding: 10px 14px 6px; font-size: 0.78rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; position: relative; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; position: relative; }
     .modal h2 { margin-bottom: 6px; }
     .modal-type { font-size: 0.85rem; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .modal-close { position: absolute; top: 16px; right: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 10px; font-size: 1rem; }
+    .modal-checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .modal-check-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+    .modal-check-card .mc-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .modal-check-card .mc-days  { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .modal-check-card .mc-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+    .modal-check-card .mc-date  { font-size: 0.78rem; margin-top: 6px; }
     .field-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .field-row:last-child { border-bottom: none; }
     .field-label { font-size: 0.8rem; color: var(--muted); }
     .field-value { font-size: 0.88rem; font-weight: 500; text-align: right; max-width: 60%; }
-    .big-due { text-align: center; padding: 20px 0; }
-    .big-due .days-num   { font-size: 3.5rem; font-weight: 800; line-height: 1; }
-    .big-due .days-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
     .elapsed-banner { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.85rem; color: var(--purple); font-weight: 600; }
     .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
     .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
     .settings-card h3 { margin-bottom: 6px; font-size: 1rem; }
     .settings-card .card-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; }
     .mapping-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .mapping-row label { font-size: 0.85rem; min-width: 140px; color: var(--muted); }
-    .mapping-row select, .mapping-row input[type=number] { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.85rem; outline: none; }
-    .mapping-row input[type=number]:focus { border-color: var(--accent); }
+    .mapping-row label { font-size: 0.85rem; min-width: 150px; color: var(--muted); flex-shrink: 0; }
+    .mapping-row select, .mapping-row input[type=number] { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.85rem; outline: none; min-width: 0; }
+    .mapping-row input[type=number]:focus, .mapping-row select:focus { border-color: var(--accent); }
     .threshold-preview { font-size: 0.8rem; color: var(--purple); margin-top: 6px; font-weight: 600; }
     .due-soon-preview  { font-size: 0.8rem; color: var(--amber); margin-top: 6px; font-weight: 600; }
     #toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; font-size: 0.88rem; z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 320px; }
@@ -134,6 +145,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; color: var(--muted); }
     .tag-client { background: rgba(79,110,247,0.12); border-color: rgba(79,110,247,0.3); color: var(--accent); }
+    .section-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 16px; margin-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -188,6 +200,14 @@
     <input type="text" id="search-input" placeholder="🔍  Search assets or clients…" oninput="renderAssets()"/>
     <select id="filter-type" onchange="renderAssets()"><option value="">All Types</option></select>
     <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
+    <select id="filter-check" onchange="renderAssets()">
+      <option value="">All Checks</option>
+      <option value="Service Due">Service Due</option>
+      <option value="PVI Due">PVI Due</option>
+      <option value="Validation Due">Validation Due</option>
+      <option value="Performance Due">Performance Due</option>
+      <option value="EMC Due">EMC Due</option>
+    </select>
     <select id="filter-status" onchange="renderAssets()">
       <option value="">All Statuses</option>
       <option value="elapsed">Elapsed</option>
@@ -231,10 +251,12 @@
         <tr>
           <th>Asset Name</th>
           <th>Type</th>
-          <th>Due Date</th>
-          <th>Days</th>
-          <th>Status</th>
-          <th>Elapsed</th>
+          <th>Service Due</th>
+          <th>PVI Due</th>
+          <th>Validation Due</th>
+          <th>Performance Due</th>
+          <th>EMC Due</th>
+          <th>Worst Status</th>
         </tr>
       </thead>
       <tbody id="list-body"></tbody>
@@ -246,8 +268,7 @@
   <h2 style="margin-bottom:8px">Settings</h2>
   <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Configure thresholds and map due-date fields per asset type.</p>
 
-  <!-- Threshold settings -->
-  <div class="settings-grid" style="margin-bottom:24px">
+  <div class="settings-grid" style="margin-bottom:28px">
     <div class="settings-card">
       <h3>🟣 Elapsed Threshold</h3>
       <p class="card-desc">Assets overdue by more than this many days are marked <strong style="color:var(--purple)">Elapsed</strong>.</p>
@@ -268,8 +289,9 @@
     </div>
   </div>
 
-  <h3 style="margin-bottom:16px;font-size:1rem;color:var(--text)">Due Date Field Mapping</h3>
-  <div class="settings-grid" id="settings-grid"></div>
+  <div class="section-title">Due Date Field Mapping</div>
+  <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">For each asset type, map which field corresponds to each check type. Leave blank if not applicable.</p>
+  <div id="settings-grid"></div>
 
   <div style="margin-top:24px">
     <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
@@ -290,10 +312,21 @@ var apiKey            = '';
 var apiPass           = '';
 var assets            = [];
 var assetTypes        = {};
-var fieldMappings     = {};
 var clientMap         = {};
 var ELAPSED_THRESHOLD = 100;
 var SOON_THRESHOLD    = 30;
+
+// Check types — label shown in UI, key used in storage
+var CHECK_TYPES = [
+  { key: 'service',     label: 'Service Due' },
+  { key: 'pvi',         label: 'PVI Due' },
+  { key: 'validation',  label: 'Validation Due' },
+  { key: 'performance', label: 'Performance Due' },
+  { key: 'emc',         label: 'EMC Due' }
+];
+
+// fieldMappings[assetTypeUuid][checkKey] = fieldName
+var fieldMappings = {};
 
 function authHeader() {
   return 'Basic ' + btoa(unescape(encodeURIComponent(apiKey + ':' + apiPass)));
@@ -316,10 +349,14 @@ function getFieldValue(asset, fieldName) {
   return match ? (match.fieldValue || null) : null;
 }
 
-function getDueDate(asset) {
-  var field = fieldMappings[asset.asset_type_uuid];
-  if (!field) return null;
-  return getFieldValue(asset, field);
+function getMappedFieldName(typeUuid, checkKey) {
+  return (fieldMappings[typeUuid] && fieldMappings[typeUuid][checkKey]) || null;
+}
+
+function getCheckDate(asset, checkKey) {
+  var fieldName = getMappedFieldName(asset.asset_type_uuid, checkKey);
+  if (!fieldName) return null;
+  return getFieldValue(asset, fieldName);
 }
 
 function getClientName(asset) {
@@ -342,6 +379,16 @@ function statusOf(days) {
   if (days < 0)                  return 'overdue';
   if (days <= SOON_THRESHOLD)    return 'due-soon';
   return 'ok';
+}
+
+// Worst status across multiple checks
+var STATUS_RANK = { 'elapsed': 0, 'overdue': 1, 'due-soon': 2, 'ok': 3, 'no-date': 4 };
+function worstStatus(statuses) {
+  var best = 'no-date';
+  statuses.forEach(function(s) {
+    if ((STATUS_RANK[s] || 99) < (STATUS_RANK[best] || 99)) best = s;
+  });
+  return best;
 }
 
 function statusColor(status) {
@@ -394,12 +441,12 @@ function saveLocal() {
 }
 
 function loadLocal() {
-  apiKey            = localStorage.getItem('sm8_key')               || '';
-  apiPass           = localStorage.getItem('sm8_pass')              || '';
-  assets            = JSON.parse(localStorage.getItem('sm8_assets')    || '[]');
-  assetTypes        = JSON.parse(localStorage.getItem('sm8_types')     || '{}');
-  fieldMappings     = JSON.parse(localStorage.getItem('sm8_mappings')  || '{}');
-  clientMap         = JSON.parse(localStorage.getItem('sm8_clients')   || '{}');
+  apiKey            = localStorage.getItem('sm8_key')      || '';
+  apiPass           = localStorage.getItem('sm8_pass')     || '';
+  assets            = JSON.parse(localStorage.getItem('sm8_assets')   || '[]');
+  assetTypes        = JSON.parse(localStorage.getItem('sm8_types')    || '{}');
+  fieldMappings     = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
+  clientMap         = JSON.parse(localStorage.getItem('sm8_clients')  || '{}');
   ELAPSED_THRESHOLD = parseInt(localStorage.getItem('sm8_elapsed_threshold') || '100', 10);
   SOON_THRESHOLD    = parseInt(localStorage.getItem('sm8_soon_threshold')    || '30',  10);
 }
@@ -459,13 +506,25 @@ function fetchAll() {
     return sm8Get('/asset');
   }).then(function(raw) {
     assets = raw.filter(function(a) { return String(a.active) === '1'; });
+    // Auto-guess mappings for each check type
     Object.keys(assetTypes).forEach(function(typeUuid) {
-      if (!fieldMappings[typeUuid]) {
-        var guess = assetTypes[typeUuid].fields.find(function(f) {
-          return /due|expir|next.service|service.date|renewal|review/i.test(f.name);
-        });
-        if (guess) { fieldMappings[typeUuid] = guess.name; }
-      }
+      if (!fieldMappings[typeUuid]) fieldMappings[typeUuid] = {};
+      var fields = assetTypes[typeUuid].fields;
+      CHECK_TYPES.forEach(function(ct) {
+        if (!fieldMappings[typeUuid][ct.key]) {
+          var guess = fields.find(function(f) {
+            return f.name.toLowerCase().indexOf(ct.label.toLowerCase()) !== -1 ||
+                   f.name.toLowerCase().indexOf(ct.key.toLowerCase()) !== -1;
+          });
+          // Fallback: for 'service' also try generic due/expiry patterns
+          if (!guess && ct.key === 'service') {
+            guess = fields.find(function(f) {
+              return /due|expir|next.service|service.date|renewal|review/i.test(f.name);
+            });
+          }
+          if (guess) fieldMappings[typeUuid][ct.key] = guess.name;
+        }
+      });
     });
     return sm8Get('/company');
   }).then(function(companies) {
@@ -519,15 +578,38 @@ function showTab(tab) {
   else { showScreen('settings'); renderSettings(); }
 }
 
+// Build enriched asset: compute all check statuses, derive worst overall status
 function enrichedAssets() {
   return assets.map(function(a) {
     var typeUuid   = a.asset_type_uuid;
     var typeName   = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
-    var dueDate    = getDueDate(a);
-    var days       = daysUntil(dueDate);
-    var status     = statusOf(days);
     var clientName = getClientName(a);
-    return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status, clientName: clientName });
+
+    var checks = {};
+    CHECK_TYPES.forEach(function(ct) {
+      var date   = getCheckDate(a, ct.key);
+      var days   = daysUntil(date);
+      var status = statusOf(days);
+      checks[ct.key] = { date: date, days: days, status: status };
+    });
+
+    var allStatuses = CHECK_TYPES.map(function(ct) { return checks[ct.key].status; });
+    var overall     = worstStatus(allStatuses);
+
+    // For sorting use the most urgent (lowest) days value that isn't null
+    var urgentDays = null;
+    CHECK_TYPES.forEach(function(ct) {
+      var d = checks[ct.key].days;
+      if (d !== null && (urgentDays === null || d < urgentDays)) urgentDays = d;
+    });
+
+    return Object.assign({}, a, {
+      typeName:   typeName,
+      clientName: clientName,
+      checks:     checks,
+      status:     overall,
+      urgentDays: urgentDays
+    });
   });
 }
 
@@ -537,8 +619,8 @@ function sortedAssets(data) {
     var cb = b.clientName.toLowerCase();
     if (ca < cb) return -1;
     if (ca > cb) return  1;
-    var da = a.days === null ? 999999 : a.days;
-    var db = b.days === null ? 999999 : b.days;
+    var da = a.urgentDays === null ? 999999 : a.urgentDays;
+    var db = b.urgentDays === null ? 999999 : b.urgentDays;
     return da - db;
   });
 }
@@ -588,7 +670,9 @@ function filteredAssets() {
   var search       = document.getElementById('search-input').value.toLowerCase();
   var typeFilter   = document.getElementById('filter-type').value;
   var clientFilter = document.getElementById('filter-client').value;
+  var checkFilter  = document.getElementById('filter-check').value;
   var statusFilter = document.getElementById('filter-status').value;
+
   return enrichedAssets().filter(function(a) {
     if (search &&
         String(a.name||'').toLowerCase().indexOf(search) === -1 &&
@@ -596,7 +680,25 @@ function filteredAssets() {
         String(a.clientName||'').toLowerCase().indexOf(search) === -1) { return false; }
     if (typeFilter   && a.asset_type_uuid !== typeFilter)   { return false; }
     if (clientFilter && a.company_uuid    !== clientFilter) { return false; }
-    if (statusFilter && a.status          !== statusFilter) { return false; }
+
+    // Check filter: find the check type key for this label and filter by its status
+    if (checkFilter) {
+      var ct = CHECK_TYPES.find(function(c) { return c.label === checkFilter; });
+      if (ct) {
+        // Only show assets where this specific check has a date
+        if (!a.checks[ct.key] || a.checks[ct.key].date === null) return false;
+      }
+    }
+
+    // Status filter applies to worst overall status (or specific check if check filter active)
+    if (statusFilter) {
+      if (checkFilter) {
+        var ct2 = CHECK_TYPES.find(function(c) { return c.label === checkFilter; });
+        if (ct2 && a.checks[ct2.key].status !== statusFilter) return false;
+      } else {
+        if (a.status !== statusFilter) return false;
+      }
+    }
     return true;
   });
 }
@@ -609,12 +711,12 @@ function renderStats() {
   var ok  = all.filter(function(a) { return a.status === 'ok';       }).length;
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
-    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                         + all.length + '</span></div>' +
-    '<div class="stat-card purple"><span class="stat-label">Elapsed >&nbsp;' + ELAPSED_THRESHOLD + 'd</span><span class="stat-value">' + el + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                        + ov  + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon ≤&nbsp;' + SOON_THRESHOLD + 'd</span><span class="stat-value">' + so + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                           + ok  + '</span></div>' +
-    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">' + nd  + '</span></div>';
+    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                                                    + all.length + '</span></div>' +
+    '<div class="stat-card purple"><span class="stat-label">Elapsed &gt;' + ELAPSED_THRESHOLD + 'd</span><span class="stat-value">'                + el         + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                                   + ov         + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon ≤' + SOON_THRESHOLD + 'd</span><span class="stat-value">'                      + so         + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                                      + ok         + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'                            + nd         + '</span></div>';
 }
 
 function renderSummaryBar() {
@@ -630,10 +732,9 @@ function renderSummaryBar() {
     return '<div class="summary-bar-seg" style="flex:'+n+';background:'+col+'" title="'+lbl+': '+n+'">'+Math.round(n/total*100)+'%</div>';
   }
   document.getElementById('summary-chart').innerHTML =
-    '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview</div>' +
+    '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview (worst check per asset)</div>' +
     '<div class="summary-bar">' +
-      seg(el,'#7c3aed','Elapsed') + seg(ov,'#ef4444','Overdue') +
-      seg(so,'#f59e0b','Due Soon') + seg(ok,'#22c55e','OK') + seg(nd,'#4b5563','No Date') +
+      seg(el,'#7c3aed','Elapsed')+seg(ov,'#ef4444','Overdue')+seg(so,'#f59e0b','Due Soon')+seg(ok,'#22c55e','OK')+seg(nd,'#4b5563','No Date') +
     '</div>' +
     '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem">' +
       (el?'<span style="color:#7c3aed">&#9632; Elapsed</span>':'') +
@@ -661,47 +762,63 @@ function renderAssets() {
 
   var tbody = document.getElementById('list-body');
   if (sorted.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
     return;
   }
 
   var html = ''; var lastClient = null;
   sorted.forEach(function(a) {
-    var color    = statusColor(a.status);
-    var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
     if (a.clientName !== lastClient) {
-      html += '<tr class="client-group-header"><td colspan="6">📍 ' + esc(a.clientName) + '</td></tr>';
+      html += '<tr class="client-group-header"><td colspan="8">📍 ' + esc(a.clientName) + '</td></tr>';
       lastClient = a.clientName;
     }
-    var elapsedCell = a.status === 'elapsed'
-      ? '<span style="color:var(--purple);font-weight:700;font-size:0.82rem">⚠ ' + Math.abs(a.days) + 'd</span>'
-      : '<span style="color:var(--muted)">—</span>';
+    var worstColor = statusColor(a.status);
+    var worstCss   = worstColor === 'purple' ? 'var(--purple)' : 'var(--' + worstColor + ')';
+
+    // Build a cell for each check type
+    var checkCells = CHECK_TYPES.map(function(ct) {
+      var c = a.checks[ct.key];
+      if (!c || c.date === null) return '<td><span style="color:var(--muted);font-size:0.78rem">—</span></td>';
+      var col = statusColor(c.status);
+      var css = col === 'purple' ? 'var(--purple)' : 'var(--' + col + ')';
+      return '<td>' +
+        '<div style="font-size:0.8rem;font-weight:600;color:' + css + '">' + statusLabel(c.days, c.status) + '</div>' +
+        '<div style="font-size:0.72rem;color:var(--muted)">' + formatDate(c.date) + '</div>' +
+        '</td>';
+    }).join('');
+
     html += '<tr onclick="openModal(\'' + a.uuid + '\')">' +
-      '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
+      '<td class="td-name">' + esc(a.name || 'Unnamed') + '<div style="font-size:0.75rem;color:var(--muted);font-weight:400">' + esc(a.typeName) + '</div></td>' +
       '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
-      '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
-      '<td style="color:' + cssColor + '">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
-      '<td><span class="due-badge ' + color + '">' + statusLabel(a.days, a.status) + '</span></td>' +
-      '<td>' + elapsedCell + '</td>' +
+      checkCells +
+      '<td><span class="due-badge ' + worstColor + '">' + esc(a.status) + '</span></td>' +
       '</tr>';
   });
   tbody.innerHTML = html;
 }
 
 function assetCard(a) {
-  var color    = statusColor(a.status);
-  var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
-  var pct      = progressPct(a.days);
-  return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
+  var worstColor = statusColor(a.status);
+  var worstCss   = worstColor === 'purple' ? 'var(--purple)' : 'var(--' + worstColor + ')';
+  var pct        = progressPct(a.urgentDays);
+
+  // Only show checks that have a date mapped
+  var checkRows = CHECK_TYPES.map(function(ct) {
+    var c = a.checks[ct.key];
+    if (!c || c.date === null) return '';
+    var col = statusColor(c.status);
+    return '<div class="check-row">' +
+      '<span class="check-label">' + esc(ct.label) + '</span>' +
+      '<span class="check-badge ' + col + '">' + statusLabel(c.days, c.status) + '</span>' +
+      '</div>';
+  }).join('');
+
+  return '<div class="asset-card ' + worstColor + '" onclick="openModal(\'' + a.uuid + '\')">' +
     '<div class="asset-card-name">'    + esc(a.name || 'Unnamed Asset') + '</div>' +
     '<div class="asset-card-client">📍 ' + esc(a.clientName) + '</div>' +
     '<div class="asset-card-type">'    + esc(a.typeName) + '</div>' +
-    (a.status === 'elapsed' ? '<span class="elapsed-tag">⚠ Elapsed: ' + Math.abs(a.days) + ' days</span>' : '') +
-    '<div class="asset-card-footer">' +
-      '<span class="due-badge ' + color + '">' + statusLabel(a.days, a.status) + '</span>' +
-      '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
-    '</div>' +
-    '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + cssColor + '"></div></div></div>' +
+    (checkRows ? '<div class="asset-card-checks">' + checkRows + '</div>' : '') +
+    '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + worstCss + '"></div></div></div>' +
     '</div>';
 }
 
@@ -709,9 +826,31 @@ function openModal(uuid) {
   var all = enrichedAssets(); var a = null;
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) return;
-  var color    = statusColor(a.status);
-  var cssColor = color === 'purple' ? 'var(--purple)' : 'var(--' + color + ')';
-  var cfRows   = '';
+
+  var worstColor = statusColor(a.status);
+  var worstCss   = worstColor === 'purple' ? 'var(--purple)' : 'var(--' + worstColor + ')';
+
+  // Build check cards
+  var checkCards = CHECK_TYPES.map(function(ct) {
+    var c = a.checks[ct.key];
+    if (!c || c.date === null) return '';
+    var col = statusColor(c.status);
+    var css = col === 'purple' ? 'var(--purple)' : 'var(--' + col + ')';
+    var absD = c.days !== null ? Math.abs(c.days) : '—';
+    var sub  = c.days === null ? 'No date' : c.status === 'elapsed' ? 'days elapsed' : c.days < 0 ? 'days overdue' : c.days === 0 ? 'Due today' : 'days left';
+    return '<div class="modal-check-card">' +
+      '<div class="mc-label">' + esc(ct.label) + '</div>' +
+      '<div class="mc-days" style="color:' + css + '">' + absD + '</div>' +
+      '<div class="mc-sub">' + sub + '</div>' +
+      '<div class="mc-date"><span class="due-badge ' + col + '">' + formatDate(c.date) + '</span></div>' +
+      '</div>';
+  }).filter(function(s) { return s !== ''; }).join('');
+
+  var elapsedBanner = a.status === 'elapsed'
+    ? '<div class="elapsed-banner">⚠ Elapsed — one or more checks are more than ' + ELAPSED_THRESHOLD + ' days overdue</div>'
+    : '';
+
+  var cfRows = '';
   if (Array.isArray(a.field_data) && a.field_data.length > 0) {
     a.field_data.slice().sort(function(x,y){ return (x.sortOrder||0)-(y.sortOrder||0); }).forEach(function(f) {
       var val = f.fieldValue || '—';
@@ -721,27 +860,17 @@ function openModal(uuid) {
   } else {
     cfRows = '<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
   }
-  var elapsedBanner = a.status === 'elapsed'
-    ? '<div class="elapsed-banner">⚠ Elapsed — ' + Math.abs(a.days) + ' days since service was due</div>'
-    : '';
-  var daysLabel = a.days === null ? 'No due date set'
-    : a.status === 'elapsed' ? 'days elapsed'
-    : a.days < 0 ? 'days overdue'
-    : a.days === 0 ? 'Due today' : 'days remaining';
 
   document.getElementById('modal-body').innerHTML =
     '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
     '<div class="modal-type">' +
       '<span class="tag">' + esc(a.typeName) + '</span>' +
       '<span class="tag tag-client">📍 ' + esc(a.clientName) + '</span>' +
+      '<span class="due-badge ' + worstColor + '" style="margin-left:4px">' + a.status + '</span>' +
     '</div>' +
     elapsedBanner +
-    '<div class="big-due">' +
-      '<div class="days-num" style="color:' + cssColor + '">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
-      '<div class="days-label">' + daysLabel + '</div>' +
-      (a.dueDate ? '<div style="margin-top:8px"><span class="due-badge ' + color + '">' + formatDate(a.dueDate) + '</span></div>' : '') +
-    '</div>' +
-    '<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">Asset Fields</h3>' +
+    (checkCards ? '<div class="modal-checks">' + checkCards + '</div>' : '') +
+    '<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">All Asset Fields</h3>' +
     cfRows +
     '<div style="margin-top:16px;font-size:0.75rem;color:var(--muted)">UUID: ' + esc(a.uuid) + '</div>';
   document.getElementById('modal-overlay').classList.add('open');
@@ -762,7 +891,6 @@ function updateThresholdPreviews() {
 }
 
 function renderSettings() {
-  // Populate threshold inputs with current values
   document.getElementById('input-elapsed-threshold').value = ELAPSED_THRESHOLD;
   document.getElementById('input-soon-threshold').value    = SOON_THRESHOLD;
   updateThresholdPreviews();
@@ -773,16 +901,29 @@ function renderSettings() {
     grid.innerHTML = '<p style="color:var(--muted)">No asset types loaded. Connect and sync first.</p>';
     return;
   }
-  grid.innerHTML = keys.map(function(uuid) {
-    var t    = assetTypes[uuid];
-    var opts = t.fields.map(function(f) {
-      return '<option value="' + esc(f.name) + '" ' + (fieldMappings[uuid] === f.name ? 'selected' : '') + '>' +
-        esc(f.name) + ' (' + esc(f.field_type || 'text') + ')</option>';
+
+  grid.innerHTML = keys.sort(function(a,b) {
+    return assetTypes[a].name.localeCompare(assetTypes[b].name);
+  }).map(function(uuid) {
+    var t = assetTypes[uuid];
+    var mappings = fieldMappings[uuid] || {};
+
+    var rows = CHECK_TYPES.map(function(ct) {
+      var opts = t.fields.map(function(f) {
+        var sel = (mappings[ct.key] === f.name) ? 'selected' : '';
+        return '<option value="' + esc(f.name) + '" ' + sel + '>' + esc(f.name) + ' (' + esc(f.field_type||'text') + ')</option>';
+      }).join('');
+      return '<div class="mapping-row">' +
+        '<label>' + esc(ct.label) + '</label>' +
+        '<select id="map-' + uuid + '-' + ct.key + '"><option value="">— Not mapped —</option>' + opts + '</select>' +
+        '</div>';
     }).join('');
-    return '<div class="settings-card"><h3>' + esc(t.name) + '</h3>' +
-      '<div class="mapping-row"><label>Due Date Field</label>' +
-      '<select id="map-' + uuid + '"><option value="">— Not mapped —</option>' + opts + '</select></div>' +
-      '<div style="font-size:0.78rem;color:var(--muted)">' + t.fields.length + ' field(s) available</div></div>';
+
+    return '<div class="settings-card" style="margin-bottom:0">' +
+      '<h3>' + esc(t.name) + '</h3>' +
+      '<p class="card-desc">' + t.fields.length + ' field(s) available</p>' +
+      rows +
+      '</div>';
   }).join('');
 }
 
@@ -793,12 +934,15 @@ function saveSettings() {
   if (soonVal > 0) SOON_THRESHOLD    = soonVal;
 
   Object.keys(assetTypes).forEach(function(uuid) {
-    var sel = document.getElementById('map-' + uuid);
-    if (sel) fieldMappings[uuid] = sel.value;
+    if (!fieldMappings[uuid]) fieldMappings[uuid] = {};
+    CHECK_TYPES.forEach(function(ct) {
+      var sel = document.getElementById('map-' + uuid + '-' + ct.key);
+      if (sel) fieldMappings[uuid][ct.key] = sel.value;
+    });
   });
+
   saveLocal();
   toast('Settings saved!');
-  // Re-render dashboard with new thresholds immediately
   updateKanbanLabels();
   renderStats();
   renderSummaryBar();
