@@ -74,7 +74,7 @@
     .asset-card.grey::before { background: var(--muted); }
     .asset-card:hover { border-color: var(--accent); }
     .asset-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; padding-left: 8px; }
-    .asset-card-type { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
+    .asset-card-sub { font-size: 0.75rem; color: var(--muted); padding-left: 8px; margin-bottom: 10px; }
     .asset-card-footer { display: flex; align-items: center; justify-content: space-between; padding-left: 8px; }
     .due-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
     .due-badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
@@ -120,6 +120,7 @@
     .loader { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; color: var(--muted); margin-right: 4px; }
+    .debug-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 0.78rem; color: var(--muted); font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -168,6 +169,13 @@
 </div>
 
 <div id="screen-dashboard" class="screen">
+  <div id="debug-panel" style="display:none;margin-bottom:24px">
+    <p style="font-size:0.8rem;color:var(--amber);margin-bottom:8px">⚠ Debug: First company record — paste this and share it</p>
+    <div class="debug-box" id="debug-company"></div>
+    <p style="font-size:0.8rem;color:var(--amber);margin-bottom:8px;margin-top:16px">⚠ Debug: First asset record (company_uuid shown)</p>
+    <div class="debug-box" id="debug-asset"></div>
+    <button class="btn-ghost btn-sm" onclick="document.getElementById('debug-panel').style.display='none'">Hide Debug</button>
+  </div>
   <div class="stats-bar" id="stats-bar"></div>
   <div id="summary-chart" style="margin-bottom:28px"></div>
   <div class="toolbar">
@@ -205,7 +213,7 @@
   </div>
   <div class="list-view" id="list-view">
     <table>
-      <thead><tr><th>Asset Name</th><th>Type</th><th>Due Date</th><th>Days</th><th>Status</th></tr></thead>
+      <thead><tr><th>Asset Name</th><th>Type</th><th>Client / Site</th><th>Due Date</th><th>Days</th><th>Status</th></tr></thead>
       <tbody id="list-body"></tbody>
     </table>
   </div>
@@ -235,6 +243,7 @@ var apiPass       = '';
 var assets        = [];
 var assetTypes    = {};
 var fieldMappings = {};
+var clientMap     = {};
 
 function authHeader() {
   return 'Basic ' + btoa(unescape(encodeURIComponent(apiKey + ':' + apiPass)));
@@ -251,20 +260,23 @@ function sm8Get(endpoint) {
   });
 }
 
-// Get a field value from asset.field_data array by fieldName
 function getFieldValue(asset, fieldName) {
   if (!Array.isArray(asset.field_data)) return null;
-  var match = asset.field_data.find(function(f) {
-    return f.fieldName === fieldName;
-  });
+  var match = asset.field_data.find(function(f) { return f.fieldName === fieldName; });
   return match ? (match.fieldValue || null) : null;
 }
 
-// Get the due date for an asset using the mapped field name
 function getDueDate(asset) {
   var dueDateField = fieldMappings[asset.asset_type_uuid];
   if (!dueDateField) return null;
   return getFieldValue(asset, dueDateField);
+}
+
+function getClientName(asset) {
+  if (asset.company_uuid && clientMap[asset.company_uuid]) {
+    return clientMap[asset.company_uuid];
+  }
+  return null;
 }
 
 function daysUntil(dateStr) {
@@ -332,6 +344,7 @@ function saveLocal() {
   localStorage.setItem('sm8_assets',   JSON.stringify(assets));
   localStorage.setItem('sm8_types',    JSON.stringify(assetTypes));
   localStorage.setItem('sm8_mappings', JSON.stringify(fieldMappings));
+  localStorage.setItem('sm8_clients',  JSON.stringify(clientMap));
 }
 
 function loadLocal() {
@@ -340,6 +353,7 @@ function loadLocal() {
   assets        = JSON.parse(localStorage.getItem('sm8_assets')   || '[]');
   assetTypes    = JSON.parse(localStorage.getItem('sm8_types')    || '{}');
   fieldMappings = JSON.parse(localStorage.getItem('sm8_mappings') || '{}');
+  clientMap     = JSON.parse(localStorage.getItem('sm8_clients')  || '{}');
 }
 
 function connect() {
@@ -372,6 +386,7 @@ function logout() {
   assets        = [];
   assetTypes    = {};
   fieldMappings = {};
+  clientMap     = {};
   apiKey  = '';
   apiPass = '';
   document.getElementById('nav-tabs').style.display    = 'none';
@@ -401,7 +416,6 @@ function fetchAll() {
     return sm8Get('/asset');
   }).then(function(raw) {
     assets = raw.filter(function(a) { return String(a.active) === '1'; });
-    // Auto-guess due date field mapping for each type
     Object.keys(assetTypes).forEach(function(typeUuid) {
       if (!fieldMappings[typeUuid]) {
         var guess = assetTypes[typeUuid].fields.find(function(f) {
@@ -410,6 +424,29 @@ function fetchAll() {
         if (guess) { fieldMappings[typeUuid] = guess.name; }
       }
     });
+    // Now load company/client list for debug
+    return sm8Get('/company');
+  }).then(function(companies) {
+    clientMap = {};
+    companies.forEach(function(c) {
+      if (String(c.active) === '1') {
+        clientMap[c.uuid] = c.name;
+      }
+    });
+
+    // DEBUG: show first company record and first asset record
+    if (companies.length > 0) {
+      console.log('=== FIRST COMPANY RECORD ===');
+      console.log(JSON.stringify(companies[0], null, 2));
+      document.getElementById('debug-company').textContent = JSON.stringify(companies[0], null, 2);
+    }
+    if (assets.length > 0) {
+      var sample = { uuid: assets[0].uuid, name: assets[0].name, company_uuid: assets[0].company_uuid };
+      console.log('=== FIRST ASSET (relevant fields) ===');
+      console.log(JSON.stringify(sample, null, 2));
+      document.getElementById('debug-asset').textContent = JSON.stringify(sample, null, 2);
+    }
+    document.getElementById('debug-panel').style.display = 'block';
   });
 }
 
@@ -462,12 +499,13 @@ function showTab(tab) {
 
 function enrichedAssets() {
   return assets.map(function(a) {
-    var typeUuid = a.asset_type_uuid;
-    var typeName = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
-    var dueDate  = getDueDate(a);
-    var days     = daysUntil(dueDate);
-    var status   = statusOf(days);
-    return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status });
+    var typeUuid   = a.asset_type_uuid;
+    var typeName   = (assetTypes[typeUuid] && assetTypes[typeUuid].name) || 'Unknown Type';
+    var dueDate    = getDueDate(a);
+    var days       = daysUntil(dueDate);
+    var status     = statusOf(days);
+    var clientName = getClientName(a) || 'Unknown Client';
+    return Object.assign({}, a, { typeName: typeName, dueDate: dueDate, days: days, status: status, clientName: clientName });
   });
 }
 
@@ -497,7 +535,8 @@ function filteredAssets() {
   var statusFilter = document.getElementById('filter-status').value;
   return enrichedAssets().filter(function(a) {
     if (search && String(a.name||'').toLowerCase().indexOf(search) === -1 &&
-        String(a.typeName||'').toLowerCase().indexOf(search) === -1) { return false; }
+        String(a.typeName||'').toLowerCase().indexOf(search) === -1 &&
+        String(a.clientName||'').toLowerCase().indexOf(search) === -1) { return false; }
     if (typeFilter   && a.asset_type_uuid !== typeFilter)   { return false; }
     if (statusFilter && a.status          !== statusFilter) { return false; }
     return true;
@@ -561,12 +600,13 @@ function renderAssets() {
   });
   var tbody = document.getElementById('list-body');
   tbody.innerHTML = data.length === 0
-    ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>'
+    ? '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>'
     : data.map(function(a) {
         var color = statusColor(a.status);
         return '<tr onclick="openModal(\'' + a.uuid + '\')">' +
           '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
           '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
+          '<td>' + esc(a.clientName) + '</td>' +
           '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
           '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
           '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
@@ -580,7 +620,7 @@ function assetCard(a) {
   var barColor = color === 'grey' ? 'var(--muted)' : 'var(--' + color + ')';
   return '<div class="asset-card ' + color + '" onclick="openModal(\'' + a.uuid + '\')">' +
     '<div class="asset-card-name">'  + esc(a.name || 'Unnamed Asset') + '</div>' +
-    '<div class="asset-card-type">'  + esc(a.typeName) + '</div>' +
+    '<div class="asset-card-sub">'   + esc(a.typeName) + ' · ' + esc(a.clientName) + '</div>' +
     '<div class="asset-card-footer">' +
       '<span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span>' +
       '<span style="font-size:0.75rem;color:var(--muted)">' + (a.dueDate ? formatDate(a.dueDate) : 'No date') + '</span>' +
@@ -595,28 +635,20 @@ function openModal(uuid) {
   for (var i = 0; i < all.length; i++) { if (all[i].uuid === uuid) { a = all[i]; break; } }
   if (!a) return;
   var color = statusColor(a.status);
-
-  // Render field_data rows
   var cfRows = '';
   if (Array.isArray(a.field_data) && a.field_data.length > 0) {
-    // Sort by sortOrder
     var sorted = a.field_data.slice().sort(function(x, y) { return (x.sortOrder||0) - (y.sortOrder||0); });
     sorted.forEach(function(f) {
       var val = f.fieldValue || '—';
-      // Format date fields nicely
       if (f.fieldType === 'Date' && f.fieldValue) { val = formatDate(f.fieldValue); }
-      cfRows += '<div class="field-row">' +
-        '<span class="field-label">' + esc(f.fieldName) + '</span>' +
-        '<span class="field-value">' + esc(val) + '</span>' +
-        '</div>';
+      cfRows += '<div class="field-row"><span class="field-label">' + esc(f.fieldName) + '</span><span class="field-value">' + esc(val) + '</span></div>';
     });
   } else {
     cfRows = '<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
   }
-
   document.getElementById('modal-body').innerHTML =
     '<h2>' + esc(a.name || 'Unnamed Asset') + '</h2>' +
-    '<div class="modal-type"><span class="tag">' + esc(a.typeName) + '</span></div>' +
+    '<div class="modal-type"><span class="tag">' + esc(a.typeName) + '</span> <span class="tag">📍 ' + esc(a.clientName) + '</span></div>' +
     '<div class="big-due">' +
       '<div class="days-num" style="color:var(--' + color + ')">' + (a.days !== null ? Math.abs(a.days) : '—') + '</div>' +
       '<div class="days-label">' + (a.days === null ? 'No due date set' : a.days < 0 ? 'days overdue' : a.days === 0 ? 'Due today' : 'days remaining') + '</div>' +
