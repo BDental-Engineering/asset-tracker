@@ -61,12 +61,9 @@
     .view-toggle { display: flex; gap: 4px; margin-left: auto; }
     .view-toggle button { padding: 7px 12px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
     .view-toggle button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-    /* ── Kanban: always 5 equal columns, scrolls horizontally if needed ── */
     .kanban { display: none; }
     .kanban.active { display: block; overflow-x: auto; padding-bottom: 12px; }
     .kanban-inner { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 16px; min-width: 1100px; }
-
     .kanban-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
     .kanban-col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-weight: 700; font-size: 0.88rem; }
     .col-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -225,7 +222,6 @@
     </div>
   </div>
 
-  <!-- Kanban: outer div scrolls, inner div is always 5 columns -->
   <div class="kanban active" id="kanban-view">
     <div class="kanban-inner">
       <div class="kanban-col">
@@ -292,6 +288,14 @@
       </div>
       <div class="due-soon-preview" id="preview-soon">⚡ Due Soon if within 30 days</div>
     </div>
+    <div class="settings-card">
+      <h3>🔍 Compliance Filtering</h3>
+      <p class="card-desc">Assets are automatically hidden based on the <strong>Compliance</strong> field value.</p>
+      <div style="font-size:0.83rem;color:var(--muted);line-height:1.9">
+        <div>🚫 <strong style="color:var(--text)">Decommissioned</strong> — hidden from all results</div>
+        <div>👻 <strong style="color:var(--text)">Unknown</strong> — hidden when status is Elapsed or No Date</div>
+      </div>
+    </div>
   </div>
   <div class="section-title">Due Date Field Mapping</div>
   <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">For each asset type, map which field corresponds to each check type. Leave blank if not applicable.</p>
@@ -318,6 +322,7 @@ var assetTypes        = {};
 var clientMap         = {};
 var ELAPSED_THRESHOLD = 100;
 var SOON_THRESHOLD    = 30;
+var COMPLIANCE_FIELD  = 'Compliance';
 
 var CHECK_TYPES = [
   { key: 'service',     label: 'Service Due' },
@@ -328,6 +333,24 @@ var CHECK_TYPES = [
 ];
 
 var fieldMappings = {};
+
+function isSuppressed(asset, overallStatus) {
+  var compliance = getAnyFieldValue(asset, COMPLIANCE_FIELD);
+  if (!compliance) return false;
+  var val = compliance.trim().toLowerCase();
+  if (val === 'decommissioned') return true;
+  if (val === 'unknown' && (overallStatus === 'elapsed' || overallStatus === 'no-date')) return true;
+  return false;
+}
+
+function getAnyFieldValue(asset, fieldName) {
+  if (!Array.isArray(asset.field_data)) return null;
+  var lower = fieldName.toLowerCase();
+  var match = asset.field_data.find(function(f) {
+    return String(f.fieldName || '').toLowerCase() === lower;
+  });
+  return match ? (match.fieldValue || null) : null;
+}
 
 function authHeader() {
   return 'Basic ' + btoa(unescape(encodeURIComponent(apiKey + ':' + apiPass)));
@@ -589,7 +612,17 @@ function enrichedAssets() {
       var d = checks[ct.key].days;
       if (d !== null && (urgentDays === null || d < urgentDays)) urgentDays = d;
     });
-    return Object.assign({}, a, { typeName: typeName, clientName: clientName, checks: checks, status: overall, urgentDays: urgentDays });
+    var compliance = getAnyFieldValue(a, COMPLIANCE_FIELD);
+    var suppressed = isSuppressed(a, overall);
+    return Object.assign({}, a, {
+      typeName:   typeName,
+      clientName: clientName,
+      checks:     checks,
+      status:     overall,
+      urgentDays: urgentDays,
+      compliance: compliance,
+      suppressed: suppressed
+    });
   });
 }
 
@@ -622,7 +655,8 @@ function populateFilters() {
   var typeSel     = document.getElementById('filter-type');
   var typeCurrent = typeSel.value;
   typeSel.innerHTML = '<option value="">All Types</option>';
-  Object.keys(assetTypes).sort(function(a,b) {
+  Object.keys(assetTypes).sort(
+function(a,b) {
     return assetTypes[a].name.localeCompare(assetTypes[b].name);
   }).forEach(function(uuid) {
     var opt = document.createElement('option');
@@ -652,6 +686,7 @@ function filteredAssets() {
   var checkFilter  = document.getElementById('filter-check').value;
   var statusFilter = document.getElementById('filter-status').value;
   return enrichedAssets().filter(function(a) {
+    if (a.suppressed) return false;
     if (search &&
         String(a.name||'').toLowerCase().indexOf(search) === -1 &&
         String(a.typeName||'').toLowerCase().indexOf(search) === -1 &&
@@ -669,23 +704,24 @@ function filteredAssets() {
 }
 
 function renderStats() {
-  var all = enrichedAssets();
+  var all = enrichedAssets().filter(function(a) { return !a.suppressed; });
   var el  = all.filter(function(a) { return a.status === 'elapsed';  }).length;
   var ov  = all.filter(function(a) { return a.status === 'overdue';  }).length;
   var so  = all.filter(function(a) { return a.status === 'due-soon'; }).length;
   var ok  = all.filter(function(a) { return a.status === 'ok';       }).length;
   var nd  = all.filter(function(a) { return a.status === 'no-date';  }).length;
   document.getElementById('stats-bar').innerHTML =
-    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                                      + all.length + '</span></div>' +
-    '<div class="stat-card purple"><span class="stat-label">Elapsed &gt;' + ELAPSED_THRESHOLD + 'd</span><span class="stat-value">'  + el  + '</span></div>' +
-    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                     + ov  + '</span></div>' +
-    '<div class="stat-card amber"><span class="stat-label">Due Soon ≤' + SOON_THRESHOLD + 'd</span><span class="stat-value">'        + so  + '</span></div>' +
-    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                        + ok  + '</span></div>' +
-    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'              + nd  + '</span></div>';
+    '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'                                     + all.length + '</span></div>' +
+    '<div class="stat-card purple"><span class="stat-label">Elapsed &gt;' + ELAPSED_THRESHOLD + 'd</span><span class="stat-value">' + el  + '</span></div>' +
+    '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'                                    + ov  + '</span></div>' +
+    '<div class="stat-card amber"><span class="stat-label">Due Soon ≤' + SOON_THRESHOLD + 'd</span><span class="stat-value">'       + so  + '</span></div>' +
+    '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'                                       + ok  + '</span></div>' +
+    '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'             + nd  + '</span></div>';
 }
 
 function renderSummaryBar() {
-  var all = enrichedAssets(); var total = all.length;
+  var all   = enrichedAssets().filter(function(a) { return !a.suppressed; });
+  var total = all.length;
   if (!total) { document.getElementById('summary-chart').innerHTML = ''; return; }
   var el = all.filter(function(a){return a.status==='elapsed';}).length;
   var ov = all.filter(function(a){return a.status==='overdue';}).length;
@@ -723,7 +759,6 @@ function renderAssets() {
       ? '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
       : cols[status].map(assetCard).join('');
   });
-
   var tbody = document.getElementById('list-body');
   if (sorted.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
@@ -741,11 +776,15 @@ function renderAssets() {
       if (!c || c.date === null) return '<td><span style="color:var(--muted);font-size:0.78rem">—</span></td>';
       var col = statusColor(c.status);
       var css = col === 'purple' ? 'var(--purple)' : 'var(--' + col + ')';
-      return '<td><div style="font-size:0.8rem;font-weight:600;color:' + css + '">' + statusLabel(c.days, c.status) + '</div>' +
-             '<div style="font-size:0.72rem;color:var(--muted)">' + formatDate(c.date) + '</div></td>';
+      return '<td>' +
+        '<div style="font-size:0.8rem;font-weight:600;color:' + css + '">' + statusLabel(c.days, c.status) + '</div>' +
+        '<div style="font-size:0.72rem;color:var(--muted)">' + formatDate(c.date) + '</div>' +
+        '</td>';
     }).join('');
     html += '<tr onclick="openModal(\'' + a.uuid + '\')">' +
-      '<td class="td-name">' + esc(a.name || 'Unnamed') + '<div style="font-size:0.75rem;color:var(--muted);font-weight:400">' + esc(a.typeName) + '</div></td>' +
+      '<td class="td-name">' + esc(a.name || 'Unnamed') +
+        (a.compliance ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">' + esc(a.compliance) + '</div>' : '') +
+      '</td>' +
       '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
       checkCells +
       '<td><span class="due-badge ' + worstColor + '">' + esc(a.status) + '</span></td>' +
@@ -770,7 +809,7 @@ function assetCard(a) {
   return '<div class="asset-card ' + worstColor + '" onclick="openModal(\'' + a.uuid + '\')">' +
     '<div class="asset-card-name">'    + esc(a.name || 'Unnamed Asset') + '</div>' +
     '<div class="asset-card-client">📍 ' + esc(a.clientName) + '</div>' +
-    '<div class="asset-card-type">'    + esc(a.typeName) + '</div>' +
+    '<div class="asset-card-type">'    + esc(a.typeName) + (a.compliance ? ' · ' + esc(a.compliance) : '') + '</div>' +
     (checkRows ? '<div class="asset-card-checks">' + checkRows + '</div>' : '') +
     '<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:' + pct + '%;background:' + worstCss + '"></div></div></div>' +
     '</div>';
@@ -787,7 +826,10 @@ function openModal(uuid) {
     var col = statusColor(c.status);
     var css = col === 'purple' ? 'var(--purple)' : 'var(--' + col + ')';
     var absD = c.days !== null ? Math.abs(c.days) : '—';
-    var sub  = c.days === null ? 'No date' : c.status === 'elapsed' ? 'days elapsed' : c.days < 0 ? 'days overdue' : c.days === 0 ? 'Due today' : 'days left';
+    var sub  = c.days === null ? 'No date'
+      : c.status === 'elapsed' ? 'days elapsed'
+      : c.days < 0 ? 'days overdue'
+      : c.days === 0 ? 'Due today' : 'days left';
     return '<div class="modal-check-card">' +
       '<div class="mc-label">' + esc(ct.label) + '</div>' +
       '<div class="mc-days" style="color:' + css + '">' + absD + '</div>' +
@@ -802,10 +844,15 @@ function openModal(uuid) {
 
   var cfRows = '';
   if (Array.isArray(a.field_data) && a.field_data.length > 0) {
-    a.field_data.slice().sort(function(x,y){ return (x.sortOrder||0)-(y.sortOrder||0); }).forEach(function(f) {
+    a.field_data.slice().sort(function(x,y) {
+      return (x.sortOrder||0) - (y.sortOrder||0);
+    }).forEach(function(f) {
       var val = f.fieldValue || '—';
       if (f.fieldType === 'Date' && f.fieldValue) val = formatDate(f.fieldValue);
-      cfRows += '<div class="field-row"><span class="field-label">' + esc(f.fieldName) + '</span><span class="field-value">' + esc(val) + '</span></div>';
+      cfRows += '<div class="field-row">' +
+        '<span class="field-label">' + esc(f.fieldName) + '</span>' +
+        '<span class="field-value">' + esc(val) + '</span>' +
+        '</div>';
     });
   } else {
     cfRows = '<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
@@ -816,7 +863,8 @@ function openModal(uuid) {
     '<div class="modal-type">' +
       '<span class="tag">' + esc(a.typeName) + '</span>' +
       '<span class="tag tag-client">📍 ' + esc(a.clientName) + '</span>' +
-      '<span class="due-badge ' + worstColor + '" style="margin-left:4px">' + a.status + '</span>' +
+      (a.compliance ? '<span class="tag" style="background:rgba(136,146,176,0.1);border-color:rgba(136,146,176,0.3);color:var(--muted)">' + esc(a.compliance) + '</span>' : '') +
+      '<span class="due-badge ' + worstColor + '" style="margin-left:4px">' + esc(a.status) + '</span>' +
     '</div>' +
     elapsedBanner +
     (checkCards ? '<div class="modal-checks">' + checkCards + '</div>' : '') +
@@ -860,8 +908,10 @@ function renderSettings() {
         return '<option value="' + esc(f.name) + '" ' + (mappings[ct.key] === f.name ? 'selected' : '') + '>' +
           esc(f.name) + ' (' + esc(f.field_type||'text') + ')</option>';
       }).join('');
-      return '<div class="mapping-row"><label>' + esc(ct.label) + '</label>' +
-        '<select id="map-' + uuid + '-' + ct.key + '"><option value="">— Not mapped —</option>' + opts + '</select></div>';
+      return '<div class="mapping-row">' +
+        '<label>' + esc(ct.label) + '</label>' +
+        '<select id="map-' + uuid + '-' + ct.key + '"><option value="">— Not mapped —</option>' + opts + '</select>' +
+        '</div>';
     }).join('');
     return '<div class="settings-card">' +
       '<h3>' + esc(t.name) + '</h3>' +
