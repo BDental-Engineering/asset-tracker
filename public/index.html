@@ -92,9 +92,12 @@
     th { text-align: left; padding: 10px 14px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
     tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
     tbody tr:hover { background: var(--surface2); }
+    tbody tr.client-first-row td { padding-top: 20px; }
     td { padding: 12px 14px; font-size: 0.88rem; }
     .td-name { font-weight: 600; }
-    .td-client { color: var(--accent); font-size: 0.82rem; font-weight: 500; }
+    .td-client { color: var(--accent); font-size: 0.82rem; font-weight: 600; }
+    .client-group-header { background: var(--surface); }
+    .client-group-header td { padding: 10px 14px 6px; font-size: 0.78rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; position: relative; }
@@ -211,8 +214,8 @@
     <table>
       <thead>
         <tr>
-          <th>Asset Name</th>
           <th>Client</th>
+          <th>Asset Name</th>
           <th>Type</th>
           <th>Due Date</th>
           <th>Days</th>
@@ -401,9 +404,7 @@ function fetchAll() {
   }).then(function(fields) {
     fields.forEach(function(f) {
       if (assetTypes[f.asset_type_uuid]) {
-        assetTypes[f.asset_type_uuid].fields.push({
-          name: f.name, uuid: f.uuid, field_type: f.field_type
-        });
+        assetTypes[f.asset_type_uuid].fields.push({ name: f.name, uuid: f.uuid, field_type: f.field_type });
       }
     });
     return sm8Get('/asset');
@@ -420,10 +421,7 @@ function fetchAll() {
     return sm8Get('/company');
   }).then(function(companies) {
     clientMap = {};
-    companies.forEach(function(c) {
-      // store all companies (active or not) so assets always resolve a name
-      clientMap[c.uuid] = c.name;
-    });
+    companies.forEach(function(c) { clientMap[c.uuid] = c.name; });
   });
 }
 
@@ -484,6 +482,21 @@ function enrichedAssets() {
   });
 }
 
+// Sort: by client name A-Z, then within each client by due date ascending
+// Assets with no date go to the bottom of each client group
+function sortedAssets(data) {
+  return data.slice().sort(function(a, b) {
+    var ca = a.clientName.toLowerCase();
+    var cb = b.clientName.toLowerCase();
+    if (ca < cb) return -1;
+    if (ca > cb) return  1;
+    // same client — sort by days ascending, no-date last
+    var da = a.days === null ?  999999 : a.days;
+    var db = b.days === null ?  999999 : b.days;
+    return da - db;
+  });
+}
+
 function renderAll() {
   populateFilters();
   renderStats();
@@ -492,7 +505,6 @@ function renderAll() {
 }
 
 function populateFilters() {
-  // Type filter
   var typeSel     = document.getElementById('filter-type');
   var typeCurrent = typeSel.value;
   typeSel.innerHTML = '<option value="">All Types</option>';
@@ -505,16 +517,11 @@ function populateFilters() {
     typeSel.appendChild(opt);
   });
 
-  // Client filter — build from actual assets so only clients with assets appear
   var clientSel     = document.getElementById('filter-client');
   var clientCurrent = clientSel.value;
   clientSel.innerHTML = '<option value="">All Clients</option>';
   var seen = {};
-  assets.forEach(function(a) {
-    if (a.company_uuid && !seen[a.company_uuid]) {
-      seen[a.company_uuid] = true;
-    }
-  });
+  assets.forEach(function(a) { if (a.company_uuid) seen[a.company_uuid] = true; });
   Object.keys(seen).sort(function(a,b) {
     return (clientMap[a]||'').localeCompare(clientMap[b]||'');
   }).forEach(function(uuid) {
@@ -579,9 +586,12 @@ function renderSummaryBar() {
 }
 
 function renderAssets() {
-  var data = filteredAssets();
+  var data   = filteredAssets();
+  var sorted = sortedAssets(data);
+
+  // Kanban — within each column sort by date asc then client A-Z
   var cols = { 'overdue':[], 'due-soon':[], 'ok':[], 'no-date':[] };
-  data.forEach(function(a) { cols[a.status].push(a); });
+  sorted.forEach(function(a) { cols[a.status].push(a); });
   var colMap = { 'overdue':'overdue', 'due-soon':'soon', 'ok':'ok', 'no-date':'nodate' };
   Object.keys(colMap).forEach(function(status) {
     var id = colMap[status];
@@ -590,20 +600,32 @@ function renderAssets() {
       ? '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
       : cols[status].map(assetCard).join('');
   });
+
+  // List — grouped by client, each group sorted by due date asc
   var tbody = document.getElementById('list-body');
-  tbody.innerHTML = data.length === 0
-    ? '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>'
-    : data.map(function(a) {
-        var color = statusColor(a.status);
-        return '<tr onclick="openModal(\'' + a.uuid + '\')">' +
-          '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
-          '<td class="td-client">' + esc(a.clientName) + '</td>' +
-          '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
-          '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
-          '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
-          '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
-          '</tr>';
-      }).join('');
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';
+    return;
+  }
+
+  var html        = '';
+  var lastClient  = null;
+  sorted.forEach(function(a) {
+    var color = statusColor(a.status);
+    // Insert client group header row when client changes
+    if (a.clientName !== lastClient) {
+      html += '<tr class="client-group-header"><td colspan="6">📍 ' + esc(a.clientName) + '</td></tr>';
+      lastClient = a.clientName;
+    }
+    html += '<tr onclick="openModal(\'' + a.uuid + '\')">' +
+      '<td class="td-name">' + esc(a.name || 'Unnamed') + '</td>' +
+      '<td><span class="tag">' + esc(a.typeName) + '</span></td>' +
+      '<td>' + (a.dueDate ? formatDate(a.dueDate) : '<span style="color:var(--muted)">—</span>') + '</td>' +
+      '<td style="color:var(--' + color + ')">' + (a.days !== null ? (a.days < 0 ? Math.abs(a.days)+'d ago' : a.days+'d') : '—') + '</td>' +
+      '<td><span class="due-badge ' + color + '">' + statusLabel(a.days) + '</span></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
 }
 
 function assetCard(a) {
