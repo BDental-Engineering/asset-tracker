@@ -83,6 +83,7 @@ button:hover{opacity:0.85;}
 .check-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
 .check-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
 .check-date{font-size:0.63rem;color:var(--muted);text-align:right;}
+.check-hours{font-size:0.62rem;color:var(--accent);text-align:right;font-style:italic;}
 .suppression-pill{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle;}
 .suppression-pill.decommissioned{background:rgba(239,68,68,0.15);color:var(--red);}
 .suppression-pill.unknown{background:rgba(136,146,176,0.15);color:var(--muted);}
@@ -103,6 +104,8 @@ th{text-align:left;padding:10px 14px;font-size:0.78rem;color:var(--muted);text-t
 tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.row-suppressed{opacity:0.55;}
+tbody tr.no-hover{cursor:default;}
+tbody tr.no-hover:hover{background:transparent;}
 td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .td-name{font-weight:600;}
 .client-group-header{background:var(--surface);pointer-events:none;}
@@ -120,6 +123,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .modal-check-card .mc-sub{font-size:0.72rem;color:var(--muted);margin-top:3px;}
 .modal-check-card .mc-date{font-size:0.78rem;margin-top:8px;font-weight:600;}
 .modal-check-card .mc-date-label{font-size:0.68rem;color:var(--muted);margin-top:2px;}
+.modal-check-card .mc-hours{font-size:0.72rem;color:var(--accent);margin-top:6px;font-style:italic;}
 .field-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
 .field-row:last-child{border-bottom:none;}
 .field-label{font-size:0.8rem;color:var(--muted);}
@@ -146,12 +150,38 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:0.75rem;color:var(--muted);}
 .tag-client{background:rgba(79,110,247,0.12);border-color:rgba(79,110,247,0.3);color:var(--accent);}
 .section-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:16px;margin-top:8px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.mm-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.mm-toolbar input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;min-width:200px;}
+.mm-toolbar input:focus{border-color:var(--accent);}
+.mm-table-wrap{overflow-x:auto;}
+.mm-table{width:100%;border-collapse:collapse;}
+.mm-table thead tr{border-bottom:2px solid var(--border);}
+.mm-table th{text-align:left;padding:10px 14px;font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+.mm-table tbody tr{border-bottom:1px solid var(--border);}
+.mm-table tbody tr:hover{background:var(--surface2);}
+.mm-table td{padding:8px 14px;font-size:0.85rem;vertical-align:middle;}
+.mm-input{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.82rem;width:70px;outline:none;text-align:center;}
+.mm-input:focus{border-color:var(--accent);}
+.mm-input.changed{border-color:var(--amber);}
+.mm-make{font-weight:600;font-size:0.88rem;}
+.mm-model{font-size:0.8rem;color:var(--muted);}
+.mm-add-row{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+.mm-add-row input[type=text]{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-size:0.85rem;outline:none;min-width:140px;}
+.mm-add-row input[type=text]:focus{border-color:var(--accent);}
+.mm-add-row input[type=number]{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text);font-size:0.85rem;outline:none;width:70px;text-align:center;}
+.mm-add-row input[type=number]:focus{border-color:var(--accent);}
+.mm-add-label{font-size:0.78rem;color:var(--muted);white-space:nowrap;}
+.hours-pill{display:inline-block;background:rgba(79,110,247,0.12);border:1px solid rgba(79,110,247,0.25);border-radius:6px;padding:1px 6px;font-size:0.67rem;color:var(--accent);font-weight:600;margin-top:2px;white-space:nowrap;}
 </style>
 </head>
 <body>
 <header>
 <div class="logo"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#4f6ef7"/><path d="M8 22 L16 10 L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2.5" fill="white"/></svg>Asset Tracker</div>
-<div class="nav-tabs" id="nav-tabs" style="display:none"><button class="nav-tab active" id="tab-dashboard" onclick="showTab('dashboard')">Dashboard</button><button class="nav-tab" id="tab-settings" onclick="showTab('settings')">Settings</button></div>
+<div class="nav-tabs" id="nav-tabs" style="display:none">
+  <button class="nav-tab active" id="tab-dashboard" onclick="showTab('dashboard')">Dashboard</button>
+  <button class="nav-tab" id="tab-makemodel" onclick="showTab('makemodel')">&#9881; Make &amp; Model</button>
+  <button class="nav-tab" id="tab-settings" onclick="showTab('settings')">Settings</button>
+</div>
 <div class="header-actions"><span id="sync-status" style="font-size:0.8rem;color:var(--muted);display:none"></span><button class="btn-ghost btn-sm" id="btn-sync" onclick="syncAssets()" style="display:none">&#8635; Sync</button><button class="btn-danger btn-sm" id="btn-logout" onclick="logout()" style="display:none">Sign Out</button></div>
 </header>
 
@@ -196,6 +226,34 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <div class="list-view" id="list-view"><table><thead><tr><th>Asset Name</th><th>Type</th><th>Service Due</th><th>PVI Due</th><th>Validation Due</th><th>Performance Due</th><th>EMC Due</th><th>Worst Status</th></tr></thead><tbody id="list-body"></tbody></table></div>
 </div>
 
+<div id="screen-makemodel" class="screen">
+<h2 style="margin-bottom:8px">&#9881; Make &amp; Model Service Times</h2>
+<p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model. These times are displayed on the dashboard cards and modal.</p>
+<div class="mm-toolbar">
+<input type="text" id="mm-search" placeholder="&#128269; Search make or model&hellip;" oninput="renderMakeModel()"/>
+<button class="btn-primary btn-sm" onclick="saveMakeModel()">&#10003; Save All</button>
+<button class="btn-ghost btn-sm" onclick="exportMakeModel()">&#8681; Export CSV</button>
+<button class="btn-ghost btn-sm" onclick="document.getElementById('mm-import').click()">&#8679; Import CSV</button>
+<input type="file" id="mm-import" accept=".csv" style="display:none" onchange="importMakeModel(event)"/>
+</div>
+<div class="mm-table-wrap">
+<table class="mm-table">
+<thead><tr><th>Make</th><th>Model</th><th>Service (hrs)</th><th>PVI (hrs)</th><th>Performance (hrs)</th><th>EMC (hrs)</th><th></th></tr></thead>
+<tbody id="mm-body"></tbody>
+</table>
+</div>
+<div class="mm-add-row" id="mm-add-row">
+<span class="mm-add-label">Add new:</span>
+<input type="text" id="mm-new-make" placeholder="Make&hellip;"/>
+<input type="text" id="mm-new-model" placeholder="Model&hellip;"/>
+<span class="mm-add-label">Service</span><input type="number" id="mm-new-service" min="0" step="0.5" placeholder="hrs"/>
+<span class="mm-add-label">PVI</span><input type="number" id="mm-new-pvi" min="0" step="0.5" placeholder="hrs"/>
+<span class="mm-add-label">Perf</span><input type="number" id="mm-new-perf" min="0" step="0.5" placeholder="hrs"/>
+<span class="mm-add-label">EMC</span><input type="number" id="mm-new-emc" min="0" step="0.5" placeholder="hrs"/>
+<button class="btn-primary btn-sm" onclick="addMakeModelRow()">+ Add</button>
+</div>
+</div>
+
 <div id="screen-settings" class="screen">
 <h2 style="margin-bottom:8px">Settings</h2>
 <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Configure thresholds and map due-date fields per asset type.</p>
@@ -203,6 +261,11 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <div class="settings-card"><h3>&#128995; Elapsed Threshold</h3><p class="card-desc">Assets overdue by more than this many days are marked <strong style="color:var(--purple)">Elapsed</strong>.</p><div class="mapping-row"><label>Days overdue</label><input type="number" id="input-elapsed-threshold" min="1" max="9999" value="100" oninput="updateThresholdPreviews()"/></div><div class="threshold-preview" id="preview-elapsed">&#9888; Elapsed if overdue by more than 100 days</div></div>
 <div class="settings-card"><h3>&#128993; Due Soon Threshold</h3><p class="card-desc">Assets due within this many days are marked <strong style="color:var(--amber)">Due Soon</strong>.</p><div class="mapping-row"><label>Days ahead</label><input type="number" id="input-soon-threshold" min="1" max="9999" value="30" oninput="updateThresholdPreviews()"/></div><div class="due-soon-preview" id="preview-soon">&#9889; Due Soon if within 30 days</div></div>
 <div class="settings-card"><h3>&#128269; Compliance Filtering</h3><p class="card-desc">Assets are automatically hidden based on the <strong>Compliance</strong> field value.</p><div style="font-size:0.83rem;color:var(--muted);line-height:1.9"><div>&#128683; <strong style="color:var(--text)">Decommissioned</strong> &mdash; hidden from all results</div><div>&#128123; <strong style="color:var(--text)">Unknown</strong> &mdash; hidden when Elapsed or No Date</div><div style="margin-top:8px;color:var(--accent)">Use the &#128065; Show Hidden button on the dashboard to reveal them.</div></div></div>
+<div class="settings-card"><h3>&#128270; Make &amp; Model Fields</h3><p class="card-desc">Map which asset fields contain the Make and Model so service times can be looked up automatically.</p>
+<div class="mapping-row"><label>Make field name</label><input type="text" id="input-make-field" placeholder="e.g. Make" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;"/></div>
+<div class="mapping-row"><label>Model field name</label><input type="text" id="input-model-field" placeholder="e.g. Model" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;"/></div>
+<button class="btn-primary btn-sm" style="margin-top:8px" onclick="saveMakeModelFields()">Save Field Names</button>
+</div>
 </div>
 <div class="section-title">Due Date Field Mapping</div>
 <p style="color:var(--muted);font-size:0.82rem;margin-bottom:20px">For each asset type, map which field corresponds to each check type.</p>
@@ -215,10 +278,27 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 
 <script>
 var apiKey='',apiPass='',assets=[],assetTypes={},clientMap={},ELAPSED_THRESHOLD=100,SOON_THRESHOLD=30,COMPLIANCE_FIELD='Compliance';
+var MAKE_FIELD='Make',MODEL_FIELD='Model';
 var showHidden=false;
+var makeModelData=[];
 var CHECK_TYPES=[{key:'service',label:'Service Due'},{key:'pvi',label:'PVI Due'},{key:'validation',label:'Validation Due'},{key:'performance',label:'Performance Due'},{key:'emc',label:'EMC Due'}];
+var MM_CHECKS=[{key:'service',label:'Service'},{key:'pvi',label:'PVI'},{key:'performance',label:'Performance'},{key:'emc',label:'EMC'}];
 var fieldMappings={};
 var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
+
+function mmKey(make,model){return (String(make||'').trim()+'|||'+String(model||'').trim()).toLowerCase();}
+function getMMLookup(){
+  var map={};
+  makeModelData.forEach(function(r){map[mmKey(r.make,r.model)]=r;});
+  return map;
+}
+function getAssetHours(asset){
+  var make=getAnyFieldValue(asset,MAKE_FIELD)||'';
+  var model=getAnyFieldValue(asset,MODEL_FIELD)||'';
+  if(!make&&!model)return null;
+  var lookup=getMMLookup();
+  return lookup[mmKey(make,model)]||null;
+}
 
 function suppressionReason(asset,overallStatus){
   var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);if(!c)return null;
@@ -227,7 +307,6 @@ function suppressionReason(asset,overallStatus){
   if(v==='unknown'&&(overallStatus==='elapsed'||overallStatus==='no-date'))return 'unknown';
   return null;
 }
-function isSuppressed(asset,overallStatus){return suppressionReason(asset,overallStatus)!==null;}
 function getAnyFieldValue(asset,fieldName){
   if(!Array.isArray(asset.field_data))return null;
   var lower=fieldName.toLowerCase();
@@ -288,6 +367,11 @@ function formatDate(str){
   if(isNaN(d.getTime()))return str;
   return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
 }
+function fmtHrs(val){
+  if(val===null||val===undefined||val==='')return null;
+  var n=parseFloat(val);if(isNaN(n)||n<=0)return null;
+  return n+'h';
+}
 function toast(msg,isError){
   var el=document.getElementById('toast');el.textContent=msg;
   el.style.borderColor=isError?'var(--red)':'var(--accent)';
@@ -298,6 +382,8 @@ function saveLocal(){
   localStorage.setItem('sm8_assets',JSON.stringify(assets));localStorage.setItem('sm8_types',JSON.stringify(assetTypes));
   localStorage.setItem('sm8_mappings',JSON.stringify(fieldMappings));localStorage.setItem('sm8_clients',JSON.stringify(clientMap));
   localStorage.setItem('sm8_elapsed_threshold',String(ELAPSED_THRESHOLD));localStorage.setItem('sm8_soon_threshold',String(SOON_THRESHOLD));
+  localStorage.setItem('sm8_makemodel',JSON.stringify(makeModelData));
+  localStorage.setItem('sm8_make_field',MAKE_FIELD);localStorage.setItem('sm8_model_field',MODEL_FIELD);
 }
 function loadLocal(){
   apiKey=localStorage.getItem('sm8_key')||'';apiPass=localStorage.getItem('sm8_pass')||'';
@@ -307,6 +393,9 @@ function loadLocal(){
   clientMap=JSON.parse(localStorage.getItem('sm8_clients')||'{}');
   ELAPSED_THRESHOLD=parseInt(localStorage.getItem('sm8_elapsed_threshold')||'100',10);
   SOON_THRESHOLD=parseInt(localStorage.getItem('sm8_soon_threshold')||'30',10);
+  makeModelData=JSON.parse(localStorage.getItem('sm8_makemodel')||'[]');
+  MAKE_FIELD=localStorage.getItem('sm8_make_field')||'Make';
+  MODEL_FIELD=localStorage.getItem('sm8_model_field')||'Model';
 }
 function connect(){
   apiKey=document.getElementById('auth-key').value.trim();apiPass=document.getElementById('auth-pass').value;
@@ -318,11 +407,8 @@ function connect(){
 }
 function logout(){
   localStorage.clear();assets=[];assetTypes={};fieldMappings={};clientMap={};apiKey='';apiPass='';
-  ELAPSED_THRESHOLD=100;SOON_THRESHOLD=30;showHidden=false;
-  document.getElementById('nav-tabs').style.display='none';
-  document.getElementById('btn-sync').style.display='none';
-  document.getElementById('btn-logout').style.display='none';
-  document.getElementById('sync-status').style.display='none';
+  ELAPSED_THRESHOLD=100;SOON_THRESHOLD=30;showHidden=false;makeModelData=[];
+  ['nav-tabs','btn-sync','btn-logout','sync-status'].forEach(function(id){document.getElementById(id).style.display='none';});
   showScreen('auth');
 }
 function fetchAll(){
@@ -367,14 +453,15 @@ function showDashboard(){
   document.getElementById('btn-sync').style.display='inline-block';
   document.getElementById('btn-logout').style.display='inline-block';
   document.getElementById('sync-status').style.display='inline-block';
+  ['tab-dashboard','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   document.getElementById('tab-dashboard').classList.add('active');
-  document.getElementById('tab-settings').classList.remove('active');
   showScreen('dashboard');renderAll();
 }
 function showTab(tab){
-  document.getElementById('tab-dashboard').classList.toggle('active',tab==='dashboard');
-  document.getElementById('tab-settings').classList.toggle('active',tab==='settings');
+  ['tab-dashboard','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  document.getElementById('tab-'+tab).classList.add('active');
   if(tab==='dashboard'){showScreen('dashboard');renderAll();}
+  else if(tab==='makemodel'){showScreen('makemodel');renderMakeModel();}
   else{showScreen('settings');renderSettings();}
 }
 function toggleShowHidden(){
@@ -401,7 +488,10 @@ function enrichedAssets(){
     var compliance=getAnyFieldValue(a,COMPLIANCE_FIELD);
     var supReason=suppressionReason(a,overall);
     var suppressed=supReason!==null;
-    return Object.assign({},a,{typeName:typeName,clientName:clientName,checks:checks,status:overall,urgentDays:urgentDays,compliance:compliance,suppressed:suppressed,supReason:supReason});
+    var hours=getAssetHours(a);
+    var make=getAnyFieldValue(a,MAKE_FIELD)||'';
+    var model=getAnyFieldValue(a,MODEL_FIELD)||'';
+    return Object.assign({},a,{typeName:typeName,clientName:clientName,checks:checks,status:overall,urgentDays:urgentDays,compliance:compliance,suppressed:suppressed,supReason:supReason,hours:hours,make:make,model:model});
   });
 }
 function sortedAssets(data){
@@ -486,6 +576,10 @@ function suppressionPill(reason){
   if(reason==='decommissioned')return '<span class="suppression-pill decommissioned">&#128683; Decommissioned</span>';
   return '<span class="suppression-pill unknown">&#128123; Unknown</span>';
 }
+function hoursPill(hrs){
+  if(!hrs)return '';
+  return '<span class="hours-pill">&#128336; '+hrs+'</span>';
+}
 function renderAssets(){
   var data=filteredAssets();var sorted=sortedAssets(data);
   var hiddenCount=enrichedAssets().filter(function(a){return a.suppressed;}).length;
@@ -493,9 +587,7 @@ function renderAssets(){
   if(showHidden&&hiddenCount>0){
     hidBar.style.display='flex';
     document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s')+' &mdash; <span style="color:#fde68a;font-size:0.8rem">&#128683; Decommissioned &nbsp; &#128123; Unknown</span>';
-  } else {
-    hidBar.style.display='none';
-  }
+  } else {hidBar.style.display='none';}
   var cols={'elapsed':[],'overdue':[],'due-soon':[],'ok':[],'no-date':[]};
   sorted.forEach(function(a){cols[a.status].push(a);});
   var colMap={'elapsed':'elapsed','overdue':'overdue','due-soon':'soon','ok':'ok','no-date':'nodate'};
@@ -519,14 +611,19 @@ function renderAssets(){
       var c=a.checks[ct.key];
       if(!c||c.date===null)return '<td><span style="color:var(--muted);font-size:0.78rem">\u2014</span></td>';
       var col=statusColor(c.status);var css=col==='purple'?'var(--purple)':'var(--'+col+')';
+      var hrsKey=ct.key==='validation'?null:ct.key;
+      var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
       return '<td>'
         +'<div style="font-size:0.8rem;font-weight:600;color:'+css+'">'+statusLabel(c.days,c.status)+'</div>'
         +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
+        +(hrs?'<div>'+hoursPill(hrs)+'</div>':'')
         +'</td>';
     }).join('');
     var rowClass=a.suppressed?'row-suppressed':'';
     html+='<tr class="'+rowClass+'" onclick="openModal(\''+a.uuid+'\')">'
-      +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')+(a.compliance&&!a.suppressed?'<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">'+esc(a.compliance)+'</div>':'')+'</td>'
+      +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')+(a.compliance&&!a.suppressed?'<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">'+esc(a.compliance)+'</div>':'')
+      +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')
+      +'</td>'
       +'<td><span class="tag">'+esc(a.typeName)+'</span></td>'
       +checkCells
       +'<td><span class="due-badge '+worstColor+'">'+esc(a.status)+'</span></td>'
@@ -541,11 +638,14 @@ function assetCard(a){
   var checkRows=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];if(!c||c.date===null)return '';
     var col=statusColor(c.status);
+    var hrsKey=ct.key==='validation'?null:ct.key;
+    var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
     return '<div class="check-row">'
       +'<span class="check-label">'+esc(ct.label)+'</span>'
       +'<span class="check-right">'
       +'<span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span>'
       +'<span class="check-date">'+formatDate(c.date)+'</span>'
+      +(hrs?'<span class="check-hours">&#128336; '+hrs+'</span>':'')
       +'</span>'
       +'</div>';
   }).join('');
@@ -553,7 +653,7 @@ function assetCard(a){
   return '<div class="'+cardClass+'" onclick="openModal(\''+a.uuid+'\')">'
     +'<div class="asset-card-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
     +'<div class="asset-card-client">&#128205; '+esc(a.clientName)+'</div>'
-    +'<div class="asset-card-type">'+esc(a.typeName)+(a.compliance&&!a.suppressed?' &middot; '+esc(a.compliance):'')+'</div>'
+    +'<div class="asset-card-type">'+esc(a.typeName)+(a.make||a.model?' &middot; '+esc([a.make,a.model].filter(Boolean).join(' ')):'')+'</div>'
     +(checkRows?'<div class="asset-card-checks">'+checkRows+'</div>':'')
     +'<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+worstCss+'"></div></div></div>'
     +'</div>';
@@ -568,12 +668,15 @@ function openModal(uuid){
     var col=statusColor(c.status);var css=col==='purple'?'var(--purple)':'var(--'+col+')';
     var absD=c.days!==null?Math.abs(c.days):'\u2014';
     var sub=c.days===null?'No date':c.status==='elapsed'?'days elapsed':c.days<0?'days overdue':c.days===0?'Due today':'days left';
+    var hrsKey=ct.key==='validation'?null:ct.key;
+    var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
     return '<div class="modal-check-card">'
       +'<div class="mc-label">'+esc(ct.label)+'</div>'
       +'<div class="mc-days" style="color:'+css+'">'+absD+'</div>'
       +'<div class="mc-sub">'+sub+'</div>'
       +'<div class="mc-date" style="color:'+css+'">'+formatDate(c.date)+'</div>'
       +'<div class="mc-date-label">due date</div>'
+      +(hrs?'<div class="mc-hours">&#128336; '+hrs+' to complete</div>':'')
       +'</div>';
   }).filter(Boolean).join('');
   var elapsedBanner=a.status==='elapsed'?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
@@ -585,14 +688,13 @@ function openModal(uuid){
       if(f.fieldType==='Date'&&f.fieldValue)val=formatDate(f.fieldValue);
       cfRows+='<div class="field-row"><span class="field-label">'+esc(f.fieldName)+'</span><span class="field-value">'+esc(val)+'</span></div>';
     });
-  } else {
-    cfRows='<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
-  }
+  } else {cfRows='<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';}
   document.getElementById('modal-body').innerHTML=
     '<h2>'+esc(a.name||'Unnamed Asset')+'</h2>'
     +'<div class="modal-type">'
     +'<span class="tag">'+esc(a.typeName)+'</span>'
     +'<span class="tag tag-client">&#128205; '+esc(a.clientName)+'</span>'
+    +(a.make||a.model?'<span class="tag">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</span>':'')
     +(a.compliance?'<span class="tag" style="background:rgba(136,146,176,0.1);border-color:rgba(136,146,176,0.3);color:var(--muted)">'+esc(a.compliance)+'</span>':'')
     +'<span class="due-badge '+worstColor+'" style="margin-left:4px">'+esc(a.status)+'</span>'
     +'</div>'
@@ -605,6 +707,94 @@ function openModal(uuid){
 }
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function renderMakeModel(){
+  var search=(document.getElementById('mm-search').value||'').toLowerCase();
+  var rows=makeModelData.filter(function(r){
+    if(!search)return true;
+    return r.make.toLowerCase().indexOf(search)!==-1||r.model.toLowerCase().indexOf(search)!==-1;
+  });
+  var html='';
+  if(rows.length===0){
+    html='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No entries yet. Add one below.</td></tr>';
+  } else {
+    rows.forEach(function(r,i){
+      var realIdx=makeModelData.indexOf(r);
+      html+='<tr>'
+        +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
+        +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="—"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="—"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="—"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="—"/></td>'
+        +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
+        +'</tr>';
+    });
+  }
+  document.getElementById('mm-body').innerHTML=html;
+}
+function mmChanged(input,idx,field){
+  input.classList.add('changed');
+  makeModelData[idx][field]=input.value;
+}
+function addMakeModelRow(){
+  var make=document.getElementById('mm-new-make').value.trim();
+  var model=document.getElementById('mm-new-model').value.trim();
+  if(!make&&!model){toast('Please enter at least a Make or Model.',true);return;}
+  var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
+  if(existing){toast('That Make + Model already exists.',true);return;}
+  makeModelData.push({
+    make:make,model:model,
+    service:document.getElementById('mm-new-service').value||'',
+    pvi:document.getElementById('mm-new-pvi').value||'',
+    performance:document.getElementById('mm-new-perf').value||'',
+    emc:document.getElementById('mm-new-emc').value||''
+  });
+  ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-perf','mm-new-emc'].forEach(function(id){document.getElementById(id).value='';});
+  saveMakeModel();renderMakeModel();
+}
+function deleteMakeModelRow(idx){
+  makeModelData.splice(idx,1);
+  saveMakeModel();renderMakeModel();
+}
+function saveMakeModel(){
+  saveLocal();toast('Make & Model data saved!');
+  document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
+}
+function exportMakeModel(){
+  var csv='Make,Model,Service (hrs),PVI (hrs),Performance (hrs),EMC (hrs)\n';
+  makeModelData.forEach(function(r){
+    csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';
+  });
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='make-model-times.csv';a.click();
+}
+function importMakeModel(event){
+  var file=event.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var lines=e.target.result.split('\n');
+    var added=0;
+    lines.slice(1).forEach(function(line){
+      if(!line.trim())return;
+      var cols=line.match(/(".*?"|[^,]+)(?=,|$)/g)||[];
+      function clean(s){return (s||'').replace(/^"|"$/g,'').trim();}
+      var make=clean(cols[0]),model=clean(cols[1]),service=clean(cols[2]),pvi=clean(cols[3]),perf=clean(cols[4]),emc=clean(cols[5]);
+      if(!make&&!model)return;
+      var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
+      if(existing){existing.service=service;existing.pvi=pvi;existing.performance=perf;existing.emc=emc;}
+      else{makeModelData.push({make:make,model:model,service:service,pvi:pvi,performance:perf,emc:emc});added++;}
+    });
+    saveMakeModel();renderMakeModel();toast('CSV imported!');
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+function saveMakeModelFields(){
+  MAKE_FIELD=document.getElementById('input-make-field').value.trim()||'Make';
+  MODEL_FIELD=document.getElementById('input-model-field').value.trim()||'Model';
+  saveLocal();toast('Field names saved!');renderAssets();
+}
 function updateThresholdPreviews(){
   var el=parseInt(document.getElementById('input-elapsed-threshold').value,10)||100;
   var soon=parseInt(document.getElementById('input-soon-threshold').value,10)||30;
@@ -614,6 +804,8 @@ function updateThresholdPreviews(){
 function renderSettings(){
   document.getElementById('input-elapsed-threshold').value=ELAPSED_THRESHOLD;
   document.getElementById('input-soon-threshold').value=SOON_THRESHOLD;
+  document.getElementById('input-make-field').value=MAKE_FIELD;
+  document.getElementById('input-model-field').value=MODEL_FIELD;
   updateThresholdPreviews();
   var grid=document.getElementById('settings-grid');
   var keys=Object.keys(assetTypes);
