@@ -54,7 +54,7 @@ button:hover{opacity:0.85;}
 .hidden-bar span{flex:1;}
 .kanban{display:none;}
 .kanban.active{display:block;overflow-x:auto;padding-bottom:12px;}
-.kanban-inner{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:16px;min-width:1100px;}
+.kanban-inner{display:grid;grid-template-columns:repeat(5,minmax(240px,1fr));gap:16px;min-width:1200px;}
 .kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0;}
 .kanban-col-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700;font-size:0.88rem;}
 .col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
@@ -72,15 +72,17 @@ button:hover{opacity:0.85;}
 .asset-card-name{font-weight:600;font-size:0.88rem;margin-bottom:2px;padding-left:8px;}
 .asset-card-client{font-size:0.75rem;color:var(--accent);padding-left:8px;margin-bottom:2px;font-weight:500;}
 .asset-card-type{font-size:0.72rem;color:var(--muted);padding-left:8px;margin-bottom:6px;}
-.asset-card-checks{padding-left:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:3px;}
-.check-row{display:flex;align-items:center;justify-content:space-between;font-size:0.71rem;}
-.check-label{color:var(--muted);}
+.asset-card-checks{padding-left:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:5px;}
+.check-row{display:flex;align-items:flex-start;justify-content:space-between;font-size:0.71rem;gap:6px;}
+.check-label{color:var(--muted);padding-top:1px;flex-shrink:0;}
+.check-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
 .check-badge{font-weight:700;padding:1px 7px;border-radius:10px;font-size:0.68rem;}
 .check-badge.green{background:rgba(34,197,94,0.15);color:var(--green);}
 .check-badge.amber{background:rgba(245,158,11,0.15);color:var(--amber);}
 .check-badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
 .check-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
 .check-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
+.check-date{font-size:0.63rem;color:var(--muted);text-align:right;}
 .suppression-pill{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle;}
 .suppression-pill.decommissioned{background:rgba(239,68,68,0.15);color:var(--red);}
 .suppression-pill.unknown{background:rgba(136,146,176,0.15);color:var(--muted);}
@@ -107,16 +109,17 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .client-group-header td{padding:10px 14px 6px;font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;position:relative;}
 .modal h2{margin-bottom:6px;}
 .modal-type{font-size:0.85rem;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
 .modal-close{position:absolute;top:16px;right:16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;font-size:1rem;}
-.modal-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.modal-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
 .modal-check-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
 .modal-check-card .mc-label{font-size:0.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;}
 .modal-check-card .mc-days{font-size:1.8rem;font-weight:800;line-height:1;}
 .modal-check-card .mc-sub{font-size:0.72rem;color:var(--muted);margin-top:3px;}
-.modal-check-card .mc-date{font-size:0.75rem;margin-top:6px;}
+.modal-check-card .mc-date{font-size:0.78rem;margin-top:8px;font-weight:600;}
+.modal-check-card .mc-date-label{font-size:0.68rem;color:var(--muted);margin-top:2px;}
 .field-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
 .field-row:last-child{border-bottom:none;}
 .field-label{font-size:0.8rem;color:var(--muted);}
@@ -218,8 +221,7 @@ var fieldMappings={};
 var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
 
 function suppressionReason(asset,overallStatus){
-  var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);
-  if(!c)return null;
+  var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);if(!c)return null;
   var v=c.trim().toLowerCase();
   if(v==='decommissioned')return 'decommissioned';
   if(v==='unknown'&&(overallStatus==='elapsed'||overallStatus==='no-date'))return 'unknown';
@@ -244,16 +246,14 @@ function getFieldValue(asset,fieldName){
 }
 function getCheckDate(asset,checkKey){
   var fn=(fieldMappings[asset.asset_type_uuid]&&fieldMappings[asset.asset_type_uuid][checkKey])||null;
-  if(!fn)return null;
-  return getFieldValue(asset,fn);
+  if(!fn)return null;return getFieldValue(asset,fn);
 }
 function getClientName(asset){return(asset.company_uuid&&clientMap[asset.company_uuid])||'Unknown Client';}
 function daysUntil(dateStr){
   if(!dateStr)return null;
   var clean=String(dateStr).trim().substring(0,10);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(clean))return null;
-  var due=new Date(clean+'T00:00:00');
-  if(isNaN(due.getTime()))return null;
+  var due=new Date(clean+'T00:00:00');if(isNaN(due.getTime()))return null;
   var today=new Date();today.setHours(0,0,0,0);
   return Math.round((due.getTime()-today.getTime())/86400000);
 }
@@ -309,8 +309,7 @@ function loadLocal(){
   SOON_THRESHOLD=parseInt(localStorage.getItem('sm8_soon_threshold')||'30',10);
 }
 function connect(){
-  apiKey=document.getElementById('auth-key').value.trim();
-  apiPass=document.getElementById('auth-pass').value;
+  apiKey=document.getElementById('auth-key').value.trim();apiPass=document.getElementById('auth-pass').value;
   var errEl=document.getElementById('auth-error');errEl.style.display='none';
   if(!apiKey||!apiPass){errEl.textContent='Please enter your email and password.';errEl.style.display='block';return;}
   var btn=document.getElementById('btn-connect');btn.innerHTML='<span class="loader"></span> Connecting...';btn.disabled=true;
@@ -382,7 +381,7 @@ function toggleShowHidden(){
   showHidden=!showHidden;
   var btn=document.getElementById('btn-show-hidden');
   btn.classList.toggle('active',showHidden);
-  btn.textContent=showHidden?'\uD83D\uDC41 Showing Hidden':'\uD83D\uDC41 Show Hidden';
+  btn.innerHTML=showHidden?'&#128065; Showing Hidden':'&#128065; Show Hidden';
   renderAssets();
 }
 function enrichedAssets(){
@@ -493,7 +492,7 @@ function renderAssets(){
   var hidBar=document.getElementById('hidden-bar');
   if(showHidden&&hiddenCount>0){
     hidBar.style.display='flex';
-    document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s')+' &mdash; <span style="color:#fde68a;font-size:0.8rem">&#128683; Decommissioned &nbsp;&#128123; Unknown</span>';
+    document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s')+' &mdash; <span style="color:#fde68a;font-size:0.8rem">&#128683; Decommissioned &nbsp; &#128123; Unknown</span>';
   } else {
     hidBar.style.display='none';
   }
@@ -520,14 +519,14 @@ function renderAssets(){
       var c=a.checks[ct.key];
       if(!c||c.date===null)return '<td><span style="color:var(--muted);font-size:0.78rem">\u2014</span></td>';
       var col=statusColor(c.status);var css=col==='purple'?'var(--purple)':'var(--'+col+')';
-      return '<td><div style="font-size:0.8rem;font-weight:600;color:'+css+'">'+statusLabel(c.days,c.status)+'</div><div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div></td>';
+      return '<td>'
+        +'<div style="font-size:0.8rem;font-weight:600;color:'+css+'">'+statusLabel(c.days,c.status)+'</div>'
+        +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
+        +'</td>';
     }).join('');
     var rowClass=a.suppressed?'row-suppressed':'';
     html+='<tr class="'+rowClass+'" onclick="openModal(\''+a.uuid+'\')">'
-      +'<td class="td-name">'+esc(a.name||'Unnamed')
-      +(a.suppressed?suppressionPill(a.supReason):'')
-      +(a.compliance&&!a.suppressed?'<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">'+esc(a.compliance)+'</div>':'')
-      +'</td>'
+      +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')+(a.compliance&&!a.suppressed?'<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">'+esc(a.compliance)+'</div>':'')+'</td>'
       +'<td><span class="tag">'+esc(a.typeName)+'</span></td>'
       +checkCells
       +'<td><span class="due-badge '+worstColor+'">'+esc(a.status)+'</span></td>'
@@ -542,7 +541,13 @@ function assetCard(a){
   var checkRows=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];if(!c||c.date===null)return '';
     var col=statusColor(c.status);
-    return '<div class="check-row"><span class="check-label">'+esc(ct.label)+'</span><span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span></div>';
+    return '<div class="check-row">'
+      +'<span class="check-label">'+esc(ct.label)+'</span>'
+      +'<span class="check-right">'
+      +'<span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span>'
+      +'<span class="check-date">'+formatDate(c.date)+'</span>'
+      +'</span>'
+      +'</div>';
   }).join('');
   var cardClass='asset-card '+worstColor+(a.suppressed?' is-suppressed':'');
   return '<div class="'+cardClass+'" onclick="openModal(\''+a.uuid+'\')">'
@@ -567,13 +572,12 @@ function openModal(uuid){
       +'<div class="mc-label">'+esc(ct.label)+'</div>'
       +'<div class="mc-days" style="color:'+css+'">'+absD+'</div>'
       +'<div class="mc-sub">'+sub+'</div>'
-      +'<div class="mc-date"><span class="due-badge '+col+'">'+formatDate(c.date)+'</span></div>'
+      +'<div class="mc-date" style="color:'+css+'">'+formatDate(c.date)+'</div>'
+      +'<div class="mc-date-label">due date</div>'
       +'</div>';
   }).filter(Boolean).join('');
-  var elapsedBanner=a.status==='elapsed'
-    ?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
-  var suppressedBanner=a.suppressed
-    ?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden from results.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
+  var elapsedBanner=a.status==='elapsed'?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
+  var suppressedBanner=a.suppressed?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden from results.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
   var cfRows='';
   if(Array.isArray(a.field_data)&&a.field_data.length>0){
     a.field_data.slice().sort(function(x,y){return(x.sortOrder||0)-(y.sortOrder||0);}).forEach(function(f){
@@ -592,8 +596,7 @@ function openModal(uuid){
     +(a.compliance?'<span class="tag" style="background:rgba(136,146,176,0.1);border-color:rgba(136,146,176,0.3);color:var(--muted)">'+esc(a.compliance)+'</span>':'')
     +'<span class="due-badge '+worstColor+'" style="margin-left:4px">'+esc(a.status)+'</span>'
     +'</div>'
-    +suppressedBanner
-    +elapsedBanner
+    +suppressedBanner+elapsedBanner
     +(checkCards?'<div class="modal-checks">'+checkCards+'</div>':'')
     +'<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">All Asset Fields</h3>'
     +cfRows
