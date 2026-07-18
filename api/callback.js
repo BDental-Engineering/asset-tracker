@@ -68,7 +68,7 @@ module.exports = async function(req, res) {
 
     // Set a long-lived session cookie and clear the state cookie
     res.setHeader('Set-Cookie', [
-      'sm8_session=' + sessionId + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400',
+      'sm8_session=' + sessionId + '; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=86400',
       'sm8_state=; Path=/; HttpOnly; Max-Age=0'
     ]);
 
