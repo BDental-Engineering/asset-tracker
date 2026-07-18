@@ -63,23 +63,29 @@ module.exports = async function(req, res) {
     }
   }
 
-  const sm8Path = req.query.path || '';
+  let sm8Path = req.query.path || '';
   if (!sm8Path) { res.status(400).json({ error: 'No path provided' }); return; }
+
+  // Ensure path starts with a single /
+  if (!sm8Path.startsWith('/')) sm8Path = '/' + sm8Path;
 
   const method = req.headers['x-http-method-override'] || req.method;
 
   let bodyData = '';
   req.on('data', function(chunk) { bodyData += chunk; });
   req.on('end', function() {
+
     const options = {
       hostname: 'api.servicem8.com',
-      path:     '/api_1.0' + sm8Path,
+      path:     '/api' + sm8Path,   // ← was '/api_1.0' which returns 403
       method:   method,
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
         'Accept':        'application/json'
       }
     };
+
+    console.log('[proxy] -->', method, options.path);
 
     if (bodyData) {
       options.headers['Content-Type']   = 'application/json';
@@ -90,6 +96,7 @@ module.exports = async function(req, res) {
       let data = '';
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
+        console.log('[proxy] <--', sm8Res.statusCode, options.path);
         res.setHeader('Content-Type', 'application/json');
         try {
           res.status(sm8Res.statusCode).json(JSON.parse(data));
@@ -97,13 +104,17 @@ module.exports = async function(req, res) {
           if ([200, 201, 204].includes(sm8Res.statusCode)) {
             res.status(sm8Res.statusCode).json({ success: true });
           } else {
-            res.status(500).json({ error: 'Invalid JSON', status: sm8Res.statusCode });
+            res.status(500).json({ error: 'Invalid JSON', status: sm8Res.statusCode, raw: data.substring(0, 200) });
           }
         }
       });
     });
 
-    proxy.on('error', function(e) { res.status(500).json({ error: e.message }); });
+    proxy.on('error', function(e) {
+      console.log('[proxy] error:', e.message);
+      res.status(500).json({ error: e.message });
+    });
+
     if (bodyData) proxy.write(bodyData);
     proxy.end();
   });
