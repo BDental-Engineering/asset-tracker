@@ -587,27 +587,30 @@ function loadLocal(){
 }
 
 // ─── User identity ────────────────────────────────────────────────────────────
-function resolveUserName(staffList){
+function readIdentityCookies(){
+  var email='',name='';
+  document.cookie.split(';').forEach(function(c){
+    var parts=c.trim().split('=');
+    var key=parts[0];
+    var val=decodeURIComponent(parts.slice(1).join('='));
+    if(key==='sm8_user_email')email=val;
+    if(key==='sm8_user_name')name=val;
+  });
+  return{email:email,name:name};
+}
+function resolveUserName(staffList,cookieEmail){
   if(!Array.isArray(staffList)||!staffList.length)return 'Unknown User';
-
-  // Try to find the logged-in user by matching the session email stored during OAuth
-  var sessionEmail=localStorage.getItem('sm8_session_email')||'';
   var matched=null;
-
-  if(sessionEmail){
+  var storedEmail=cookieEmail||localStorage.getItem('sm8_session_email')||'';
+  if(storedEmail){
     matched=staffList.find(function(s){
-      return String(s.email||'').toLowerCase()===sessionEmail.toLowerCase();
+      return String(s.email||'').toLowerCase()===storedEmail.toLowerCase();
     });
   }
-
-  // Fall back to first active staff member
-  if(!matched){
-    matched=staffList.find(function(s){return String(s.active)==='1';});
-  }
+  if(!matched)matched=staffList.find(function(s){return String(s.active)==='1';});
   if(!matched)matched=staffList[0];
   if(!matched)return 'Unknown User';
-
-  // ServiceM8 uses 'first' and 'last', not 'first_name'/'last_name'
+  // ServiceM8 uses 'first' and 'last'
   var full=[matched.first,matched.last].filter(Boolean).join(' ').trim();
   if(full)return full;
   if(matched.name)return matched.name;
@@ -624,7 +627,7 @@ function writeHistory(record){
     method:'POST',credentials:'include',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(record)
-  }).catch(function(){/* silent — local copy already prepended */});
+  }).catch(function(){});
 }
 function loadHistory(){
   fetch('/api/history',{credentials:'include'})
@@ -639,9 +642,8 @@ function loadHistory(){
 function loadMakeModelFromServer(){
   fetch('/api/makemodel',{credentials:'include'})
     .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
-    .then(function(data){
-      if(Array.isArray(data)&&data.length>0){makeModelData=data;saveLocal();}
-    }).catch(function(){});
+    .then(function(data){if(Array.isArray(data)&&data.length>0){makeModelData=data;saveLocal();}})
+    .catch(function(){});
 }
 function saveMakeModelToServer(onSuccess,onError){
   var statusEl=document.getElementById('mm-sync-status');
@@ -685,7 +687,16 @@ function checkSession(){
   }
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
-  // Step 1: check session with a simple fetch (not sm8Get) so we don't throw on non-401 errors
+
+  // Read identity cookies set by callback.js
+  var identity=readIdentityCookies();
+  if(identity.email)localStorage.setItem('sm8_session_email',identity.email);
+  if(identity.name)localStorage.setItem('sm8_session_name',identity.name);
+
+  // Use stored name immediately if available
+  var storedName=identity.name||localStorage.getItem('sm8_session_name')||'';
+  if(storedName)currentUser=storedName;
+
   fetch('/api/proxy?path=/staff.json',{credentials:'include',headers:{'Accept':'application/json'}})
     .then(function(res){
       if(res.status===401){showScreen('auth');return null;}
@@ -693,20 +704,20 @@ function checkSession(){
     })
     .then(function(staffList){
       if(!staffList)return;
-      // Try to read the session email from a cookie the server set
-      var cookieEmail='';
-      document.cookie.split(';').forEach(function(c){
-        var parts=c.trim().split('=');
-        if(parts[0]==='sm8_user_email')cookieEmail=decodeURIComponent(parts[1]||'');
-    });
-    if(cookieEmail)localStorage.setItem('sm8_session_email',cookieEmail);
 
-    currentUser=resolveUserName(Array.isArray(staffList)?staffList:[]);
-      // Resolve user name gracefully
-      currentUser=resolveUserName(Array.isArray(staffList)?staffList:[]);
+      // If callback set a name cookie use it directly — it came from /staff/me.json
+      if(identity.name){
+        currentUser=identity.name;
+      } else {
+        // Fall back to matching by email in the staff list
+        currentUser=resolveUserName(Array.isArray(staffList)?staffList:[],identity.email);
+      }
+      localStorage.setItem('sm8_session_name',currentUser);
+
       var badge=document.getElementById('user-badge');
       badge.textContent='\uD83D\uDC64 '+currentUser;
       badge.style.display='inline-block';
+
       loadLocal();
       if(assets.length>0){
         showDashboard();
@@ -719,17 +730,14 @@ function checkSession(){
         document.getElementById('loading-msg').textContent='Loading your assets\u2026';
         fetchAll()
           .then(function(){
-            saveLocal();
-            loadMakeModelFromServer();
-            loadHistory();
-            showDashboard();
+            saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();
             toast('Loaded '+assets.length+' assets.');
           })
           .catch(handleFetchError);
       }
     })
     .catch(function(){
-      // Network error — if we have cached data, use it rather than bouncing to login
+      // Network error — use cache if available
       loadLocal();
       if(assets.length>0){
         showDashboard();
@@ -739,7 +747,6 @@ function checkSession(){
       }
     });
 }
-
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
     showScreen('auth');
@@ -891,13 +898,9 @@ function saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName){
     })
     .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status+': '+text);});})
     .then(function(){
-      // Update local asset field_data
       if(Array.isArray(asset.field_data)){
         var fn=(fieldMappings[asset.asset_type_uuid]&&fieldMappings[asset.asset_type_uuid][checkKey])||null;
-        if(fn){
-          var m=asset.field_data.find(function(f){return f.fieldName===fn;});
-          if(m)m.fieldValue=newDate;
-        }
+        if(fn){var m=asset.field_data.find(function(f){return f.fieldName===fn;});if(m)m.fieldValue=newDate;}
       }
       saveLocal();
       var ct=CHECK_TYPES.find(function(c){return c.key===checkKey;});
@@ -1163,15 +1166,13 @@ function renderAssets(){
       var col=statusColor(c.status);var css=col==='purple'?'var(--purple)':'var(--'+col+')';
       var hrsKey=ct.key==='validation'?null:ct.key;
       var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
-      return '<td>'
-        +'<div style="font-size:0.8rem;font-weight:600;color:'+css+'">'+statusLabel(c.days,c.status)+'</div>'
+      return '<td><div style="font-size:0.8rem;font-weight:600;color:'+css+'">'+statusLabel(c.days,c.status)+'</div>'
         +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
         +(hrs?'<div>'+hoursPill(hrs)+'</div>':'')+'</td>';
     }).join('');
     html+='<tr class="'+(a.suppressed?'row-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
       +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')
-      +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')
-      +'</td>'
+      +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')+'</td>'
       +'<td onclick="event.stopPropagation()">'+compPill(a.compliance)+'<br/>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</td>'
       +'<td><span class="tag">'+esc(a.typeName)+'</span></td>'
       +checkCells
@@ -1189,13 +1190,10 @@ function assetCard(a){
     var col=statusColor(c.status);
     var hrsKey=ct.key==='validation'?null:ct.key;
     var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
-    return '<div class="check-row">'
-      +'<span class="check-label">'+esc(ct.label)+'</span>'
-      +'<span class="check-right">'
-      +'<span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span>'
+    return '<div class="check-row"><span class="check-label">'+esc(ct.label)+'</span>'
+      +'<span class="check-right"><span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span>'
       +'<span class="check-date">'+formatDate(c.date)+'</span>'
-      +(hrs?'<span class="check-hours">&#128336; '+hrs+'</span>':'')
-      +'</span></div>';
+      +(hrs?'<span class="check-hours">&#128336; '+hrs+'</span>':'')+'</span></div>';
   }).join('');
   return '<div class="asset-card '+worstColor+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
     +'<div class="asset-card-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
@@ -1306,15 +1304,14 @@ function renderHistory(){
   var search=(document.getElementById('history-search').value||'').toLowerCase();
   var typeFilter=document.getElementById('history-type-filter').value;
   var userFilter=document.getElementById('history-user-filter').value;
-  // Populate user filter
   var users={};
   historyData.forEach(function(h){if(h.changed_by)users[h.changed_by]=true;});
   var userSel=document.getElementById('history-user-filter');
-  var currentUser2=userSel.value;
+  var currentUserFilter=userSel.value;
   userSel.innerHTML='<option value="">All Users</option>';
   Object.keys(users).sort().forEach(function(u){
     var opt=document.createElement('option');opt.value=u;opt.textContent=u;
-    if(u===currentUser2)opt.selected=true;
+    if(u===currentUserFilter)opt.selected=true;
     userSel.appendChild(opt);
   });
   var filtered=historyData.filter(function(h){
@@ -1335,9 +1332,9 @@ function renderHistory(){
     var dotClass=h.type==='compliance'?'compliance':'date_change';
     var desc='';
     if(h.type==='compliance'){
-      desc='Compliance changed: <span class="history-val-old">'+esc(h.old_value||'—')+'</span> &rarr; <span class="history-val-new">'+esc(h.new_value||'—')+'</span>';
+      desc='Compliance: <span class="history-val-old">'+esc(h.old_value||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(h.new_value||'\u2014')+'</span>';
     } else {
-      desc=esc(h.field||'Date')+' changed: <span class="history-val-old">'+esc(formatDate(h.old_value)||'—')+'</span> &rarr; <span class="history-val-new">'+esc(formatDate(h.new_value)||'—')+'</span>';
+      desc=esc(h.field||'Date')+': <span class="history-val-old">'+esc(formatDate(h.old_value)||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(formatDate(h.new_value)||'\u2014')+'</span>';
     }
     html+='<div class="history-item">'
       +'<div class="history-dot-col"><div class="history-dot '+dotClass+'"></div>'+(isLast?'':'<div class="history-line"></div>')+'</div>'
@@ -1370,8 +1367,7 @@ function openModal(uuid){
     var hrsKey=ct.key==='validation'?null:ct.key;
     var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
     var currentDate=c?c.date||'':'';
-    var cardId='mc-'+esc(uuid)+'-'+ct.key;
-    return '<div class="modal-check-card" id="'+cardId+'">'
+    return '<div class="modal-check-card">'
       +'<button class="mc-edit-btn" onclick="toggleDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')" title="Edit date">&#9998;</button>'
       +'<div class="mc-label">'+esc(ct.label)+'</div>'
       +'<div class="mc-days" style="color:'+css+'">'+absD+'</div>'
@@ -1389,7 +1385,6 @@ function openModal(uuid){
   }).filter(Boolean).join('');
   var elapsedBanner=a.status==='elapsed'?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
   var suppressedBanner=a.suppressed?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
-  // Asset history for this asset
   var assetHistory=historyData.filter(function(h){return h.asset_uuid===uuid;}).slice(0,8);
   var historyHTML='';
   if(assetHistory.length){
@@ -1397,10 +1392,10 @@ function openModal(uuid){
     assetHistory.forEach(function(h){
       var dotClass=h.type==='compliance'?'compliance':'date_change';
       var desc=h.type==='compliance'
-        ?'Compliance: <strong>'+esc(h.old_value||'—')+'</strong> &rarr; <strong>'+esc(h.new_value||'—')+'</strong>'
-        :esc(h.field||'Date')+': <strong>'+esc(formatDate(h.old_value)||'—')+'</strong> &rarr; <strong>'+esc(formatDate(h.new_value)||'—')+'</strong>';
+        ?'Compliance: <strong>'+esc(h.old_value||'\u2014')+'</strong> &rarr; <strong>'+esc(h.new_value||'\u2014')+'</strong>'
+        :esc(h.field||'Date')+': <strong>'+esc(formatDate(h.old_value)||'\u2014')+'</strong> &rarr; <strong>'+esc(formatDate(h.new_value)||'\u2014')+'</strong>';
       historyHTML+='<div class="modal-history-item">'
-        +'<div class="mhi-dot '+dotClass+'" style="margin-top:4px"></div>'
+        +'<div class="mhi-dot '+dotClass+'"></div>'
         +'<div class="mhi-content"><div class="mhi-desc">'+desc+'</div>'
         +'<div class="mhi-meta"><span class="by">'+esc(h.changed_by||'Unknown')+'</span> &middot; '+esc(formatDateTime(h.timestamp))+'</div>'
         +'</div></div>';
@@ -1443,7 +1438,6 @@ function toggleDateEdit(uuid,checkKey,currentDate,assetName,clientName){
   var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);
   if(!editEl)return;
   var isOpen=editEl.style.display!=='none';
-  // Close all other open editors first
   document.querySelectorAll('.mc-date-edit').forEach(function(el){el.style.display='none';});
   if(!isOpen){
     editEl.style.display='flex';
