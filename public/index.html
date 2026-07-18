@@ -513,36 +513,49 @@ function updateComplianceField(uuid,newValue,selectEl){
   selectEl.classList.add('saving');
   var asset=assets.find(function(a){return a.uuid===uuid;});
   if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');return;}
-  var fieldData=Array.isArray(asset.field_data)?asset.field_data:[];
+
+  var fieldData=Array.isArray(asset.field_data)?JSON.parse(JSON.stringify(asset.field_data)):[];
   var lower=COMPLIANCE_FIELD.toLowerCase();
   var existing=fieldData.find(function(f){return String(f.fieldName||'').toLowerCase()===lower;});
-  var promise;
+
   if(existing){
-    promise=sm8Patch('/assetfield/'+existing.uuid,{field_value:newValue});
+    existing.fieldValue=newValue;
   } else {
-    promise=sm8Get('/assettypefield').then(function(typeFields){
-      var tf=typeFields.find(function(f){return f.asset_type_uuid===asset.asset_type_uuid&&f.name.toLowerCase()===lower;});
-      if(!tf)throw new Error('Compliance field not found on asset type');
-      return fetch('/api/proxy?path=/assetfield.json',{
-        method:'POST',
-        headers:{'Authorization':authHeader(),'Accept':'application/json','Content-Type':'application/json'},
-        body:JSON.stringify({asset_uuid:uuid,asset_type_field_uuid:tf.uuid,field_value:newValue})
-      }).then(function(res){return res.json().then(function(data){if(!res.ok)throw new Error(data.message||JSON.stringify(data));return data;});});
-    });
+    fieldData.push({fieldName:COMPLIANCE_FIELD,fieldValue:newValue});
   }
-  promise.then(function(){
+
+  fetch('/api/proxy?path=/asset/'+uuid+'.json',{
+    method:'POST',
+    headers:{
+      'Authorization':authHeader(),
+      'Accept':'application/json',
+      'Content-Type':'application/json',
+      'X-HTTP-Method-Override':'PUT'
+    },
+    body:JSON.stringify({field_data:fieldData})
+  })
+  .then(function(res){
+    return res.json().then(function(data){
+      if(!res.ok)throw new Error(data.message||JSON.stringify(data));
+      return data;
+    });
+  })
+  .then(function(){
     setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
+    asset.field_data=fieldData;
     saveLocal();
     selectEl.classList.remove('saving');
     selectEl.classList.add('saved');
     setTimeout(function(){selectEl.classList.remove('saved');},2000);
     renderAll();
-  }).catch(function(e){
+  })
+  .catch(function(e){
     selectEl.classList.remove('saving');
     selectEl.classList.add('error');
     toast('Failed to update compliance: '+e.message,true);
   });
 }
+
 
 function complianceSelectHTML(uuid,currentValue,cssClass){
   var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
