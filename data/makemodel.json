@@ -166,5 +166,13 @@
     "pvi": "0.5",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Melag",
+    "model": "Vacuclave 118",
+    "service": "2",
+    "pvi": "0.5",
+    "performance": "",
+    "emc": ""
   }
 ]
