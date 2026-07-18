@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "make": "Cattani",
+    "model": "AC200",
+    "service": "0.5",
+    "pvi": "1",
+    "performance": "",
+    "emc": ""
+  },
+  {
+    "make": "Cattani",
+    "model": "AC300",
+    "service": "0.5",
+    "pvi": "1",
+    "performance": "",
+    "emc": ""
+  },
+  {
+    "make": "Cattani",
+    "model": "AC400",
+    "service": "1",
+    "pvi": "1",
+    "performance": "",
+    "emc": ""
+  },
+  {
+    "make": "Durr",
+    "model": "VSA300s",
+    "service": "1",
+    "pvi": "",
+    "performance": "",
+    "emc": ""
+  }
+]
