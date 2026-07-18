@@ -520,82 +520,95 @@ function updateComplianceField(uuid,newValue,selectEl){
     return;
   }
 
-  // Build a clean copy of field_data with the compliance value updated
-  var fieldData=Array.isArray(asset.field_data)
-    ?JSON.parse(JSON.stringify(asset.field_data))
-    :[];
+  console.log('=== COMPLIANCE UPDATE START ===');
+  console.log('Asset UUID:', uuid);
+  console.log('New value:', newValue);
+  console.log('Raw field_data from cache:', JSON.stringify(asset.field_data, null, 2));
 
-  var lower=COMPLIANCE_FIELD.toLowerCase();
-  var found=false;
-
-  fieldData=fieldData.map(function(f){
-    if(String(f.fieldName||'').toLowerCase()===lower){
-      found=true;
-      return {
-        uuid:f.uuid||'',
-        active:f.active||'1',
-        fieldName:f.fieldName,
-        fieldValue:newValue,
-        fieldType:f.fieldType||f.field_type||'Text',
-        sortOrder:f.sortOrder||0,
-        asset_uuid:uuid,
-        asset_type_field_uuid:f.asset_type_field_uuid||''
-      };
-    }
-    return f;
-  });
-
-  if(!found){
-    // Try to find the field definition from assetTypes so we have the right uuid
-    var typeUuid=asset.asset_type_uuid;
-    var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
-    var fieldDef=typeFields.find(function(f){
-      return String(f.name||'').toLowerCase()===lower;
-    });
-    fieldData.push({
-      uuid:'',
-      active:'1',
-      fieldName:COMPLIANCE_FIELD,
-      fieldValue:newValue,
-      fieldType:'Text',
-      sortOrder:0,
-      asset_uuid:uuid,
-      asset_type_field_uuid:fieldDef?fieldDef.uuid:''
-    });
-  }
-
-  // Build the full asset payload — ServiceM8 requires the whole record on PUT
-  var payload={
-    uuid:asset.uuid,
-    active:asset.active||'1',
-    name:asset.name||'',
-    asset_type_uuid:asset.asset_type_uuid||'',
-    company_uuid:asset.company_uuid||'',
-    field_data:fieldData
-  };
-
+  // First, fetch the live asset direct from ServiceM8 so we have the real field data
   fetch('/api/proxy?path=/asset/'+uuid+'.json',{
-    method:'POST',
+    method:'GET',
     headers:{
       'Authorization':authHeader(),
-      'Accept':'application/json',
-      'Content-Type':'application/json',
-      'X-HTTP-Method-Override':'PUT'
-    },
-    body:JSON.stringify(payload)
+      'Accept':'application/json'
+    }
+  })
+  .then(function(res){return res.json();})
+  .then(function(liveAsset){
+    console.log('Live asset from ServiceM8:', JSON.stringify(liveAsset, null, 2));
+
+    var fieldData=Array.isArray(liveAsset.field_data)
+      ?JSON.parse(JSON.stringify(liveAsset.field_data))
+      :[];
+
+    console.log('Live field_data:', JSON.stringify(fieldData, null, 2));
+
+    var lower=COMPLIANCE_FIELD.toLowerCase();
+    var found=false;
+
+    fieldData=fieldData.map(function(f){
+      if(String(f.fieldName||'').toLowerCase()===lower){
+        found=true;
+        console.log('Found compliance field entry:', JSON.stringify(f, null, 2));
+        return Object.assign({},f,{fieldValue:newValue});
+      }
+      return f;
+    });
+
+    if(!found){
+      console.log('Compliance field NOT found in field_data — will add new entry');
+      var typeUuid=liveAsset.asset_type_uuid;
+      var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
+      var fieldDef=typeFields.find(function(f){
+        return String(f.name||'').toLowerCase()===lower;
+      });
+      console.log('Field definition from asset type:', JSON.stringify(fieldDef, null, 2));
+      fieldData.push({
+        uuid:'',
+        active:'1',
+        fieldName:COMPLIANCE_FIELD,
+        fieldValue:newValue,
+        fieldType:'Text',
+        sortOrder:0,
+        asset_uuid:uuid,
+        asset_type_field_uuid:fieldDef?fieldDef.uuid:''
+      });
+    }
+
+    var payload={
+      uuid:liveAsset.uuid,
+      active:liveAsset.active||'1',
+      name:liveAsset.name||'',
+      asset_type_uuid:liveAsset.asset_type_uuid||'',
+      company_uuid:liveAsset.company_uuid||'',
+      field_data:fieldData
+    };
+
+    console.log('PUT payload being sent:', JSON.stringify(payload, null, 2));
+
+    return fetch('/api/proxy?path=/asset/'+uuid+'.json',{
+      method:'POST',
+      headers:{
+        'Authorization':authHeader(),
+        'Accept':'application/json',
+        'Content-Type':'application/json',
+        'X-HTTP-Method-Override':'PUT'
+      },
+      body:JSON.stringify(payload)
+    });
   })
   .then(function(res){
-    // ServiceM8 returns 200 with empty body on success
-    if(res.status===200||res.status===201||res.status===204){
-      return {};
-    }
-    return res.json().then(function(data){
-      throw new Error(data.message||data.error||('HTTP '+res.status));
+    console.log('PUT response status:', res.status);
+    return res.text().then(function(text){
+      console.log('PUT response body:', text);
+      if(res.status===200||res.status===201||res.status===204){
+        return text;
+      }
+      throw new Error('HTTP '+res.status+': '+text);
     });
   })
   .then(function(){
-    // Update local cache so UI reflects change immediately
-    asset.field_data=fieldData;
+    console.log('=== UPDATE SUCCESS ===');
     setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
     saveLocal();
     selectEl.classList.remove('saving');
@@ -605,13 +618,12 @@ function updateComplianceField(uuid,newValue,selectEl){
     toast('Compliance updated to: '+newValue);
   })
   .catch(function(e){
+    console.error('=== UPDATE FAILED ===', e);
     selectEl.classList.remove('saving');
     selectEl.classList.add('error');
-    toast('Failed to update compliance: '+e.message,true);
+    toast('Failed: '+e.message,true);
   });
 }
-
-
 
 function complianceSelectHTML(uuid,currentValue,cssClass){
   var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
