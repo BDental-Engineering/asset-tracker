@@ -33,9 +33,7 @@ button:hover{opacity:0.85;}
 .loading-card{text-align:center;padding:40px;}
 .loading-card p{color:var(--muted);margin-top:16px;font-size:0.9rem;}
 .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:28px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:6px;cursor:default;}
-.stat-card.clickable{cursor:pointer;transition:border-color 0.2s;}
-.stat-card.clickable:hover{border-color:var(--accent);}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:6px;}
 .stat-label{font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
 .stat-value{font-size:2rem;font-weight:700;}
 .stat-card.green .stat-value{color:var(--green);}
@@ -119,18 +117,25 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .client-group-header td{padding:10px 14px 6px;font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;position:relative;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;position:relative;}
 .modal h2{margin-bottom:6px;}
 .modal-type{font-size:0.85rem;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
 .modal-close{position:absolute;top:16px;right:16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;font-size:1rem;}
 .modal-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.modal-check-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.modal-check-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;position:relative;}
 .modal-check-card .mc-label{font-size:0.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;}
 .modal-check-card .mc-days{font-size:1.8rem;font-weight:800;line-height:1;}
 .modal-check-card .mc-sub{font-size:0.72rem;color:var(--muted);margin-top:3px;}
 .modal-check-card .mc-date{font-size:0.78rem;margin-top:8px;font-weight:600;}
 .modal-check-card .mc-date-label{font-size:0.68rem;color:var(--muted);margin-top:2px;}
 .modal-check-card .mc-hours{font-size:0.72rem;color:var(--accent);margin-top:6px;font-style:italic;}
+.mc-edit-btn{position:absolute;top:8px;right:8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:2px 6px;font-size:0.68rem;cursor:pointer;line-height:1.4;}
+.mc-edit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.mc-date-edit{margin-top:8px;display:flex;flex-direction:column;gap:6px;align-items:center;}
+.mc-date-input{background:var(--surface);border:1px solid var(--accent);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.8rem;outline:none;width:100%;text-align:center;}
+.mc-date-actions{display:flex;gap:6px;}
+.mc-date-save{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:0.72rem;cursor:pointer;font-weight:600;}
+.mc-date-cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:0.72rem;cursor:pointer;}
 .modal-compliance{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;}
 .modal-compliance h4{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
 .modal-compliance-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
@@ -204,7 +209,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .mm-sync-status.saving{color:var(--amber);}
 .mm-sync-status.saved{color:var(--green);}
 .mm-sync-status.error{color:var(--red);}
-/* ── Client list ── */
+/* Client list */
 .client-list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .client-list-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;}
 .client-list-card:hover{border-color:var(--accent);transform:translateY(-2px);}
@@ -219,7 +224,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .client-count-pill.green{background:rgba(34,197,94,0.15);color:var(--green);}
 .client-count-pill.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
 .client-asset-count{font-size:0.75rem;color:var(--muted);margin-top:8px;}
-/* ── Client detail ── */
+/* Client detail */
 .client-detail-header{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
 .client-detail-header h2{font-size:1.6rem;font-weight:800;}
 .client-detail-back{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);cursor:pointer;}
@@ -251,7 +256,40 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .car-check-badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
 .car-check-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
 .car-check-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
-.car-compliance{flex-shrink:0;}
+/* History */
+.history-filters{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
+.history-filters input,.history-filters select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;}
+.history-filters input{min-width:200px;}
+.history-timeline{display:flex;flex-direction:column;gap:0;}
+.history-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border);}
+.history-item:last-child{border-bottom:none;}
+.history-dot-col{display:flex;flex-direction:column;align-items:center;gap:0;padding-top:3px;}
+.history-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.history-dot.compliance{background:var(--accent);}
+.history-dot.date_change{background:var(--amber);}
+.history-line{flex:1;width:2px;background:var(--border);margin-top:4px;}
+.history-content{flex:1;min-width:0;}
+.history-asset{font-weight:700;font-size:0.88rem;cursor:pointer;color:var(--text);}
+.history-asset:hover{color:var(--accent);}
+.history-client{font-size:0.75rem;color:var(--accent);margin-bottom:4px;}
+.history-change{font-size:0.82rem;color:var(--muted);margin-bottom:4px;}
+.history-change strong{color:var(--text);}
+.history-meta{font-size:0.72rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;}
+.history-meta .by{color:var(--accent);font-weight:600;}
+.history-val-old{text-decoration:line-through;color:var(--red);font-weight:600;}
+.history-val-new{color:var(--green);font-weight:600;}
+.history-empty{text-align:center;padding:60px 0;color:var(--muted);}
+.modal-history{margin-top:20px;}
+.modal-history h4{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.modal-history-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.8rem;}
+.modal-history-item:last-child{border-bottom:none;}
+.mhi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.mhi-dot.compliance{background:var(--accent);}
+.mhi-dot.date_change{background:var(--amber);}
+.mhi-content{flex:1;}
+.mhi-desc{color:var(--text);margin-bottom:2px;}
+.mhi-meta{color:var(--muted);font-size:0.72rem;}
+.mhi-meta .by{color:var(--accent);font-weight:600;}
 </style>
 </head>
 <body>
@@ -263,10 +301,12 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div class="nav-tabs" id="nav-tabs" style="display:none">
     <button class="nav-tab active" id="tab-dashboard" onclick="showTab('dashboard')">Dashboard</button>
     <button class="nav-tab" id="tab-clients" onclick="showTab('clients')">&#128205; Clients</button>
+    <button class="nav-tab" id="tab-history" onclick="showTab('history')">&#128336; History</button>
     <button class="nav-tab" id="tab-makemodel" onclick="showTab('makemodel')">&#9881; Make &amp; Model</button>
     <button class="nav-tab" id="tab-settings" onclick="showTab('settings')">Settings</button>
   </div>
   <div class="header-actions">
+    <span id="user-badge" style="font-size:0.78rem;color:var(--muted);display:none"></span>
     <span id="sync-status" style="font-size:0.8rem;color:var(--muted);display:none"></span>
     <button class="btn-ghost btn-sm" id="btn-sync" onclick="syncAssets()" style="display:none">&#8635; Sync</button>
     <a href="/api/logout" class="btn-danger btn-sm" id="btn-logout" style="display:none;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.78rem;font-weight:600;">Sign Out</a>
@@ -401,10 +441,31 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div class="client-assets-list" id="client-assets-list"></div>
 </div>
 
+<!-- HISTORY -->
+<div id="screen-history" class="screen">
+  <div style="margin-bottom:24px;">
+    <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">&#128336; Change History</h2>
+    <p style="color:var(--muted);font-size:0.85rem">All compliance and due date changes, newest first.</p>
+  </div>
+  <div class="history-filters">
+    <input type="text" id="history-search" placeholder="&#128269; Search asset or client&hellip;" oninput="renderHistory()"/>
+    <select id="history-type-filter" onchange="renderHistory()">
+      <option value="">All Changes</option>
+      <option value="compliance">Compliance only</option>
+      <option value="date_change">Date changes only</option>
+    </select>
+    <select id="history-user-filter" onchange="renderHistory()">
+      <option value="">All Users</option>
+    </select>
+    <button class="btn-ghost btn-sm" onclick="loadHistory()">&#8635; Refresh</button>
+  </div>
+  <div id="history-list"></div>
+</div>
+
 <!-- MAKE & MODEL -->
 <div id="screen-makemodel" class="screen">
   <h2 style="margin-bottom:8px">&#9881; Make &amp; Model Service Times</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model. Data is saved to the server.</p>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model.</p>
   <div class="mm-toolbar">
     <input type="text" id="mm-search" placeholder="&#128269; Search make or model&hellip;" oninput="renderMakeModel()"/>
     <button class="btn-primary btn-sm" onclick="saveMakeModel()">&#10003; Save All</button>
@@ -463,7 +524,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     </div>
     <div class="settings-card">
       <h3>&#128270; Make &amp; Model Fields</h3>
-      <p class="card-desc">Map which asset fields contain the Make and Model so service times can be looked up automatically.</p>
+      <p class="card-desc">Map which asset fields contain the Make and Model.</p>
       <div class="mapping-row"><label>Make field name</label><input type="text" id="input-make-field" placeholder="e.g. Make"/></div>
       <div class="mapping-row"><label>Model field name</label><input type="text" id="input-model-field" placeholder="e.g. Model"/></div>
       <button class="btn-primary btn-sm" style="margin-top:8px" onclick="saveMakeModelFields()">Save Field Names</button>
@@ -488,8 +549,8 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 var assets=[],assetTypes={},clientMap={},fieldMappings={};
 var ELAPSED_THRESHOLD=100,SOON_THRESHOLD=30;
 var COMPLIANCE_FIELD='Compliance',MAKE_FIELD='Make',MODEL_FIELD='Model';
-var showHidden=false,makeModelData=[];
-var activeClientUuid=null;
+var showHidden=false,makeModelData=[],historyData=[];
+var activeClientUuid=null,currentUser='Unknown User';
 var CHECK_TYPES=[
   {key:'service',label:'Service Due'},
   {key:'pvi',label:'PVI Due'},
@@ -525,16 +586,49 @@ function loadLocal(){
   MODEL_FIELD=localStorage.getItem('sm8_model_field')||'Model';
 }
 
+// ─── User identity ────────────────────────────────────────────────────────────
+function resolveUserName(staffList){
+  if(!Array.isArray(staffList)||!staffList.length)return 'Unknown User';
+  // Try to find the logged-in staff member — ServiceM8 returns all staff,
+  // active ones first. We pick the first active record as the session owner.
+  var active=staffList.find(function(s){return String(s.active)==='1';});
+  var s=active||staffList[0];
+  if(!s)return 'Unknown User';
+  var first=s.first_name||s.firstname||'';
+  var last=s.last_name||s.lastname||s.surname||'';
+  var full=(first+' '+last).trim();
+  if(full)return full;
+  if(s.name)return s.name;
+  if(s.email)return s.email;
+  return 'Unknown User';
+}
+
+// ─── History API ──────────────────────────────────────────────────────────────
+function writeHistory(record){
+  record.changed_by=currentUser;
+  record.timestamp=new Date().toISOString();
+  historyData.unshift(record);
+  fetch('/api/history',{
+    method:'POST',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(record)
+  }).catch(function(){/* silent — local copy already prepended */});
+}
+function loadHistory(){
+  fetch('/api/history',{credentials:'include'})
+    .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
+    .then(function(data){
+      historyData=Array.isArray(data)?data:[];
+      if(document.getElementById('screen-history').classList.contains('active'))renderHistory();
+    }).catch(function(){});
+}
+
 // ─── Make & Model server sync ─────────────────────────────────────────────────
 function loadMakeModelFromServer(){
   fetch('/api/makemodel',{credentials:'include'})
     .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
     .then(function(data){
-      if(Array.isArray(data)&&data.length>0){
-        makeModelData=data;saveLocal();
-        if(document.getElementById('screen-makemodel').classList.contains('active'))renderMakeModel();
-        if(document.getElementById('screen-dashboard').classList.contains('active'))renderAssets();
-      }
+      if(Array.isArray(data)&&data.length>0){makeModelData=data;saveLocal();}
     }).catch(function(){});
 }
 function saveMakeModelToServer(onSuccess,onError){
@@ -543,7 +637,7 @@ function saveMakeModelToServer(onSuccess,onError){
   fetch('/api/makemodel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(makeModelData)})
     .then(function(res){if(!res.ok)throw new Error('Server responded with '+res.status);return res.json();})
     .then(function(){
-      if(statusEl){statusEl.innerHTML='&#10003; Saved to server';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
+      if(statusEl){statusEl.innerHTML='&#10003; Saved';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
       if(onSuccess)onSuccess();
     }).catch(function(e){
       if(statusEl){statusEl.innerHTML='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
@@ -579,22 +673,24 @@ function checkSession(){
   }
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
-  fetch('/api/proxy?path=/staff.json',{credentials:'include',headers:{'Accept':'application/json'}})
-    .then(function(res){
-      if(res.status===401){showScreen('auth');}
-      else{
-        loadLocal();
-        if(assets.length>0){
-          showDashboard();
-          document.getElementById('sync-status').textContent='Loaded from cache';
-          loadMakeModelFromServer();backgroundSync();
-        } else {
-          showScreen('loading');
-          document.getElementById('loading-msg').textContent='Loading your assets\u2026';
-          fetchAll().then(function(){saveLocal();loadMakeModelFromServer();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
-        }
-      }
-    }).catch(function(){showScreen('auth');});
+  sm8Get('/staff').then(function(staffList){
+    currentUser=resolveUserName(staffList);
+    var badge=document.getElementById('user-badge');
+    badge.textContent='&#128100; '+currentUser;badge.style.display='inline-block';
+    loadLocal();
+    if(assets.length>0){
+      showDashboard();
+      document.getElementById('sync-status').textContent='Loaded from cache';
+      loadMakeModelFromServer();loadHistory();backgroundSync();
+    } else {
+      showScreen('loading');
+      document.getElementById('loading-msg').textContent='Loading your assets\u2026';
+      fetchAll().then(function(){saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
+    }
+  }).catch(function(e){
+    if(e.message==='SESSION_EXPIRED')showScreen('auth');
+    else{showScreen('auth');}
+  });
 }
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
@@ -663,32 +759,34 @@ function showDashboard(){
   document.getElementById('btn-sync').style.display='inline-block';
   document.getElementById('btn-logout').style.display='inline-block';
   document.getElementById('sync-status').style.display='inline-block';
-  ['tab-dashboard','tab-clients','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  document.getElementById('user-badge').style.display='inline-block';
+  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   document.getElementById('tab-dashboard').classList.add('active');
   showScreen('dashboard');renderAll();
 }
 function showTab(tab){
-  ['tab-dashboard','tab-clients','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   document.getElementById('tab-'+tab).classList.add('active');
   if(tab==='dashboard'){showScreen('dashboard');renderAll();}
   else if(tab==='clients'){showScreen('clients');renderClientList();}
+  else if(tab==='history'){showScreen('history');renderHistory();}
   else if(tab==='makemodel'){showScreen('makemodel');renderMakeModel();}
   else{showScreen('settings');renderSettings();}
 }
 function openClientDetail(uuid){
   activeClientUuid=uuid;
   document.getElementById('client-detail-name').textContent=clientMap[uuid]||'Unknown Client';
-  ['tab-dashboard','tab-clients','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   document.getElementById('tab-clients').classList.add('active');
-  showScreen('client-detail');
-  renderClientDetail();
+  showScreen('client-detail');renderClientDetail();
 }
 
-// ─── Compliance ───────────────────────────────────────────────────────────────
+// ─── Compliance update ────────────────────────────────────────────────────────
 function updateComplianceField(uuid,newValue,selectEl){
   selectEl.classList.remove('saved','error');selectEl.classList.add('saving');
   var asset=assets.find(function(a){return a.uuid===uuid;});
   if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');toast('Asset not found.',true);return;}
+  var oldValue=getAnyFieldValue(asset,COMPLIANCE_FIELD)||'';
   fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
     .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
     .then(function(liveAsset){
@@ -711,12 +809,52 @@ function updateComplianceField(uuid,newValue,selectEl){
       setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);saveLocal();
       selectEl.classList.remove('saving');selectEl.classList.add('saved');
       setTimeout(function(){selectEl.classList.remove('saved');},2500);
+      writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
       renderAll();toast('Compliance updated to: '+newValue);
     })
     .catch(function(e){
       selectEl.classList.remove('saving');selectEl.classList.add('error');
       if(e.message==='SESSION_EXPIRED')handleFetchError(e);
       else toast('Failed: '+e.message,true);
+    });
+}
+
+// ─── Due date update ──────────────────────────────────────────────────────────
+function saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName){
+  var asset=assets.find(function(a){return a.uuid===uuid;});
+  if(!asset){toast('Asset not found.',true);return Promise.reject(new Error('not found'));}
+  return fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
+    .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
+    .then(function(liveAsset){
+      var fieldName=(fieldMappings[liveAsset.asset_type_uuid]&&fieldMappings[liveAsset.asset_type_uuid][checkKey])||null;
+      if(!fieldName)throw new Error('No field mapped for '+checkKey);
+      var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
+      var found=false;
+      fieldData=fieldData.map(function(f){
+        if(f.fieldName===fieldName){found=true;return Object.assign({},f,{fieldValue:newDate});}
+        return f;
+      });
+      if(!found){
+        var typeFields=(assetTypes[liveAsset.asset_type_uuid]&&assetTypes[liveAsset.asset_type_uuid].fields)||[];
+        var fieldDef=typeFields.find(function(f){return f.name===fieldName;});
+        fieldData.push({uuid:'',active:'1',fieldName:fieldName,fieldValue:newDate,fieldType:'Date',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
+      }
+      return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
+    })
+    .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status+': '+text);});})
+    .then(function(){
+      // Update local asset field_data
+      if(Array.isArray(asset.field_data)){
+        var fn=(fieldMappings[asset.asset_type_uuid]&&fieldMappings[asset.asset_type_uuid][checkKey])||null;
+        if(fn){
+          var m=asset.field_data.find(function(f){return f.fieldName===fn;});
+          if(m)m.fieldValue=newDate;
+        }
+      }
+      saveLocal();
+      var ct=CHECK_TYPES.find(function(c){return c.key===checkKey;});
+      writeHistory({type:'date_change',asset_uuid:uuid,asset_name:assetName||'Unnamed',client_name:clientName||'',field:ct?ct.label:checkKey,old_value:oldDate||'',new_value:newDate});
+      renderAll();toast('Date updated!');
     });
 }
 
@@ -798,6 +936,11 @@ function formatDate(str){
   if(isNaN(d.getTime()))return str;
   return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
 }
+function formatDateTime(str){
+  if(!str)return '';
+  var d=new Date(str);if(isNaN(d.getTime()))return str;
+  return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+}
 function fmtHrs(val){
   if(val===null||val===undefined||val==='')return null;
   var n=parseFloat(val);if(isNaN(n)||n<=0)return null;
@@ -850,7 +993,7 @@ function sortedAssets(data){
   });
 }
 
-// ─── Dashboard rendering ──────────────────────────────────────────────────────
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 function renderAll(){updateKanbanLabels();populateFilters();renderStats();renderSummaryBar();renderAssets();}
 function updateKanbanLabels(){
   document.getElementById('kanban-elapsed-label').textContent='Elapsed (>'+ELAPSED_THRESHOLD+'d)';
@@ -903,9 +1046,9 @@ function renderStats(){
   var hidCount=enrichedAssets().filter(function(a){return a.suppressed;}).length;
   document.getElementById('stats-bar').innerHTML=
     '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'+all.length+'</span></div>'+
-    '<div class="stat-card purple"><span class="stat-label">Elapsed &gt;'+ELAPSED_THRESHOLD+'d</span><span class="stat-value">'+el+'</span></div>'+
+    '<div class="stat-card purple"><span class="stat-label">Elapsed</span><span class="stat-value">'+el+'</span></div>'+
     '<div class="stat-card red"><span class="stat-label">Overdue</span><span class="stat-value">'+ov+'</span></div>'+
-    '<div class="stat-card amber"><span class="stat-label">Due Soon \u2264'+SOON_THRESHOLD+'d</span><span class="stat-value">'+so+'</span></div>'+
+    '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'+so+'</span></div>'+
     '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'+ok+'</span></div>'+
     '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'+nd+'</span></div>'+
     (hidCount?'<div class="stat-card"><span class="stat-label">Hidden</span><span class="stat-value" style="color:#b45309">'+hidCount+'</span></div>':'');
@@ -920,7 +1063,7 @@ function renderSummaryBar(){
   var nd=all.filter(function(a){return a.status==='no-date';}).length;
   function seg(n,col,lbl){if(!n)return '';return '<div class="summary-bar-seg" style="flex:'+n+';background:'+col+'" title="'+lbl+': '+n+'">'+Math.round(n/total*100)+'%</div>';}
   document.getElementById('summary-chart').innerHTML=
-    '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview (worst check per asset)</div>'+
+    '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview</div>'+
     '<div class="summary-bar">'+seg(el,'#7c3aed','Elapsed')+seg(ov,'#ef4444','Overdue')+seg(so,'#f59e0b','Due Soon')+seg(ok,'#22c55e','OK')+seg(nd,'#4b5563','No Date')+'</div>'+
     '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem">'+
     (el?'<span style="color:#7c3aed">&#9632; Elapsed</span>':'')+(ov?'<span style="color:#ef4444">&#9632; Overdue</span>':'')+(so?'<span style="color:#f59e0b">&#9632; Due Soon</span>':'')+(ok?'<span style="color:#22c55e">&#9632; OK</span>':'')+(nd?'<span style="color:#4b5563">&#9632; No Date</span>':'')+'</div>';
@@ -945,7 +1088,7 @@ function renderAssets(){
   var hidBar=document.getElementById('hidden-bar');
   if(showHidden&&hiddenCount>0){
     hidBar.style.display='flex';
-    document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s')+' &mdash; <span style="color:#fde68a;font-size:0.8rem">&#128683; Decommissioned &nbsp; &#128123; Unknown</span>';
+    document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s');
   } else {hidBar.style.display='none';}
   var cols={'elapsed':[],'overdue':[],'due-soon':[],'ok':[],'no-date':[]};
   sorted.forEach(function(a){cols[a.status].push(a);});
@@ -1021,22 +1164,10 @@ function renderClientList(){
   var search=(document.getElementById('client-list-search').value||'').toLowerCase();
   var all=enrichedAssets();
   var byClient={};
-  all.forEach(function(a){
-    var uuid=a.company_uuid||'__unknown__';
-    if(!byClient[uuid])byClient[uuid]=[];
-    byClient[uuid].push(a);
-  });
-  var clientUuids=Object.keys(byClient).sort(function(a,b){
-    return(clientMap[a]||'Unknown').localeCompare(clientMap[b]||'Unknown');
-  });
-  if(search){
-    clientUuids=clientUuids.filter(function(uuid){
-      return(clientMap[uuid]||'Unknown').toLowerCase().indexOf(search)!==-1;
-    });
-  }
-  if(!clientUuids.length){
-    document.getElementById('client-list-grid').innerHTML='<p style="color:var(--muted)">No clients found.</p>';return;
-  }
+  all.forEach(function(a){var uuid=a.company_uuid||'__unknown__';if(!byClient[uuid])byClient[uuid]=[];byClient[uuid].push(a);});
+  var clientUuids=Object.keys(byClient).sort(function(a,b){return(clientMap[a]||'Unknown').localeCompare(clientMap[b]||'Unknown');});
+  if(search)clientUuids=clientUuids.filter(function(uuid){return(clientMap[uuid]||'Unknown').toLowerCase().indexOf(search)!==-1;});
+  if(!clientUuids.length){document.getElementById('client-list-grid').innerHTML='<p style="color:var(--muted)">No clients found.</p>';return;}
   var html=clientUuids.map(function(uuid){
     var clientAssets=byClient[uuid];
     var visible=clientAssets.filter(function(a){return !a.suppressed;});
@@ -1047,8 +1178,7 @@ function renderClientList(){
     var ok=visible.filter(function(a){return a.status==='ok';}).length;
     var nd=visible.filter(function(a){return a.status==='no-date';}).length;
     var total=visible.length;
-    var worstStatuses=visible.map(function(a){return a.status;});
-    var worst=worstStatus(worstStatuses.length?worstStatuses:['no-date']);
+    var worst=worstStatus(visible.length?visible.map(function(a){return a.status;}):['no-date']);
     var worstColor=statusColor(worst);
     function barSeg(n,col){if(!n||!total)return '';return '<div class="client-list-bar-seg" style="flex:'+n+';background:'+col+'"></div>';}
     var bar=barSeg(el,'#7c3aed')+barSeg(ov,'#ef4444')+barSeg(so,'#f59e0b')+barSeg(ok,'#22c55e')+barSeg(nd,'#4b5563');
@@ -1083,10 +1213,10 @@ function renderClientDetail(){
   var nd=visible.filter(function(a){return a.status==='no-date';}).length;
   document.getElementById('client-detail-asset-count').textContent=visible.length+' asset'+(visible.length===1?'':'s');
   document.getElementById('client-detail-stats').innerHTML=
-    '<div class="client-detail-stat purple"><div class="ds-value" style="color:var(--purple)">'+el+'</div><div class="ds-label">Elapsed</div></div>'+
-    '<div class="client-detail-stat red"><div class="ds-value" style="color:var(--red)">'+ov+'</div><div class="ds-label">Overdue</div></div>'+
-    '<div class="client-detail-stat amber"><div class="ds-value" style="color:var(--amber)">'+so+'</div><div class="ds-label">Due Soon</div></div>'+
-    '<div class="client-detail-stat green"><div class="ds-value" style="color:var(--green)">'+ok+'</div><div class="ds-label">OK</div></div>'+
+    '<div class="client-detail-stat"><div class="ds-value" style="color:var(--purple)">'+el+'</div><div class="ds-label">Elapsed</div></div>'+
+    '<div class="client-detail-stat"><div class="ds-value" style="color:var(--red)">'+ov+'</div><div class="ds-label">Overdue</div></div>'+
+    '<div class="client-detail-stat"><div class="ds-value" style="color:var(--amber)">'+so+'</div><div class="ds-label">Due Soon</div></div>'+
+    '<div class="client-detail-stat"><div class="ds-value" style="color:var(--green)">'+ok+'</div><div class="ds-label">OK</div></div>'+
     '<div class="client-detail-stat"><div class="ds-value" style="color:var(--muted)">'+nd+'</div><div class="ds-label">No Date</div></div>';
   var filtered=all.filter(function(a){
     if(a.suppressed&&!showHidden)return false;
@@ -1102,18 +1232,13 @@ function renderClientDetail(){
     var db=b.urgentDays===null?999999:b.urgentDays;
     return da-db;
   });
-  if(!filtered.length){
-    document.getElementById('client-assets-list').innerHTML='<p style="color:var(--muted);padding:20px 0">No assets match the current filters.</p>';return;
-  }
+  if(!filtered.length){document.getElementById('client-assets-list').innerHTML='<p style="color:var(--muted);padding:20px 0">No assets match the current filters.</p>';return;}
   var html=filtered.map(function(a){
     var worstColor=statusColor(a.status);
     var checkBadges=CHECK_TYPES.map(function(ct){
       var c=a.checks[ct.key];if(!c||c.date===null)return '';
       var col=statusColor(c.status);
-      return '<div class="car-check">'
-        +'<div class="car-check-label">'+esc(ct.label.replace(' Due',''))+'</div>'
-        +'<div class="car-check-badge '+col+'">'+statusLabel(c.days,c.status)+'</div>'
-        +'</div>';
+      return '<div class="car-check"><div class="car-check-label">'+esc(ct.label.replace(' Due',''))+'</div><div class="car-check-badge '+col+'">'+statusLabel(c.days,c.status)+'</div></div>';
     }).filter(Boolean).join('');
     return '<div class="client-asset-row '+worstColor+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
       +'<div style="flex:1;min-width:0;">'
@@ -1122,36 +1247,118 @@ function renderClientDetail(){
       +(a.make||a.model?'<div class="car-make">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')
       +'</div>'
       +(checkBadges?'<div class="car-checks">'+checkBadges+'</div>':'')
-      +'<div class="car-compliance" onclick="event.stopPropagation()">'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</div>'
+      +'<div onclick="event.stopPropagation()">'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</div>'
       +'</div>';
   }).join('');
   document.getElementById('client-assets-list').innerHTML=html;
 }
 
+// ─── History ──────────────────────────────────────────────────────────────────
+function renderHistory(){
+  var search=(document.getElementById('history-search').value||'').toLowerCase();
+  var typeFilter=document.getElementById('history-type-filter').value;
+  var userFilter=document.getElementById('history-user-filter').value;
+  // Populate user filter
+  var users={};
+  historyData.forEach(function(h){if(h.changed_by)users[h.changed_by]=true;});
+  var userSel=document.getElementById('history-user-filter');
+  var currentUser2=userSel.value;
+  userSel.innerHTML='<option value="">All Users</option>';
+  Object.keys(users).sort().forEach(function(u){
+    var opt=document.createElement('option');opt.value=u;opt.textContent=u;
+    if(u===currentUser2)opt.selected=true;
+    userSel.appendChild(opt);
+  });
+  var filtered=historyData.filter(function(h){
+    if(typeFilter&&h.type!==typeFilter)return false;
+    if(userFilter&&h.changed_by!==userFilter)return false;
+    if(search&&
+      String(h.asset_name||'').toLowerCase().indexOf(search)===-1&&
+      String(h.client_name||'').toLowerCase().indexOf(search)===-1&&
+      String(h.changed_by||'').toLowerCase().indexOf(search)===-1)return false;
+    return true;
+  });
+  if(!filtered.length){
+    document.getElementById('history-list').innerHTML='<div class="history-empty">&#128336; No history yet. Changes to compliance and due dates will appear here.</div>';return;
+  }
+  var html='<div class="history-timeline">';
+  filtered.forEach(function(h,i){
+    var isLast=i===filtered.length-1;
+    var dotClass=h.type==='compliance'?'compliance':'date_change';
+    var desc='';
+    if(h.type==='compliance'){
+      desc='Compliance changed: <span class="history-val-old">'+esc(h.old_value||'—')+'</span> &rarr; <span class="history-val-new">'+esc(h.new_value||'—')+'</span>';
+    } else {
+      desc=esc(h.field||'Date')+' changed: <span class="history-val-old">'+esc(formatDate(h.old_value)||'—')+'</span> &rarr; <span class="history-val-new">'+esc(formatDate(h.new_value)||'—')+'</span>';
+    }
+    html+='<div class="history-item">'
+      +'<div class="history-dot-col"><div class="history-dot '+dotClass+'"></div>'+(isLast?'':'<div class="history-line"></div>')+'</div>'
+      +'<div class="history-content">'
+      +'<div class="history-asset" onclick="openModal(\''+esc(h.asset_uuid||'')+'\')">'+esc(h.asset_name||'Unknown Asset')+'</div>'
+      +'<div class="history-client">&#128205; '+esc(h.client_name||'Unknown Client')+'</div>'
+      +'<div class="history-change">'+desc+'</div>'
+      +'<div class="history-meta"><span class="by">&#128100; '+esc(h.changed_by||'Unknown')+'</span><span>&#128336; '+esc(formatDateTime(h.timestamp))+'</span></div>'
+      +'</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('history-list').innerHTML=html;
+}
+
 // ─── Asset modal ──────────────────────────────────────────────────────────────
 function openModal(uuid){
+  if(!uuid)return;
   var all=enrichedAssets();var a=null;
   for(var i=0;i<all.length;i++){if(all[i].uuid===uuid){a=all[i];break;}}
   if(!a)return;
   var worstColor=statusColor(a.status);
   var checkCards=CHECK_TYPES.map(function(ct){
-    var c=a.checks[ct.key];if(!c||c.date===null)return '';
-    var col=statusColor(c.status);var css=col==='purple'?'var(--purple)':'var(--'+col+')';
-    var absD=c.days!==null?Math.abs(c.days):'\u2014';
-    var sub=c.days===null?'No date':c.status==='elapsed'?'days elapsed':c.days<0?'days overdue':c.days===0?'Due today':'days left';
+    var c=a.checks[ct.key];
+    var isMapped=!!(fieldMappings[a.asset_type_uuid]&&fieldMappings[a.asset_type_uuid][ct.key]);
+    if(!isMapped)return '';
+    var col=c&&c.date?statusColor(c.status):'grey';
+    var css=col==='purple'?'var(--purple)':'var(--'+col+')';
+    var absD=c&&c.days!==null?Math.abs(c.days):'\u2014';
+    var sub=!c||c.date===null?'No date':c.status==='elapsed'?'days elapsed':c.days<0?'days overdue':c.days===0?'Due today':'days left';
     var hrsKey=ct.key==='validation'?null:ct.key;
     var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
-    return '<div class="modal-check-card">'
+    var currentDate=c?c.date||'':'';
+    var cardId='mc-'+esc(uuid)+'-'+ct.key;
+    return '<div class="modal-check-card" id="'+cardId+'">'
+      +'<button class="mc-edit-btn" onclick="toggleDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')" title="Edit date">&#9998;</button>'
       +'<div class="mc-label">'+esc(ct.label)+'</div>'
       +'<div class="mc-days" style="color:'+css+'">'+absD+'</div>'
       +'<div class="mc-sub">'+sub+'</div>'
-      +'<div class="mc-date" style="color:'+css+'">'+formatDate(c.date)+'</div>'
+      +'<div class="mc-date" style="color:'+css+'">'+formatDate(currentDate)+'</div>'
       +'<div class="mc-date-label">due date</div>'
       +(hrs?'<div class="mc-hours">&#128336; '+hrs+' to complete</div>':'')
+      +'<div class="mc-date-edit" id="edit-'+esc(uuid)+'-'+ct.key+'" style="display:none">'
+      +'<input class="mc-date-input" type="date" id="dateinput-'+esc(uuid)+'-'+ct.key+'" value="'+esc(currentDate.substring(0,10))+'"/>'
+      +'<div class="mc-date-actions">'
+      +'<button class="mc-date-save" onclick="commitDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')">Save</button>'
+      +'<button class="mc-date-cancel" onclick="cancelDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\')">Cancel</button>'
+      +'</div></div>'
       +'</div>';
   }).filter(Boolean).join('');
   var elapsedBanner=a.status==='elapsed'?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
   var suppressedBanner=a.suppressed?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
+  // Asset history for this asset
+  var assetHistory=historyData.filter(function(h){return h.asset_uuid===uuid;}).slice(0,8);
+  var historyHTML='';
+  if(assetHistory.length){
+    historyHTML='<div class="modal-history"><h4>&#128336; Recent Changes</h4>';
+    assetHistory.forEach(function(h){
+      var dotClass=h.type==='compliance'?'compliance':'date_change';
+      var desc=h.type==='compliance'
+        ?'Compliance: <strong>'+esc(h.old_value||'—')+'</strong> &rarr; <strong>'+esc(h.new_value||'—')+'</strong>'
+        :esc(h.field||'Date')+': <strong>'+esc(formatDate(h.old_value)||'—')+'</strong> &rarr; <strong>'+esc(formatDate(h.new_value)||'—')+'</strong>';
+      historyHTML+='<div class="modal-history-item">'
+        +'<div class="mhi-dot '+dotClass+'" style="margin-top:4px"></div>'
+        +'<div class="mhi-content"><div class="mhi-desc">'+desc+'</div>'
+        +'<div class="mhi-meta"><span class="by">'+esc(h.changed_by||'Unknown')+'</span> &middot; '+esc(formatDateTime(h.timestamp))+'</div>'
+        +'</div></div>';
+    });
+    historyHTML+='</div>';
+  }
   var cfRows='';
   if(Array.isArray(a.field_data)&&a.field_data.length>0){
     a.field_data.slice().sort(function(x,y){return(x.sortOrder||0)-(y.sortOrder||0);}).forEach(function(f){
@@ -1176,10 +1383,47 @@ function openModal(uuid){
     +'<span class="compliance-status-msg" id="comp-msg-'+esc(a.uuid)+'"></span>'
     +'</div></div>'
     +(checkCards?'<div class="modal-checks">'+checkCards+'</div>':'')
-    +'<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">All Asset Fields</h3>'
+    +historyHTML
+    +'<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;margin-top:20px;text-transform:uppercase;letter-spacing:0.06em">All Asset Fields</h3>'
     +cfRows
     +'<div style="margin-top:16px;font-size:0.75rem;color:var(--muted)">UUID: '+esc(a.uuid)+'</div>';
   document.getElementById('modal-overlay').classList.add('open');
+}
+
+// ─── Date edit UI ─────────────────────────────────────────────────────────────
+function toggleDateEdit(uuid,checkKey,currentDate,assetName,clientName){
+  var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);
+  if(!editEl)return;
+  var isOpen=editEl.style.display!=='none';
+  // Close all other open editors first
+  document.querySelectorAll('.mc-date-edit').forEach(function(el){el.style.display='none';});
+  if(!isOpen){
+    editEl.style.display='flex';
+    var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);
+    if(inp){inp.value=currentDate?currentDate.substring(0,10):'';inp.focus();}
+  }
+}
+function cancelDateEdit(uuid,checkKey){
+  var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);
+  if(editEl)editEl.style.display='none';
+}
+function commitDateEdit(uuid,checkKey,oldDate,assetName,clientName){
+  var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);
+  if(!inp)return;
+  var newDate=inp.value;
+  if(!newDate){toast('Please pick a date.',true);return;}
+  if(newDate===oldDate.substring(0,10)){cancelDateEdit(uuid,checkKey);return;}
+  inp.disabled=true;
+  saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName)
+    .then(function(){
+      closeModalDirect();
+      setTimeout(function(){openModal(uuid);},200);
+    })
+    .catch(function(e){
+      inp.disabled=false;
+      if(e.message==='SESSION_EXPIRED')handleFetchError(e);
+      else toast('Failed to save date: '+e.message,true);
+    });
 }
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
@@ -1187,27 +1431,21 @@ function closeModalDirect(){document.getElementById('modal-overlay').classList.r
 // ─── Make & Model ─────────────────────────────────────────────────────────────
 function renderMakeModel(){
   var search=(document.getElementById('mm-search').value||'').toLowerCase();
-  var rows=makeModelData.filter(function(r){
-    if(!search)return true;
-    return r.make.toLowerCase().indexOf(search)!==-1||r.model.toLowerCase().indexOf(search)!==-1;
-  });
+  var rows=makeModelData.filter(function(r){if(!search)return true;return r.make.toLowerCase().indexOf(search)!==-1||r.model.toLowerCase().indexOf(search)!==-1;});
   var html='';
-  if(rows.length===0){
-    html='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No entries yet. Add one below.</td></tr>';
-  } else {
-    rows.forEach(function(r){
-      var realIdx=makeModelData.indexOf(r);
-      html+='<tr>'
-        +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
-        +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="\u2014"/></td>'
-        +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
-        +'</tr>';
-    });
-  }
+  if(!rows.length){html='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No entries yet.</td></tr>';}
+  else{rows.forEach(function(r){
+    var realIdx=makeModelData.indexOf(r);
+    html+='<tr>'
+      +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
+      +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
+      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="\u2014"/></td>'
+      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="\u2014"/></td>'
+      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="\u2014"/></td>'
+      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="\u2014"/></td>'
+      +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
+      +'</tr>';
+  });}
   document.getElementById('mm-body').innerHTML=html;
 }
 function mmChanged(input,idx,field){input.classList.add('changed');makeModelData[idx][field]=input.value;}
@@ -1215,15 +1453,8 @@ function addMakeModelRow(){
   var make=document.getElementById('mm-new-make').value.trim();
   var model=document.getElementById('mm-new-model').value.trim();
   if(!make&&!model){toast('Please enter at least a Make or Model.',true);return;}
-  var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
-  if(existing){toast('That Make + Model already exists.',true);return;}
-  makeModelData.push({
-    make:make,model:model,
-    service:document.getElementById('mm-new-service').value||'',
-    pvi:document.getElementById('mm-new-pvi').value||'',
-    performance:document.getElementById('mm-new-perf').value||'',
-    emc:document.getElementById('mm-new-emc').value||''
-  });
+  if(makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);})){toast('Already exists.',true);return;}
+  makeModelData.push({make:make,model:model,service:document.getElementById('mm-new-service').value||'',pvi:document.getElementById('mm-new-pvi').value||'',performance:document.getElementById('mm-new-perf').value||'',emc:document.getElementById('mm-new-emc').value||''});
   ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-perf','mm-new-emc'].forEach(function(id){document.getElementById(id).value='';});
   saveMakeModel();renderMakeModel();
 }
@@ -1231,17 +1462,12 @@ function deleteMakeModelRow(idx){makeModelData.splice(idx,1);saveMakeModel();ren
 function saveMakeModel(){
   saveLocal();
   document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
-  saveMakeModelToServer(
-    function(){toast('Make & Model data saved!');},
-    function(e){toast('Saved locally. Server error: '+e.message,true);}
-  );
+  saveMakeModelToServer(function(){toast('Saved!');},function(e){toast('Saved locally. Server error: '+e.message,true);});
 }
 function exportMakeModel(){
   var csv='Make,Model,Service (hrs),PVI (hrs),Performance (hrs),EMC (hrs)\n';
   makeModelData.forEach(function(r){csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';});
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='make-model-times.csv';a.click();
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='make-model-times.csv';a.click();
 }
 function importMakeModel(event){
   var file=event.target.files[0];if(!file)return;
@@ -1283,14 +1509,14 @@ function renderSettings(){
   updateThresholdPreviews();
   var grid=document.getElementById('settings-grid');
   var keys=Object.keys(assetTypes);
-  if(!keys.length){grid.innerHTML='<p style="color:var(--muted)">No asset types loaded. Connect and sync first.</p>';return;}
+  if(!keys.length){grid.innerHTML='<p style="color:var(--muted)">No asset types loaded.</p>';return;}
   grid.innerHTML='<div class="settings-grid">'+keys.sort(function(a,b){return assetTypes[a].name.localeCompare(assetTypes[b].name);}).map(function(uuid){
     var t=assetTypes[uuid];var mappings=fieldMappings[uuid]||{};
     var rows=CHECK_TYPES.map(function(ct){
       var opts=t.fields.map(function(f){return '<option value="'+esc(f.name)+'" '+(mappings[ct.key]===f.name?'selected':'')+'>'+esc(f.name)+' ('+esc(f.field_type||'text')+')</option>';}).join('');
       return '<div class="mapping-row"><label>'+esc(ct.label)+'</label><select id="map-'+uuid+'-'+ct.key+'"><option value="">\u2014 Not mapped \u2014</option>'+opts+'</select></div>';
     }).join('');
-    return '<div class="settings-card"><h3>'+esc(t.name)+'</h3><p class="card-desc">'+t.fields.length+' field(s) available</p>'+rows+'</div>';
+    return '<div class="settings-card"><h3>'+esc(t.name)+'</h3><p class="card-desc">'+t.fields.length+' field(s)</p>'+rows+'</div>';
   }).join('')+'</div>';
 }
 function saveSettings(){
