@@ -54,7 +54,7 @@ button:hover{opacity:0.85;}
 .hidden-bar span{flex:1;}
 .kanban{display:none;}
 .kanban.active{display:block;overflow-x:auto;padding-bottom:12px;}
-.kanban-inner{display:grid;grid-template-columns:repeat(5,minmax(240px,1fr));gap:16px;min-width:1200px;}
+.kanban-inner{display:grid;grid-template-columns:repeat(5,minmax(260px,1fr));gap:16px;min-width:1300px;}
 .kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0;}
 .kanban-col-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700;font-size:0.88rem;}
 .col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
@@ -96,16 +96,21 @@ button:hover{opacity:0.85;}
 .due-badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
 .due-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
 .due-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
+.compliance-select{width:100%;margin-top:8px;margin-left:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.75rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
+.compliance-select:focus{border-color:var(--accent);}
+.compliance-select.saving{border-color:var(--amber);opacity:0.7;}
+.compliance-select.saved{border-color:var(--green);}
+.compliance-select.error{border-color:var(--red);}
+.compliance-wrap{padding-left:8px;margin-top:6px;}
+.compliance-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
 .list-view{display:none;}
 .list-view.active{display:block;overflow-x:auto;}
 table{width:100%;border-collapse:collapse;}
 thead tr{border-bottom:2px solid var(--border);}
 th{text-align:left;padding:10px 14px;font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
-tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.row-suppressed{opacity:0.55;}
-tbody tr.no-hover{cursor:default;}
-tbody tr.no-hover:hover{background:transparent;}
 td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .td-name{font-weight:600;}
 .client-group-header{background:var(--surface);pointer-events:none;}
@@ -124,6 +129,18 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .modal-check-card .mc-date{font-size:0.78rem;margin-top:8px;font-weight:600;}
 .modal-check-card .mc-date-label{font-size:0.68rem;color:var(--muted);margin-top:2px;}
 .modal-check-card .mc-hours{font-size:0.72rem;color:var(--accent);margin-top:6px;font-style:italic;}
+.modal-compliance{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;}
+.modal-compliance h4{font-size:0.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+.modal-compliance-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.modal-compliance-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 32px 8px 12px;color:var(--text);font-size:0.88rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;min-width:200px;}
+.modal-compliance-select:focus{border-color:var(--accent);}
+.modal-compliance-select.saving{border-color:var(--amber);}
+.modal-compliance-select.saved{border-color:var(--green);}
+.modal-compliance-select.error{border-color:var(--red);}
+.compliance-status-msg{font-size:0.78rem;font-weight:600;}
+.compliance-status-msg.saving{color:var(--amber);}
+.compliance-status-msg.saved{color:var(--green);}
+.compliance-status-msg.error{color:var(--red);}
 .field-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);}
 .field-row:last-child{border-bottom:none;}
 .field-label{font-size:0.8rem;color:var(--muted);}
@@ -136,8 +153,8 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .settings-card .card-desc{font-size:0.8rem;color:var(--muted);margin-bottom:16px;}
 .mapping-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .mapping-row label{font-size:0.85rem;min-width:150px;color:var(--muted);flex-shrink:0;}
-.mapping-row select,.mapping-row input[type=number]{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;min-width:0;}
-.mapping-row input[type=number]:focus,.mapping-row select:focus{border-color:var(--accent);}
+.mapping-row select,.mapping-row input[type=number],.mapping-row input[type=text]{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;min-width:0;}
+.mapping-row input:focus,.mapping-row select:focus{border-color:var(--accent);}
 .threshold-preview{font-size:0.8rem;color:var(--purple);margin-top:6px;font-weight:600;}
 .due-soon-preview{font-size:0.8rem;color:var(--amber);margin-top:6px;font-weight:600;}
 #toast{position:fixed;bottom:28px;right:28px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:0.88rem;z-index:300;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;}
@@ -172,6 +189,13 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .mm-add-row input[type=number]:focus{border-color:var(--accent);}
 .mm-add-label{font-size:0.78rem;color:var(--muted);white-space:nowrap;}
 .hours-pill{display:inline-block;background:rgba(79,110,247,0.12);border:1px solid rgba(79,110,247,0.25);border-radius:6px;padding:1px 6px;font-size:0.67rem;color:var(--accent);font-weight:600;margin-top:2px;white-space:nowrap;}
+.comp-pill{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap;}
+.comp-pill.Active{background:rgba(34,197,94,0.15);color:var(--green);}
+.comp-pill.Expired{background:rgba(239,68,68,0.15);color:var(--red);}
+.comp-pill.Quoted{background:rgba(245,158,11,0.15);color:var(--accent);}
+.comp-pill.Scheduled{background:rgba(79,110,247,0.15);color:var(--amber);}
+.comp-pill.Query{background:rgba(124,58,237,0.15);color:var(--purple);}
+.comp-pill.GoneWithThirdParty{background:rgba(136,146,176,0.15);color:var(--muted);}
 </style>
 </head>
 <body>
@@ -223,12 +247,12 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <div class="kanban-col"><div class="kanban-col-header"><span class="col-dot" style="background:var(--green)"></span>OK<span class="col-count" id="count-ok">0</span></div><div class="kanban-cards" id="col-ok"></div></div>
 <div class="kanban-col"><div class="kanban-col-header"><span class="col-dot" style="background:var(--muted)"></span>No Date<span class="col-count" id="count-nodate">0</span></div><div class="kanban-cards" id="col-nodate"></div></div>
 </div></div>
-<div class="list-view" id="list-view"><table><thead><tr><th>Asset Name</th><th>Type</th><th>Service Due</th><th>PVI Due</th><th>Validation Due</th><th>Performance Due</th><th>EMC Due</th><th>Worst Status</th></tr></thead><tbody id="list-body"></tbody></table></div>
+<div class="list-view" id="list-view"><table><thead><tr><th>Asset Name</th><th>Compliance</th><th>Type</th><th>Service Due</th><th>PVI Due</th><th>Validation Due</th><th>Performance Due</th><th>EMC Due</th><th>Worst Status</th></tr></thead><tbody id="list-body"></tbody></table></div>
 </div>
 
 <div id="screen-makemodel" class="screen">
 <h2 style="margin-bottom:8px">&#9881; Make &amp; Model Service Times</h2>
-<p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model. These times are displayed on the dashboard cards and modal.</p>
+<p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model.</p>
 <div class="mm-toolbar">
 <input type="text" id="mm-search" placeholder="&#128269; Search make or model&hellip;" oninput="renderMakeModel()"/>
 <button class="btn-primary btn-sm" onclick="saveMakeModel()">&#10003; Save All</button>
@@ -242,7 +266,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <tbody id="mm-body"></tbody>
 </table>
 </div>
-<div class="mm-add-row" id="mm-add-row">
+<div class="mm-add-row">
 <span class="mm-add-label">Add new:</span>
 <input type="text" id="mm-new-make" placeholder="Make&hellip;"/>
 <input type="text" id="mm-new-model" placeholder="Model&hellip;"/>
@@ -262,8 +286,8 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <div class="settings-card"><h3>&#128993; Due Soon Threshold</h3><p class="card-desc">Assets due within this many days are marked <strong style="color:var(--amber)">Due Soon</strong>.</p><div class="mapping-row"><label>Days ahead</label><input type="number" id="input-soon-threshold" min="1" max="9999" value="30" oninput="updateThresholdPreviews()"/></div><div class="due-soon-preview" id="preview-soon">&#9889; Due Soon if within 30 days</div></div>
 <div class="settings-card"><h3>&#128269; Compliance Filtering</h3><p class="card-desc">Assets are automatically hidden based on the <strong>Compliance</strong> field value.</p><div style="font-size:0.83rem;color:var(--muted);line-height:1.9"><div>&#128683; <strong style="color:var(--text)">Decommissioned</strong> &mdash; hidden from all results</div><div>&#128123; <strong style="color:var(--text)">Unknown</strong> &mdash; hidden when Elapsed or No Date</div><div style="margin-top:8px;color:var(--accent)">Use the &#128065; Show Hidden button on the dashboard to reveal them.</div></div></div>
 <div class="settings-card"><h3>&#128270; Make &amp; Model Fields</h3><p class="card-desc">Map which asset fields contain the Make and Model so service times can be looked up automatically.</p>
-<div class="mapping-row"><label>Make field name</label><input type="text" id="input-make-field" placeholder="e.g. Make" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;"/></div>
-<div class="mapping-row"><label>Model field name</label><input type="text" id="input-model-field" placeholder="e.g. Model" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;"/></div>
+<div class="mapping-row"><label>Make field name</label><input type="text" id="input-make-field" placeholder="e.g. Make"/></div>
+<div class="mapping-row"><label>Model field name</label><input type="text" id="input-model-field" placeholder="e.g. Model"/></div>
 <button class="btn-primary btn-sm" style="margin-top:8px" onclick="saveMakeModelFields()">Save Field Names</button>
 </div>
 </div>
@@ -282,24 +306,24 @@ var MAKE_FIELD='Make',MODEL_FIELD='Model';
 var showHidden=false;
 var makeModelData=[];
 var CHECK_TYPES=[{key:'service',label:'Service Due'},{key:'pvi',label:'PVI Due'},{key:'validation',label:'Validation Due'},{key:'performance',label:'Performance Due'},{key:'emc',label:'EMC Due'}];
-var MM_CHECKS=[{key:'service',label:'Service'},{key:'pvi',label:'PVI'},{key:'performance',label:'Performance'},{key:'emc',label:'EMC'}];
 var fieldMappings={};
 var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
+var COMPLIANCE_OPTIONS=['Active','Expired','Quoted','Scheduled','Query','Gone With Third Party'];
+var COMPLIANCE_HIDDEN=['Decommissioned','Unknown'];
 
-function mmKey(make,model){return (String(make||'').trim()+'|||'+String(model||'').trim()).toLowerCase();}
-function getMMLookup(){
-  var map={};
-  makeModelData.forEach(function(r){map[mmKey(r.make,r.model)]=r;});
-  return map;
+function compliancePillClass(val){
+  if(!val)return '';
+  return val.replace(/\s+/g,'');
 }
+
+function mmKey(make,model){return(String(make||'').trim()+'|||'+String(model||'').trim()).toLowerCase();}
+function getMMLookup(){var map={};makeModelData.forEach(function(r){map[mmKey(r.make,r.model)]=r;});return map;}
 function getAssetHours(asset){
   var make=getAnyFieldValue(asset,MAKE_FIELD)||'';
   var model=getAnyFieldValue(asset,MODEL_FIELD)||'';
   if(!make&&!model)return null;
-  var lookup=getMMLookup();
-  return lookup[mmKey(make,model)]||null;
+  return getMMLookup()[mmKey(make,model)]||null;
 }
-
 function suppressionReason(asset,overallStatus){
   var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);if(!c)return null;
   var v=c.trim().toLowerCase();
@@ -313,10 +337,23 @@ function getAnyFieldValue(asset,fieldName){
   var m=asset.field_data.find(function(f){return String(f.fieldName||'').toLowerCase()===lower;});
   return m?(m.fieldValue||null):null;
 }
+function setAnyFieldValueLocal(asset,fieldName,value){
+  if(!Array.isArray(asset.field_data))return;
+  var lower=fieldName.toLowerCase();
+  var m=asset.field_data.find(function(f){return String(f.fieldName||'').toLowerCase()===lower;});
+  if(m)m.fieldValue=value;
+}
 function authHeader(){return 'Basic '+btoa(unescape(encodeURIComponent(apiKey+':'+apiPass)));}
 function sm8Get(endpoint){
   return fetch('/api/proxy?path='+endpoint+'.json',{headers:{'Authorization':authHeader(),'Accept':'application/json'}})
     .then(function(res){return res.json().then(function(data){if(!res.ok)throw new Error(data.message||JSON.stringify(data));return data;});});
+}
+function sm8Patch(endpoint,body){
+  return fetch('/api/proxy?path='+endpoint+'.json',{
+    method:'POST',
+    headers:{'Authorization':authHeader(),'Accept':'application/json','Content-Type':'application/json','X-HTTP-Method-Override':'PUT'},
+    body:JSON.stringify(body)
+  }).then(function(res){return res.json().then(function(data){if(!res.ok)throw new Error(data.message||JSON.stringify(data));return data;});});
 }
 function getFieldValue(asset,fieldName){
   if(!Array.isArray(asset.field_data))return null;
@@ -345,9 +382,8 @@ function statusOf(days){
 }
 function worstStatus(statuses){
   var best='no-date';
-  statuses.forEach(function(s){if((STATUS_RANK[s]||99)<(STATUS_RANK[best]||99))best=s;});
-  return best;
-}
+  statuses.forEach(function(s){if((
+STATUS_RANK[s]||99)<(STATUS_RANK[best]||99))best=s;});return best;}
 function statusColor(status){return{'elapsed':'purple','overdue':'red','due-soon':'amber','ok':'green'}[status]||'grey';}
 function statusLabel(days,status){
   if(days===null)return 'No date';
@@ -471,6 +507,55 @@ function toggleShowHidden(){
   btn.innerHTML=showHidden?'&#128065; Showing Hidden':'&#128065; Show Hidden';
   renderAssets();
 }
+
+function updateComplianceField(uuid,newValue,selectEl){
+  selectEl.classList.remove('saved','error');
+  selectEl.classList.add('saving');
+  var asset=assets.find(function(a){return a.uuid===uuid;});
+  if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');return;}
+  var fieldData=Array.isArray(asset.field_data)?asset.field_data:[];
+  var lower=COMPLIANCE_FIELD.toLowerCase();
+  var existing=fieldData.find(function(f){return String(f.fieldName||'').toLowerCase()===lower;});
+  var promise;
+  if(existing){
+    promise=sm8Patch('/assetfield/'+existing.uuid,{field_value:newValue});
+  } else {
+    promise=sm8Get('/assettypefield').then(function(typeFields){
+      var tf=typeFields.find(function(f){return f.asset_type_uuid===asset.asset_type_uuid&&f.name.toLowerCase()===lower;});
+      if(!tf)throw new Error('Compliance field not found on asset type');
+      return fetch('/api/proxy?path=/assetfield.json',{
+        method:'POST',
+        headers:{'Authorization':authHeader(),'Accept':'application/json','Content-Type':'application/json'},
+        body:JSON.stringify({asset_uuid:uuid,asset_type_field_uuid:tf.uuid,field_value:newValue})
+      }).then(function(res){return res.json().then(function(data){if(!res.ok)throw new Error(data.message||JSON.stringify(data));return data;});});
+    });
+  }
+  promise.then(function(){
+    setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
+    saveLocal();
+    selectEl.classList.remove('saving');
+    selectEl.classList.add('saved');
+    setTimeout(function(){selectEl.classList.remove('saved');},2000);
+    renderAll();
+  }).catch(function(e){
+    selectEl.classList.remove('saving');
+    selectEl.classList.add('error');
+    toast('Failed to update compliance: '+e.message,true);
+  });
+}
+
+function complianceSelectHTML(uuid,currentValue,cssClass){
+  var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
+  var selectedVal=isHidden?'':( currentValue||'');
+  var opts=COMPLIANCE_OPTIONS.map(function(o){
+    return '<option value="'+esc(o)+'"'+(o===selectedVal?' selected':'')+'>'+esc(o)+'</option>';
+  }).join('');
+  return '<select class="'+cssClass+'" onchange="updateComplianceField(\''+uuid+'\',this.value,this)" onclick="event.stopPropagation()">'
+    +'<option value="">— Set Status —</option>'
+    +opts
+    +'</select>';
+}
+
 function enrichedAssets(){
   return assets.map(function(a){
     var typeUuid=a.asset_type_uuid;
@@ -580,6 +665,11 @@ function hoursPill(hrs){
   if(!hrs)return '';
   return '<span class="hours-pill">&#128336; '+hrs+'</span>';
 }
+function compPill(val){
+  if(!val)return '';
+  var cls=compliancePillClass(val);
+  return '<span class="comp-pill '+esc(cls)+'">'+esc(val)+'</span>';
+}
 function renderAssets(){
   var data=filteredAssets();var sorted=sortedAssets(data);
   var hiddenCount=enrichedAssets().filter(function(a){return a.suppressed;}).length;
@@ -599,11 +689,11 @@ function renderAssets(){
       :cols[status].map(assetCard).join('');
   });
   var tbody=document.getElementById('list-body');
-  if(sorted.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';return;}
+  if(sorted.length===0){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';return;}
   var html='';var lastClient=null;
   sorted.forEach(function(a){
     if(a.clientName!==lastClient){
-      html+='<tr class="client-group-header"><td colspan="8">&#128205; '+esc(a.clientName)+'</td></tr>';
+      html+='<tr class="client-group-header"><td colspan="9">&#128205; '+esc(a.clientName)+'</td></tr>';
       lastClient=a.clientName;
     }
     var worstColor=statusColor(a.status);
@@ -621,9 +711,10 @@ function renderAssets(){
     }).join('');
     var rowClass=a.suppressed?'row-suppressed':'';
     html+='<tr class="'+rowClass+'" onclick="openModal(\''+a.uuid+'\')">'
-      +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')+(a.compliance&&!a.suppressed?'<div style="font-size:0.72rem;color:var(--muted);margin-top:2px">'+esc(a.compliance)+'</div>':'')
+      +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')
       +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')
       +'</td>'
+      +'<td onclick="event.stopPropagation()">'+compPill(a.compliance)+'<br/>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</td>'
       +'<td><span class="tag">'+esc(a.typeName)+'</span></td>'
       +checkCells
       +'<td><span class="due-badge '+worstColor+'">'+esc(a.status)+'</span></td>'
@@ -654,6 +745,7 @@ function assetCard(a){
     +'<div class="asset-card-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
     +'<div class="asset-card-client">&#128205; '+esc(a.clientName)+'</div>'
     +'<div class="asset-card-type">'+esc(a.typeName)+(a.make||a.model?' &middot; '+esc([a.make,a.model].filter(Boolean).join(' ')):'')+'</div>'
+    +'<div class="compliance-wrap"><div class="compliance-label">Compliance</div>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</div>'
     +(checkRows?'<div class="asset-card-checks">'+checkRows+'</div>':'')
     +'<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+worstCss+'"></div></div></div>'
     +'</div>';
@@ -680,7 +772,7 @@ function openModal(uuid){
       +'</div>';
   }).filter(Boolean).join('');
   var elapsedBanner=a.status==='elapsed'?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
-  var suppressedBanner=a.suppressed?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden from results.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
+  var suppressedBanner=a.suppressed?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
   var cfRows='';
   if(Array.isArray(a.field_data)&&a.field_data.length>0){
     a.field_data.slice().sort(function(x,y){return(x.sortOrder||0)-(y.sortOrder||0);}).forEach(function(f){
@@ -695,10 +787,17 @@ function openModal(uuid){
     +'<span class="tag">'+esc(a.typeName)+'</span>'
     +'<span class="tag tag-client">&#128205; '+esc(a.clientName)+'</span>'
     +(a.make||a.model?'<span class="tag">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</span>':'')
-    +(a.compliance?'<span class="tag" style="background:rgba(136,146,176,0.1);border-color:rgba(136,146,176,0.3);color:var(--muted)">'+esc(a.compliance)+'</span>':'')
+    +(a.compliance?compPill(a.compliance):'')
     +'<span class="due-badge '+worstColor+'" style="margin-left:4px">'+esc(a.status)+'</span>'
     +'</div>'
     +suppressedBanner+elapsedBanner
+    +'<div class="modal-compliance">'
+    +'<h4>&#9989; Compliance Status</h4>'
+    +'<div class="modal-compliance-row">'
+    +complianceSelectHTML(a.uuid,a.compliance,'modal-compliance-select')
+    +'<span class="compliance-status-msg" id="comp-msg-'+esc(a.uuid)+'"></span>'
+    +'</div>'
+    +'</div>'
     +(checkCards?'<div class="modal-checks">'+checkCards+'</div>':'')
     +'<h3 style="font-size:0.85rem;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">All Asset Fields</h3>'
     +cfRows
@@ -707,7 +806,6 @@ function openModal(uuid){
 }
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
-
 function renderMakeModel(){
   var search=(document.getElementById('mm-search').value||'').toLowerCase();
   var rows=makeModelData.filter(function(r){
@@ -718,75 +816,55 @@ function renderMakeModel(){
   if(rows.length===0){
     html='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No entries yet. Add one below.</td></tr>';
   } else {
-    rows.forEach(function(r,i){
+    rows.forEach(function(r){
       var realIdx=makeModelData.indexOf(r);
       html+='<tr>'
         +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
         +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="—"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="—"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="—"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="—"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="\u2014"/></td>'
         +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
         +'</tr>';
     });
   }
   document.getElementById('mm-body').innerHTML=html;
 }
-function mmChanged(input,idx,field){
-  input.classList.add('changed');
-  makeModelData[idx][field]=input.value;
-}
+function mmChanged(input,idx,field){input.classList.add('changed');makeModelData[idx][field]=input.value;}
 function addMakeModelRow(){
   var make=document.getElementById('mm-new-make').value.trim();
   var model=document.getElementById('mm-new-model').value.trim();
   if(!make&&!model){toast('Please enter at least a Make or Model.',true);return;}
   var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
   if(existing){toast('That Make + Model already exists.',true);return;}
-  makeModelData.push({
-    make:make,model:model,
-    service:document.getElementById('mm-new-service').value||'',
-    pvi:document.getElementById('mm-new-pvi').value||'',
-    performance:document.getElementById('mm-new-perf').value||'',
-    emc:document.getElementById('mm-new-emc').value||''
-  });
+  makeModelData.push({make:make,model:model,service:document.getElementById('mm-new-service').value||'',pvi:document.getElementById('mm-new-pvi').value||'',performance:document.getElementById('mm-new-perf').value||'',emc:document.getElementById('mm-new-emc').value||''});
   ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-perf','mm-new-emc'].forEach(function(id){document.getElementById(id).value='';});
   saveMakeModel();renderMakeModel();
 }
-function deleteMakeModelRow(idx){
-  makeModelData.splice(idx,1);
-  saveMakeModel();renderMakeModel();
-}
-function saveMakeModel(){
-  saveLocal();toast('Make & Model data saved!');
-  document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
-}
+function deleteMakeModelRow(idx){makeModelData.splice(idx,1);saveMakeModel();renderMakeModel();}
+function saveMakeModel(){saveLocal();toast('Make & Model data saved!');document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});}
 function exportMakeModel(){
   var csv='Make,Model,Service (hrs),PVI (hrs),Performance (hrs),EMC (hrs)\n';
-  makeModelData.forEach(function(r){
-    csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';
-  });
-  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='make-model-times.csv';a.click();
+  makeModelData.forEach(function(r){csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';});
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='make-model-times.csv';a.click();
 }
 function importMakeModel(event){
   var file=event.target.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
     var lines=e.target.result.split('\n');
-    var added=0;
     lines.slice(1).forEach(function(line){
       if(!line.trim())return;
       var cols=line.match(/(".*?"|[^,]+)(?=,|$)/g)||[];
-      function clean(s){return (s||'').replace(/^"|"$/g,'').trim();}
+      function clean(s){return(s||'').replace(/^"|"$/g,'').trim();}
       var make=clean(cols[0]),model=clean(cols[1]),service=clean(cols[2]),pvi=clean(cols[3]),perf=clean(cols[4]),emc=clean(cols[5]);
       if(!make&&!model)return;
       var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
       if(existing){existing.service=service;existing.pvi=pvi;existing.performance=perf;existing.emc=emc;}
-      else{makeModelData.push({make:make,model:model,service:service,pvi:pvi,performance:perf,emc:emc});added++;}
+      else{makeModelData.push({make:make,model:model,service:service,pvi:pvi,performance:perf,emc:emc});}
     });
-    saveMakeModel();renderMakeModel();toast('CSV imported!');
-    event.target.value='';
+    saveMakeModel();renderMakeModel();toast('CSV imported!');event.target.value='';
   };
   reader.readAsText(file);
 }
