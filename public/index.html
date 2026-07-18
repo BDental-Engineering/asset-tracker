@@ -196,6 +196,10 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .comp-pill.Scheduled{background:rgba(79,110,247,0.15);color:var(--amber);}
 .comp-pill.Query{background:rgba(124,58,237,0.15);color:var(--purple);}
 .comp-pill.GoneWithThirdParty{background:rgba(136,146,176,0.15);color:var(--muted);}
+.mm-sync-status{font-size:0.78rem;color:var(--muted);margin-left:4px;}
+.mm-sync-status.saving{color:var(--amber);}
+.mm-sync-status.saved{color:var(--green);}
+.mm-sync-status.error{color:var(--red);}
 </style>
 </head>
 <body>
@@ -216,12 +220,12 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </header>
 
-<!-- AUTH SCREEN -->
+<!-- AUTH -->
 <div id="screen-auth" class="screen active">
   <div class="auth-card">
     <h2>Asset Tracker</h2>
     <p>Sign in with your ServiceM8 account to continue.</p>
-    <div id="auth-error-banner" style="display:none" class="error-banner"></div>
+    <div id="auth-error-banner" class="error-banner" style="display:none"></div>
     <a href="/api/auth" class="oauth-btn">
       <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M8 22 L16 10 L24 22" stroke="#4f6ef7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2.5" fill="#4f6ef7"/></svg>
       Sign in with ServiceM8
@@ -230,7 +234,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- LOADING SCREEN -->
+<!-- LOADING -->
 <div id="screen-loading" class="screen">
   <div class="loading-card">
     <span class="loader" style="width:36px;height:36px;border-width:3px"></span>
@@ -238,7 +242,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- DASHBOARD SCREEN -->
+<!-- DASHBOARD -->
 <div id="screen-dashboard" class="screen">
   <div class="stats-bar" id="stats-bar"></div>
   <div id="summary-chart" style="margin-bottom:28px"></div>
@@ -246,8 +250,22 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <input type="text" id="search-input" placeholder="&#128269; Search assets or clients&hellip;" oninput="renderAssets()"/>
     <select id="filter-type" onchange="renderAssets()"><option value="">All Types</option></select>
     <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
-    <select id="filter-check" onchange="renderAssets()"><option value="">All Checks</option><option value="service">Service Due</option><option value="pvi">PVI Due</option><option value="validation">Validation Due</option><option value="performance">Performance Due</option><option value="emc">EMC Due</option></select>
-    <select id="filter-status" onchange="renderAssets()"><option value="">All Statuses</option><option value="elapsed">Elapsed</option><option value="overdue">Overdue</option><option value="due-soon">Due Soon</option><option value="ok">OK</option><option value="no-date">No Date</option></select>
+    <select id="filter-check" onchange="renderAssets()">
+      <option value="">All Checks</option>
+      <option value="service">Service Due</option>
+      <option value="pvi">PVI Due</option>
+      <option value="validation">Validation Due</option>
+      <option value="performance">Performance Due</option>
+      <option value="emc">EMC Due</option>
+    </select>
+    <select id="filter-status" onchange="renderAssets()">
+      <option value="">All Statuses</option>
+      <option value="elapsed">Elapsed</option>
+      <option value="overdue">Overdue</option>
+      <option value="due-soon">Due Soon</option>
+      <option value="ok">OK</option>
+      <option value="no-date">No Date</option>
+    </select>
     <button class="btn-hidden-toggle btn-sm" id="btn-show-hidden" onclick="toggleShowHidden()">&#128065; Show Hidden</button>
     <div class="view-toggle">
       <button class="active" id="btn-kanban" onclick="setView('kanban')">&#8862; Kanban</button>
@@ -266,25 +284,33 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <div class="kanban-col"><div class="kanban-col-header"><span class="col-dot" style="background:var(--muted)"></span>No Date<span class="col-count" id="count-nodate">0</span></div><div class="kanban-cards" id="col-nodate"></div></div>
   </div></div>
   <div class="list-view" id="list-view">
-    <table><thead><tr><th>Asset Name</th><th>Compliance</th><th>Type</th><th>Service Due</th><th>PVI Due</th><th>Validation Due</th><th>Performance Due</th><th>EMC Due</th><th>Worst Status</th></tr></thead>
-    <tbody id="list-body"></tbody></table>
+    <table><thead><tr>
+      <th>Asset Name</th><th>Compliance</th><th>Type</th>
+      <th>Service Due</th><th>PVI Due</th><th>Validation Due</th><th>Performance Due</th><th>EMC Due</th>
+      <th>Worst Status</th>
+    </tr></thead><tbody id="list-body"></tbody></table>
   </div>
 </div>
 
-<!-- MAKE & MODEL SCREEN -->
+<!-- MAKE & MODEL -->
 <div id="screen-makemodel" class="screen">
   <h2 style="margin-bottom:8px">&#9881; Make &amp; Model Service Times</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model.</p>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model. Data is saved to the server.</p>
   <div class="mm-toolbar">
     <input type="text" id="mm-search" placeholder="&#128269; Search make or model&hellip;" oninput="renderMakeModel()"/>
     <button class="btn-primary btn-sm" onclick="saveMakeModel()">&#10003; Save All</button>
     <button class="btn-ghost btn-sm" onclick="exportMakeModel()">&#8681; Export CSV</button>
     <button class="btn-ghost btn-sm" onclick="document.getElementById('mm-import').click()">&#8679; Import CSV</button>
     <input type="file" id="mm-import" accept=".csv" style="display:none" onchange="importMakeModel(event)"/>
+    <span class="mm-sync-status" id="mm-sync-status"></span>
   </div>
   <div class="mm-table-wrap">
     <table class="mm-table">
-      <thead><tr><th>Make</th><th>Model</th><th>Service (hrs)</th><th>PVI (hrs)</th><th>Performance (hrs)</th><th>EMC (hrs)</th><th></th></tr></thead>
+      <thead><tr>
+        <th>Make</th><th>Model</th>
+        <th>Service (hrs)</th><th>PVI (hrs)</th><th>Performance (hrs)</th><th>EMC (hrs)</th>
+        <th></th>
+      </tr></thead>
       <tbody id="mm-body"></tbody>
     </table>
   </div>
@@ -300,15 +326,35 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- SETTINGS SCREEN -->
+<!-- SETTINGS -->
 <div id="screen-settings" class="screen">
   <h2 style="margin-bottom:8px">Settings</h2>
   <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Configure thresholds and map due-date fields per asset type.</p>
   <div class="settings-grid" style="margin-bottom:28px">
-    <div class="settings-card"><h3>&#128995; Elapsed Threshold</h3><p class="card-desc">Assets overdue by more than this many days are marked <strong style="color:var(--purple)">Elapsed</strong>.</p><div class="mapping-row"><label>Days overdue</label><input type="number" id="input-elapsed-threshold" min="1" max="9999" value="100" oninput="updateThresholdPreviews()"/></div><div class="threshold-preview" id="preview-elapsed">&#9888; Elapsed if overdue by more than 100 days</div></div>
-    <div class="settings-card"><h3>&#128993; Due Soon Threshold</h3><p class="card-desc">Assets due within this many days are marked <strong style="color:var(--amber)">Due Soon</strong>.</p><div class="mapping-row"><label>Days ahead</label><input type="number" id="input-soon-threshold" min="1" max="9999" value="30" oninput="updateThresholdPreviews()"/></div><div class="due-soon-preview" id="preview-soon">&#9889; Due Soon if within 30 days</div></div>
-    <div class="settings-card"><h3>&#128269; Compliance Filtering</h3><p class="card-desc">Assets are automatically hidden based on the <strong>Compliance</strong> field value.</p><div style="font-size:0.83rem;color:var(--muted);line-height:1.9"><div>&#128683; <strong style="color:var(--text)">Decommissioned</strong> &mdash; hidden from all results</div><div>&#128123; <strong style="color:var(--text)">Unknown</strong> &mdash; hidden when Elapsed or No Date</div><div style="margin-top:8px;color:var(--accent)">Use the &#128065; Show Hidden button on the dashboard to reveal them.</div></div></div>
-    <div class="settings-card"><h3>&#128270; Make &amp; Model Fields</h3><p class="card-desc">Map which asset fields contain the Make and Model so service times can be looked up automatically.</p>
+    <div class="settings-card">
+      <h3>&#128995; Elapsed Threshold</h3>
+      <p class="card-desc">Assets overdue by more than this many days are marked <strong style="color:var(--purple)">Elapsed</strong>.</p>
+      <div class="mapping-row"><label>Days overdue</label><input type="number" id="input-elapsed-threshold" min="1" max="9999" value="100" oninput="updateThresholdPreviews()"/></div>
+      <div class="threshold-preview" id="preview-elapsed">&#9888; Elapsed if overdue by more than 100 days</div>
+    </div>
+    <div class="settings-card">
+      <h3>&#128993; Due Soon Threshold</h3>
+      <p class="card-desc">Assets due within this many days are marked <strong style="color:var(--amber)">Due Soon</strong>.</p>
+      <div class="mapping-row"><label>Days ahead</label><input type="number" id="input-soon-threshold" min="1" max="9999" value="30" oninput="updateThresholdPreviews()"/></div>
+      <div class="due-soon-preview" id="preview-soon">&#9889; Due Soon if within 30 days</div>
+    </div>
+    <div class="settings-card">
+      <h3>&#128269; Compliance Filtering</h3>
+      <p class="card-desc">Assets are automatically hidden based on the <strong>Compliance</strong> field value.</p>
+      <div style="font-size:0.83rem;color:var(--muted);line-height:1.9">
+        <div>&#128683; <strong style="color:var(--text)">Decommissioned</strong> &mdash; hidden from all results</div>
+        <div>&#128123; <strong style="color:var(--text)">Unknown</strong> &mdash; hidden when Elapsed or No Date</div>
+        <div style="margin-top:8px;color:var(--accent)">Use the &#128065; Show Hidden button on the dashboard to reveal them.</div>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>&#128270; Make &amp; Model Fields</h3>
+      <p class="card-desc">Map which asset fields contain the Make and Model so service times can be looked up automatically.</p>
       <div class="mapping-row"><label>Make field name</label><input type="text" id="input-make-field" placeholder="e.g. Make"/></div>
       <div class="mapping-row"><label>Model field name</label><input type="text" id="input-model-field" placeholder="e.g. Model"/></div>
       <button class="btn-primary btn-sm" style="margin-top:8px" onclick="saveMakeModelFields()">Save Field Names</button>
@@ -329,11 +375,11 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <div id="toast"></div>
 
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
-var assets=[], assetTypes={}, clientMap={}, fieldMappings={};
-var ELAPSED_THRESHOLD=100, SOON_THRESHOLD=30;
-var COMPLIANCE_FIELD='Compliance', MAKE_FIELD='Make', MODEL_FIELD='Model';
-var showHidden=false, makeModelData=[];
+// ─── State ────────────────────────────────────────────────────────────────────
+var assets=[],assetTypes={},clientMap={},fieldMappings={};
+var ELAPSED_THRESHOLD=100,SOON_THRESHOLD=30;
+var COMPLIANCE_FIELD='Compliance',MAKE_FIELD='Make',MODEL_FIELD='Model';
+var showHidden=false,makeModelData=[];
 var CHECK_TYPES=[
   {key:'service',label:'Service Due'},
   {key:'pvi',label:'PVI Due'},
@@ -345,7 +391,7 @@ var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
 var COMPLIANCE_OPTIONS=['Active','Expired','Quoted','Scheduled','Query','Gone With Third Party'];
 var COMPLIANCE_HIDDEN=['Decommissioned','Unknown'];
 
-// ─── Local storage (no credentials stored — OAuth handles auth) ───────────────
+// ─── Local storage ────────────────────────────────────────────────────────────
 function saveLocal(){
   localStorage.setItem('sm8_assets',JSON.stringify(assets));
   localStorage.setItem('sm8_types',JSON.stringify(assetTypes));
@@ -369,7 +415,48 @@ function loadLocal(){
   MODEL_FIELD=localStorage.getItem('sm8_model_field')||'Model';
 }
 
-// ─── API (no Authorization header — proxy uses session cookie) ────────────────
+// ─── Make & Model server sync ─────────────────────────────────────────────────
+function loadMakeModelFromServer(){
+  fetch('/api/makemodel',{credentials:'include'})
+    .then(function(res){
+      if(!res.ok)throw new Error('status '+res.status);
+      return res.json();
+    })
+    .then(function(data){
+      if(Array.isArray(data)&&data.length>0){
+        makeModelData=data;
+        saveLocal();
+        if(document.getElementById('screen-makemodel').classList.contains('active'))renderMakeModel();
+        if(document.getElementById('screen-dashboard').classList.contains('active'))renderAssets();
+      }
+    })
+    .catch(function(){/* silently use localStorage fallback */});
+}
+
+function saveMakeModelToServer(onSuccess,onError){
+  var statusEl=document.getElementById('mm-sync-status');
+  if(statusEl){statusEl.textContent='Saving\u2026';statusEl.className='mm-sync-status saving';}
+  fetch('/api/makemodel',{
+    method:'POST',
+    credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(makeModelData)
+  })
+  .then(function(res){
+    if(!res.ok)throw new Error('Server responded with '+res.status);
+    return res.json();
+  })
+  .then(function(){
+    if(statusEl){statusEl.textContent='&#10003; Saved to server';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
+    if(onSuccess)onSuccess();
+  })
+  .catch(function(e){
+    if(statusEl){statusEl.textContent='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
+    if(onError)onError(e);
+  });
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
 function sm8Get(endpoint){
   return fetch('/api/proxy?path='+endpoint+'.json',{
     credentials:'include',
@@ -395,9 +482,8 @@ function sm8Put(uuid,payload){
   });
 }
 
-// ─── Auth / session check ─────────────────────────────────────────────────────
+// ─── Auth / session ───────────────────────────────────────────────────────────
 function checkSession(){
-  // Check for OAuth error in URL
   var params=new URLSearchParams(window.location.search);
   var oauthError=params.get('error');
   if(oauthError){
@@ -408,31 +494,29 @@ function checkSession(){
     window.history.replaceState({},'',window.location.pathname);
     return;
   }
-
-  // Probe the proxy — if it returns 401 we are not logged in
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
-
   fetch('/api/proxy?path=/staff.json',{credentials:'include',headers:{'Accept':'application/json'}})
     .then(function(res){
-      if(res.status===401){
-        // No valid session — show login
-        showScreen('auth');
-      } else {
-        // Valid session — load data
+      if(res.status===401){showScreen('auth');}
+      else{
         loadLocal();
         if(assets.length>0){
-          // Show cached data immediately then sync in background
           showDashboard();
           document.getElementById('sync-status').textContent='Loaded from cache';
+          loadMakeModelFromServer();
           backgroundSync();
         } else {
-          // First load — fetch everything
           showScreen('loading');
           document.getElementById('loading-msg').textContent='Loading your assets\u2026';
           fetchAll()
-            .then(function(){saveLocal();showDashboard();toast('Loaded '+assets.length+' assets.');})
-            .catch(function(e){handleFetchError(e);});
+            .then(function(){
+              saveLocal();
+              loadMakeModelFromServer();
+              showDashboard();
+              toast('Loaded '+assets.length+' assets.');
+            })
+            .catch(handleFetchError);
         }
       }
     })
@@ -459,7 +543,6 @@ function backgroundSync(){
     })
     .catch(function(e){
       if(e.message==='SESSION_EXPIRED')handleFetchError(e);
-      // Otherwise silently ignore — cached data is still shown
     });
 }
 
@@ -544,51 +627,34 @@ function showTab(tab){
   else{showScreen('settings');renderSettings();}
 }
 
-// ─── Compliance update ────────────────────────────────────────────────────────
+// ─── Compliance ───────────────────────────────────────────────────────────────
 function updateComplianceField(uuid,newValue,selectEl){
   selectEl.classList.remove('saved','error');
   selectEl.classList.add('saving');
   var asset=assets.find(function(a){return a.uuid===uuid;});
-  if(!asset){
-    selectEl.classList.remove('saving');selectEl.classList.add('error');
-    toast('Asset not found in local cache.',true);return;
-  }
+  if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');toast('Asset not found.',true);return;}
   fetch('/api/proxy?path=/asset/'+uuid+'.json',{
-    credentials:'include',
-    headers:{'Accept':'application/json'}
+    credentials:'include',headers:{'Accept':'application/json'}
   })
   .then(function(res){
     if(res.status===401)throw new Error('SESSION_EXPIRED');
     return res.json();
   })
   .then(function(liveAsset){
-    var fieldData=Array.isArray(liveAsset.field_data)
-      ?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
+    var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
     var lower=COMPLIANCE_FIELD.toLowerCase();
     var found=false;
     fieldData=fieldData.map(function(f){
-      if(String(f.fieldName||'').toLowerCase()===lower){
-        found=true;return Object.assign({},f,{fieldValue:newValue});
-      }
+      if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
       return f;
     });
     if(!found){
       var typeUuid=liveAsset.asset_type_uuid;
       var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
       var fieldDef=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
-      fieldData.push({
-        uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,
-        fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,
-        asset_type_field_uuid:fieldDef?fieldDef.uuid:''
-      });
+      fieldData.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
     }
-    var payload={
-      uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',
-      asset_type_uuid:liveAsset.asset_type_uuid||'',
-      company_uuid:liveAsset.company_uuid||'',
-      field_data:fieldData
-    };
-    return sm8Put(uuid,payload);
+    return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
   })
   .then(function(res){
     return res.text().then(function(text){
@@ -606,8 +672,8 @@ function updateComplianceField(uuid,newValue,selectEl){
   })
   .catch(function(e){
     selectEl.classList.remove('saving');selectEl.classList.add('error');
-    if(e.message==='SESSION_EXPIRED'){handleFetchError(e);}
-    else{toast('Failed: '+e.message,true);}
+    if(e.message==='SESSION_EXPIRED')handleFetchError(e);
+    else toast('Failed: '+e.message,true);
   });
 }
 
@@ -825,8 +891,7 @@ function suppressionPill(reason){
 function hoursPill(hrs){if(!hrs)return '';return '<span class="hours-pill">&#128336; '+hrs+'</span>';}
 function compPill(val){
   if(!val)return '';
-  var cls=compliancePillClass(val);
-  return '<span class="comp-pill '+esc(cls)+'">'+esc(val)+'</span>';
+  return '<span class="comp-pill '+esc(compliancePillClass(val))+'">'+esc(val)+'</span>';
 }
 function renderAssets(){
   var data=filteredAssets();var sorted=sortedAssets(data);
@@ -866,8 +931,7 @@ function renderAssets(){
         +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
         +(hrs?'<div>'+hoursPill(hrs)+'</div>':'')+'</td>';
     }).join('');
-    var rowClass=a.suppressed?'row-suppressed':'';
-    html+='<tr class="'+rowClass+'" onclick="openModal(\''+a.uuid+'\')">'
+    html+='<tr class="'+(a.suppressed?'row-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
       +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')
       +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')
       +'</td>'
@@ -896,8 +960,7 @@ function assetCard(a){
       +(hrs?'<span class="check-hours">&#128336; '+hrs+'</span>':'')
       +'</span></div>';
   }).join('');
-  var cardClass='asset-card '+worstColor+(a.suppressed?' is-suppressed':'');
-  return '<div class="'+cardClass+'" onclick="openModal(\''+a.uuid+'\')">'
+  return '<div class="asset-card '+worstColor+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
     +'<div class="asset-card-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
     +'<div class="asset-card-client">&#128205; '+esc(a.clientName)+'</div>'
     +'<div class="asset-card-type">'+esc(a.typeName)+(a.make||a.model?' &middot; '+esc([a.make,a.model].filter(Boolean).join(' ')):'')+'</div>'
@@ -947,8 +1010,7 @@ function openModal(uuid){
     +'<span class="due-badge '+worstColor+'" style="margin-left:4px">'+esc(a.status)+'</span>'
     +'</div>'
     +suppressedBanner+elapsedBanner
-    +'<div class="modal-compliance">'
-    +'<h4>&#9989; Compliance Status</h4>'
+    +'<div class="modal-compliance"><h4>&#9989; Compliance Status</h4>'
     +'<div class="modal-compliance-row">'
     +complianceSelectHTML(a.uuid,a.compliance,'modal-compliance-select')
     +'<span class="compliance-status-msg" id="comp-msg-'+esc(a.uuid)+'"></span>'
@@ -995,20 +1057,38 @@ function addMakeModelRow(){
   if(!make&&!model){toast('Please enter at least a Make or Model.',true);return;}
   var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
   if(existing){toast('That Make + Model already exists.',true);return;}
-  makeModelData.push({make:make,model:model,
+  makeModelData.push({
+    make:make,model:model,
     service:document.getElementById('mm-new-service').value||'',
     pvi:document.getElementById('mm-new-pvi').value||'',
     performance:document.getElementById('mm-new-perf').value||'',
-    emc:document.getElementById('mm-new-emc').value||''});
+    emc:document.getElementById('mm-new-emc').value||''
+  });
   ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-perf','mm-new-emc'].forEach(function(id){document.getElementById(id).value='';});
-  saveMakeModel();renderMakeModel();
+  saveMakeModel();
+  renderMakeModel();
 }
-function deleteMakeModelRow(idx){makeModelData.splice(idx,1);saveMakeModel();renderMakeModel();}
-function saveMakeModel(){saveLocal();toast('Make & Model data saved!');document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});}
+function deleteMakeModelRow(idx){
+  makeModelData.splice(idx,1);
+  saveMakeModel();
+  renderMakeModel();
+}
+function saveMakeModel(){
+  saveLocal();
+  document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
+  saveMakeModelToServer(
+    function(){toast('Make & Model data saved!');},
+    function(e){toast('Saved locally. Server error: '+e.message,true);}
+  );
+}
 function exportMakeModel(){
   var csv='Make,Model,Service (hrs),PVI (hrs),Performance (hrs),EMC (hrs)\n';
-  makeModelData.forEach(function(r){csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';});
-  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='make-model-times.csv';a.click();
+  makeModelData.forEach(function(r){
+    csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='make-model-times.csv';a.click();
 }
 function importMakeModel(event){
   var file=event.target.files[0];if(!file)return;
@@ -1078,6 +1158,7 @@ function setView(v){
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
+loadLocal();
 checkSession();
 </script>
 </body>
