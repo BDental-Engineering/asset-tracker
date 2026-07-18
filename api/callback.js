@@ -27,7 +27,7 @@ function exchangeCode(code) {
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
         try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Bad response: ' + data)); }
+        catch(e) { reject(new Error('Bad token response: ' + data)); }
       });
     });
     req.on('error', reject);
@@ -37,7 +37,7 @@ function exchangeCode(code) {
 }
 
 function fetchStaffMe(accessToken) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     const options = {
       hostname: 'api.servicem8.com',
       path:     '/api/staff/me.json',
@@ -51,11 +51,20 @@ function fetchStaffMe(accessToken) {
       let data = '';
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
-        try { resolve(JSON.parse(data)); }
-        catch(e) { resolve(null); }
+        try {
+          const parsed = JSON.parse(data);
+          console.log('[callback] staff/me raw response:', JSON.stringify(parsed));
+          resolve(parsed);
+        } catch(e) {
+          console.log('[callback] staff/me parse error:', e.message, 'raw:', data);
+          resolve(null);
+        }
       });
     });
-    req.on('error', function() { resolve(null); });
+    req.on('error', function(e) {
+      console.log('[callback] staff/me request error:', e.message);
+      resolve(null);
+    });
     req.end();
   });
 }
@@ -80,36 +89,40 @@ module.exports = async function(req, res) {
 
   try {
     const tokenData = await exchangeCode(code);
+    console.log('[callback] token keys:', Object.keys(tokenData));
 
     if (tokenData.error) {
       return res.redirect('/?error=' + encodeURIComponent(tokenData.error_description || tokenData.error));
     }
 
-    // Try to get the logged-in user's email and name
-    let userEmail = '';
+    let userEmail = tokenData.email || '';
     let userName  = '';
 
-    // ServiceM8 sometimes includes the email directly in the token response
-    if (tokenData.email) {
-      userEmail = tokenData.email;
-    }
-
-    // Fetch /staff/me.json for the definitive logged-in user record
     if (tokenData.access_token) {
       const me = await fetchStaffMe(tokenData.access_token);
+
       if (me && !me.error) {
-        // Use 'first' + 'last' (ServiceM8 field names)
-        const first = me.first || me.first_name || '';
-        const last  = me.last  || me.last_name  || '';
-        userName  = [first, last].filter(Boolean).join(' ').trim() || me.name || '';
-        userEmail = me.email || userEmail;
+        // Log all keys so we can see exact field names ServiceM8 returns
+        console.log('[callback] staff/me keys:', Object.keys(me));
+
+        // Try every known variation of name fields
+        const first = me.first      || me.first_name  || me.firstName  || '';
+        const last  = me.last       || me.last_name   || me.lastName   || me.surname || '';
+        const full  = [first, last].filter(Boolean).join(' ').trim();
+
+        userName  = full || me.name || me.display_name || me.displayName || '';
+        userEmail = me.email || me.username || userEmail;
+
+        console.log('[callback] resolved userName:', userName, '| userEmail:', userEmail);
+      } else {
+        console.log('[callback] staff/me returned error or null:', JSON.stringify(me));
       }
     }
 
-    // Set the session token cookie
+    // Set session cookie
     setSessionCookie(res, tokenData);
 
-    // Build cookie array — session + clear state + user identity cookies
+    // Build full cookie array
     const existingCookie = res.getHeader('Set-Cookie');
     const sessionCookie  = Array.isArray(existingCookie) ? existingCookie[0] : existingCookie;
 
@@ -133,9 +146,15 @@ module.exports = async function(req, res) {
     }
 
     res.setHeader('Set-Cookie', cookiesToSet);
+
+    console.log('[callback] cookies being set:', cookiesToSet.map(function(c) {
+      return c.split(';')[0]; // log name=value only, not flags
+    }));
+
     res.redirect('/');
 
   } catch(e) {
+    console.log('[callback] error:', e.message);
     res.redirect('/?error=' + encodeURIComponent(e.message));
   }
 };
