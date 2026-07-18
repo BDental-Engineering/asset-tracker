@@ -673,25 +673,52 @@ function checkSession(){
   }
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
-  sm8Get('/staff').then(function(staffList){
-    currentUser=resolveUserName(staffList);
-    var badge=document.getElementById('user-badge');
-    badge.textContent='&#128100; '+currentUser;badge.style.display='inline-block';
-    loadLocal();
-    if(assets.length>0){
-      showDashboard();
-      document.getElementById('sync-status').textContent='Loaded from cache';
-      loadMakeModelFromServer();loadHistory();backgroundSync();
-    } else {
-      showScreen('loading');
-      document.getElementById('loading-msg').textContent='Loading your assets\u2026';
-      fetchAll().then(function(){saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
-    }
-  }).catch(function(e){
-    if(e.message==='SESSION_EXPIRED')showScreen('auth');
-    else{showScreen('auth');}
-  });
+  // Step 1: check session with a simple fetch (not sm8Get) so we don't throw on non-401 errors
+  fetch('/api/proxy?path=/staff.json',{credentials:'include',headers:{'Accept':'application/json'}})
+    .then(function(res){
+      if(res.status===401){showScreen('auth');return null;}
+      return res.json();
+    })
+    .then(function(staffList){
+      if(!staffList)return;
+      // Resolve user name gracefully
+      currentUser=resolveUserName(Array.isArray(staffList)?staffList:[]);
+      var badge=document.getElementById('user-badge');
+      badge.textContent='\uD83D\uDC64 '+currentUser;
+      badge.style.display='inline-block';
+      loadLocal();
+      if(assets.length>0){
+        showDashboard();
+        document.getElementById('sync-status').textContent='Loaded from cache';
+        loadMakeModelFromServer();
+        loadHistory();
+        backgroundSync();
+      } else {
+        showScreen('loading');
+        document.getElementById('loading-msg').textContent='Loading your assets\u2026';
+        fetchAll()
+          .then(function(){
+            saveLocal();
+            loadMakeModelFromServer();
+            loadHistory();
+            showDashboard();
+            toast('Loaded '+assets.length+' assets.');
+          })
+          .catch(handleFetchError);
+      }
+    })
+    .catch(function(){
+      // Network error — if we have cached data, use it rather than bouncing to login
+      loadLocal();
+      if(assets.length>0){
+        showDashboard();
+        document.getElementById('sync-status').textContent='Offline \u2014 showing cached data';
+      } else {
+        showScreen('auth');
+      }
+    });
 }
+
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
     showScreen('auth');
