@@ -110,5 +110,13 @@
     "pvi": "",
     "performance": "0.5",
     "emc": "0.5"
+  },
+  {
+    "make": "Durr",
+    "model": "VistaScan Mini Easy V1",
+    "service": "1",
+    "pvi": "",
+    "performance": "",
+    "emc": ""
   }
 ]
