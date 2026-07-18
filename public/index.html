@@ -511,18 +511,68 @@ function toggleShowHidden(){
 function updateComplianceField(uuid,newValue,selectEl){
   selectEl.classList.remove('saved','error');
   selectEl.classList.add('saving');
+
   var asset=assets.find(function(a){return a.uuid===uuid;});
-  if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');return;}
-
-  var fieldData=Array.isArray(asset.field_data)?JSON.parse(JSON.stringify(asset.field_data)):[];
-  var lower=COMPLIANCE_FIELD.toLowerCase();
-  var existing=fieldData.find(function(f){return String(f.fieldName||'').toLowerCase()===lower;});
-
-  if(existing){
-    existing.fieldValue=newValue;
-  } else {
-    fieldData.push({fieldName:COMPLIANCE_FIELD,fieldValue:newValue});
+  if(!asset){
+    selectEl.classList.remove('saving');
+    selectEl.classList.add('error');
+    toast('Asset not found in local cache.',true);
+    return;
   }
+
+  // Build a clean copy of field_data with the compliance value updated
+  var fieldData=Array.isArray(asset.field_data)
+    ?JSON.parse(JSON.stringify(asset.field_data))
+    :[];
+
+  var lower=COMPLIANCE_FIELD.toLowerCase();
+  var found=false;
+
+  fieldData=fieldData.map(function(f){
+    if(String(f.fieldName||'').toLowerCase()===lower){
+      found=true;
+      return {
+        uuid:f.uuid||'',
+        active:f.active||'1',
+        fieldName:f.fieldName,
+        fieldValue:newValue,
+        fieldType:f.fieldType||f.field_type||'Text',
+        sortOrder:f.sortOrder||0,
+        asset_uuid:uuid,
+        asset_type_field_uuid:f.asset_type_field_uuid||''
+      };
+    }
+    return f;
+  });
+
+  if(!found){
+    // Try to find the field definition from assetTypes so we have the right uuid
+    var typeUuid=asset.asset_type_uuid;
+    var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
+    var fieldDef=typeFields.find(function(f){
+      return String(f.name||'').toLowerCase()===lower;
+    });
+    fieldData.push({
+      uuid:'',
+      active:'1',
+      fieldName:COMPLIANCE_FIELD,
+      fieldValue:newValue,
+      fieldType:'Text',
+      sortOrder:0,
+      asset_uuid:uuid,
+      asset_type_field_uuid:fieldDef?fieldDef.uuid:''
+    });
+  }
+
+  // Build the full asset payload — ServiceM8 requires the whole record on PUT
+  var payload={
+    uuid:asset.uuid,
+    active:asset.active||'1',
+    name:asset.name||'',
+    asset_type_uuid:asset.asset_type_uuid||'',
+    company_uuid:asset.company_uuid||'',
+    field_data:fieldData
+  };
 
   fetch('/api/proxy?path=/asset/'+uuid+'.json',{
     method:'POST',
@@ -532,22 +582,27 @@ function updateComplianceField(uuid,newValue,selectEl){
       'Content-Type':'application/json',
       'X-HTTP-Method-Override':'PUT'
     },
-    body:JSON.stringify({field_data:fieldData})
+    body:JSON.stringify(payload)
   })
   .then(function(res){
+    // ServiceM8 returns 200 with empty body on success
+    if(res.status===200||res.status===201||res.status===204){
+      return {};
+    }
     return res.json().then(function(data){
-      if(!res.ok)throw new Error(data.message||JSON.stringify(data));
-      return data;
+      throw new Error(data.message||data.error||('HTTP '+res.status));
     });
   })
   .then(function(){
-    setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
+    // Update local cache so UI reflects change immediately
     asset.field_data=fieldData;
+    setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
     saveLocal();
     selectEl.classList.remove('saving');
     selectEl.classList.add('saved');
-    setTimeout(function(){selectEl.classList.remove('saved');},2000);
+    setTimeout(function(){selectEl.classList.remove('saved');},2500);
     renderAll();
+    toast('Compliance updated to: '+newValue);
   })
   .catch(function(e){
     selectEl.classList.remove('saving');
@@ -555,6 +610,7 @@ function updateComplianceField(uuid,newValue,selectEl){
     toast('Failed to update compliance: '+e.message,true);
   });
 }
+
 
 
 function complianceSelectHTML(uuid,currentValue,cssClass){
