@@ -29,12 +29,13 @@ button:hover{opacity:0.85;}
 .auth-card .hint{font-size:0.78rem;color:var(--muted);margin-top:20px;}
 .oauth-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:var(--accent);color:#fff;border-radius:10px;text-decoration:none;font-size:1rem;font-weight:700;transition:opacity 0.15s;border:none;cursor:pointer;width:100%;justify-content:center;}
 .oauth-btn:hover{opacity:0.85;}
-.oauth-btn svg{flex-shrink:0;}
 .error-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px 16px;font-size:0.85rem;color:var(--red);margin-bottom:20px;text-align:left;}
 .loading-card{text-align:center;padding:40px;}
 .loading-card p{color:var(--muted);margin-top:16px;font-size:0.9rem;}
 .stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:28px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:6px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:6px;cursor:default;}
+.stat-card.clickable{cursor:pointer;transition:border-color 0.2s;}
+.stat-card.clickable:hover{border-color:var(--accent);}
 .stat-label{font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
 .stat-value{font-size:2rem;font-weight:700;}
 .stat-card.green .stat-value{color:var(--green);}
@@ -203,6 +204,54 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .mm-sync-status.saving{color:var(--amber);}
 .mm-sync-status.saved{color:var(--green);}
 .mm-sync-status.error{color:var(--red);}
+/* ── Client list ── */
+.client-list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.client-list-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;}
+.client-list-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.client-list-name{font-size:1rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.client-list-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin-bottom:10px;}
+.client-list-bar-seg{border-radius:2px;}
+.client-list-counts{display:flex;gap:10px;flex-wrap:wrap;}
+.client-count-pill{font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:10px;}
+.client-count-pill.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
+.client-count-pill.red{background:rgba(239,68,68,0.15);color:var(--red);}
+.client-count-pill.amber{background:rgba(245,158,11,0.15);color:var(--amber);}
+.client-count-pill.green{background:rgba(34,197,94,0.15);color:var(--green);}
+.client-count-pill.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
+.client-asset-count{font-size:0.75rem;color:var(--muted);margin-top:8px;}
+/* ── Client detail ── */
+.client-detail-header{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
+.client-detail-header h2{font-size:1.6rem;font-weight:800;}
+.client-detail-back{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);cursor:pointer;}
+.client-detail-back:hover{border-color:var(--accent);}
+.client-detail-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px;}
+.client-detail-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.client-detail-stat .ds-value{font-size:1.6rem;font-weight:800;}
+.client-detail-stat .ds-label{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
+.client-search{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;min-width:220px;margin-bottom:20px;}
+.client-search:focus{border-color:var(--accent);}
+.client-assets-list{display:flex;flex-direction:column;gap:12px;}
+.client-asset-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color 0.2s;position:relative;overflow:hidden;}
+.client-asset-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;}
+.client-asset-row.green::before{background:var(--green);}
+.client-asset-row.amber::before{background:var(--amber);}
+.client-asset-row.red::before{background:var(--red);}
+.client-asset-row.purple::before{background:var(--purple);}
+.client-asset-row.grey::before{background:var(--muted);}
+.client-asset-row:hover{border-color:var(--accent);}
+.car-name{font-weight:700;font-size:0.95rem;flex:1;min-width:0;}
+.car-type{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+.car-make{font-size:0.72rem;color:var(--accent);margin-top:1px;}
+.car-checks{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+.car-check{display:flex;flex-direction:column;align-items:center;min-width:70px;}
+.car-check-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;}
+.car-check-badge{font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:8px;}
+.car-check-badge.green{background:rgba(34,197,94,0.15);color:var(--green);}
+.car-check-badge.amber{background:rgba(245,158,11,0.15);color:var(--amber);}
+.car-check-badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
+.car-check-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
+.car-check-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
+.car-compliance{flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -213,6 +262,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
   <div class="nav-tabs" id="nav-tabs" style="display:none">
     <button class="nav-tab active" id="tab-dashboard" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="nav-tab" id="tab-clients" onclick="showTab('clients')">&#128205; Clients</button>
     <button class="nav-tab" id="tab-makemodel" onclick="showTab('makemodel')">&#9881; Make &amp; Model</button>
     <button class="nav-tab" id="tab-settings" onclick="showTab('settings')">Settings</button>
   </div>
@@ -306,6 +356,51 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
+<!-- CLIENTS LIST -->
+<div id="screen-clients" class="screen">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">&#128205; Clients</h2>
+      <p style="color:var(--muted);font-size:0.85rem">Click a client to view their assets in detail.</p>
+    </div>
+    <input type="text" class="client-search" id="client-list-search" placeholder="&#128269; Search clients&hellip;" oninput="renderClientList()"/>
+  </div>
+  <div class="client-list-grid" id="client-list-grid"></div>
+</div>
+
+<!-- CLIENT DETAIL -->
+<div id="screen-client-detail" class="screen">
+  <div class="client-detail-header">
+    <button class="client-detail-back" onclick="showTab('clients')">&#8592; All Clients</button>
+    <h2 id="client-detail-name"></h2>
+    <span id="client-detail-asset-count" style="font-size:0.85rem;color:var(--muted)"></span>
+  </div>
+  <div class="client-detail-stats" id="client-detail-stats"></div>
+  <div style="margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <input type="text" class="client-search" id="client-detail-search" placeholder="&#128269; Search assets&hellip;" oninput="renderClientDetail()" style="margin-bottom:0"/>
+    <select id="client-detail-status-filter" onchange="renderClientDetail()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;">
+      <option value="">All Statuses</option>
+      <option value="elapsed">Elapsed</option>
+      <option value="overdue">Overdue</option>
+      <option value="due-soon">Due Soon</option>
+      <option value="ok">OK</option>
+      <option value="no-date">No Date</option>
+    </select>
+    <select id="client-detail-compliance-filter" onchange="renderClientDetail()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;">
+      <option value="">All Compliance</option>
+      <option value="Active">Active</option>
+      <option value="Expired">Expired</option>
+      <option value="Quoted">Quoted</option>
+      <option value="Scheduled">Scheduled</option>
+      <option value="Query">Query</option>
+      <option value="Gone With Third Party">Gone With Third Party</option>
+      <option value="Decommissioned">Decommissioned</option>
+      <option value="Unknown">Unknown</option>
+    </select>
+  </div>
+  <div class="client-assets-list" id="client-assets-list"></div>
+</div>
+
 <!-- MAKE & MODEL -->
 <div id="screen-makemodel" class="screen">
   <h2 style="margin-bottom:8px">&#9881; Make &amp; Model Service Times</h2>
@@ -394,6 +489,7 @@ var assets=[],assetTypes={},clientMap={},fieldMappings={};
 var ELAPSED_THRESHOLD=100,SOON_THRESHOLD=30;
 var COMPLIANCE_FIELD='Compliance',MAKE_FIELD='Make',MODEL_FIELD='Model';
 var showHidden=false,makeModelData=[];
+var activeClientUuid=null;
 var CHECK_TYPES=[
   {key:'service',label:'Service Due'},
   {key:'pvi',label:'PVI Due'},
@@ -432,66 +528,41 @@ function loadLocal(){
 // ─── Make & Model server sync ─────────────────────────────────────────────────
 function loadMakeModelFromServer(){
   fetch('/api/makemodel',{credentials:'include'})
-    .then(function(res){
-      if(!res.ok)throw new Error('status '+res.status);
-      return res.json();
-    })
+    .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
     .then(function(data){
       if(Array.isArray(data)&&data.length>0){
-        makeModelData=data;
-        saveLocal();
+        makeModelData=data;saveLocal();
         if(document.getElementById('screen-makemodel').classList.contains('active'))renderMakeModel();
         if(document.getElementById('screen-dashboard').classList.contains('active'))renderAssets();
       }
-    })
-    .catch(function(){/* silently use localStorage fallback */});
+    }).catch(function(){});
 }
-
 function saveMakeModelToServer(onSuccess,onError){
   var statusEl=document.getElementById('mm-sync-status');
   if(statusEl){statusEl.textContent='Saving\u2026';statusEl.className='mm-sync-status saving';}
-  fetch('/api/makemodel',{
-    method:'POST',
-    credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(makeModelData)
-  })
-  .then(function(res){
-    if(!res.ok)throw new Error('Server responded with '+res.status);
-    return res.json();
-  })
-  .then(function(){
-    if(statusEl){statusEl.innerHTML='&#10003; Saved to server';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
-    if(onSuccess)onSuccess();
-  })
-  .catch(function(e){
-    if(statusEl){statusEl.innerHTML='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
-    if(onError)onError(e);
-  });
+  fetch('/api/makemodel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(makeModelData)})
+    .then(function(res){if(!res.ok)throw new Error('Server responded with '+res.status);return res.json();})
+    .then(function(){
+      if(statusEl){statusEl.innerHTML='&#10003; Saved to server';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
+      if(onSuccess)onSuccess();
+    }).catch(function(e){
+      if(statusEl){statusEl.innerHTML='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
+      if(onError)onError(e);
+    });
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 function sm8Get(endpoint){
-  return fetch('/api/proxy?path='+endpoint+'.json',{
-    credentials:'include',
-    headers:{'Accept':'application/json'}
-  }).then(function(res){
-    if(res.status===401)throw new Error('SESSION_EXPIRED');
-    return res.json().then(function(data){
-      if(!res.ok)throw new Error(data.message||JSON.stringify(data));
-      return data;
+  return fetch('/api/proxy?path='+endpoint+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
+    .then(function(res){
+      if(res.status===401)throw new Error('SESSION_EXPIRED');
+      return res.json().then(function(data){if(!res.ok)throw new Error(data.message||JSON.stringify(data));return data;});
     });
-  });
 }
 function sm8Put(uuid,payload){
   return fetch('/api/proxy?path=/asset/'+uuid+'.json',{
-    method:'POST',
-    credentials:'include',
-    headers:{
-      'Accept':'application/json',
-      'Content-Type':'application/json',
-      'X-HTTP-Method-Override':'PUT'
-    },
+    method:'POST',credentials:'include',
+    headers:{'Accept':'application/json','Content-Type':'application/json','X-HTTP-Method-Override':'PUT'},
     body:JSON.stringify(payload)
   });
 }
@@ -503,10 +574,8 @@ function checkSession(){
   if(oauthError){
     showScreen('auth');
     var banner=document.getElementById('auth-error-banner');
-    banner.textContent='Sign-in failed: '+oauthError;
-    banner.style.display='block';
-    window.history.replaceState({},'',window.location.pathname);
-    return;
+    banner.textContent='Sign-in failed: '+oauthError;banner.style.display='block';
+    window.history.replaceState({},'',window.location.pathname);return;
   }
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
@@ -518,46 +587,27 @@ function checkSession(){
         if(assets.length>0){
           showDashboard();
           document.getElementById('sync-status').textContent='Loaded from cache';
-          loadMakeModelFromServer();
-          backgroundSync();
+          loadMakeModelFromServer();backgroundSync();
         } else {
           showScreen('loading');
           document.getElementById('loading-msg').textContent='Loading your assets\u2026';
-          fetchAll()
-            .then(function(){
-              saveLocal();
-              loadMakeModelFromServer();
-              showDashboard();
-              toast('Loaded '+assets.length+' assets.');
-            })
-            .catch(handleFetchError);
+          fetchAll().then(function(){saveLocal();loadMakeModelFromServer();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
         }
       }
-    })
-    .catch(function(){showScreen('auth');});
+    }).catch(function(){showScreen('auth');});
 }
-
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
     showScreen('auth');
     var banner=document.getElementById('auth-error-banner');
-    banner.textContent='Your session has expired. Please sign in again.';
-    banner.style.display='block';
-  } else {
-    toast('Error: '+e.message,true);
-    showScreen('auth');
-  }
+    banner.textContent='Your session has expired. Please sign in again.';banner.style.display='block';
+  } else {toast('Error: '+e.message,true);showScreen('auth');}
 }
-
 function backgroundSync(){
-  fetchAll()
-    .then(function(){
-      saveLocal();renderAll();
-      document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
-    })
-    .catch(function(e){
-      if(e.message==='SESSION_EXPIRED')handleFetchError(e);
-    });
+  fetchAll().then(function(){
+    saveLocal();renderAll();
+    document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
+  }).catch(function(e){if(e.message==='SESSION_EXPIRED')handleFetchError(e);});
 }
 
 // ─── Data fetching ────────────────────────────────────────────────────────────
@@ -567,10 +617,7 @@ function fetchAll(){
     types.forEach(function(t){if(String(t.active)==='1')assetTypes[t.uuid]={name:t.name,fields:[]};});
     return sm8Get('/assettypefield');
   }).then(function(fields){
-    fields.forEach(function(f){
-      if(assetTypes[f.asset_type_uuid])
-        assetTypes[f.asset_type_uuid].fields.push({name:f.name,uuid:f.uuid,field_type:f.field_type});
-    });
+    fields.forEach(function(f){if(assetTypes[f.asset_type_uuid])assetTypes[f.asset_type_uuid].fields.push({name:f.name,uuid:f.uuid,field_type:f.field_type});});
     return sm8Get('/asset');
   }).then(function(raw){
     assets=raw.filter(function(a){return String(a.active)==='1';});
@@ -579,23 +626,17 @@ function fetchAll(){
       var fields=assetTypes[typeUuid].fields;
       CHECK_TYPES.forEach(function(ct){
         if(!fieldMappings[typeUuid][ct.key]){
-          var guess=fields.find(function(f){
-            return f.name.toLowerCase().indexOf(ct.label.toLowerCase())!==-1
-              ||f.name.toLowerCase().indexOf(ct.key.toLowerCase())!==-1;
-          });
-          if(!guess&&ct.key==='service')
-            guess=fields.find(function(f){return /due|expir|next.service|service.date|renewal|review/i.test(f.name);});
+          var guess=fields.find(function(f){return f.name.toLowerCase().indexOf(ct.label.toLowerCase())!==-1||f.name.toLowerCase().indexOf(ct.key.toLowerCase())!==-1;});
+          if(!guess&&ct.key==='service')guess=fields.find(function(f){return /due|expir|next.service|service.date|renewal|review/i.test(f.name);});
           if(guess)fieldMappings[typeUuid][ct.key]=guess.name;
         }
       });
     });
     return sm8Get('/company');
   }).then(function(companies){
-    clientMap={};
-    companies.forEach(function(c){clientMap[c.uuid]=c.name;});
+    clientMap={};companies.forEach(function(c){clientMap[c.uuid]=c.name;});
   });
 }
-
 function syncAssets(){
   var btn=document.getElementById('btn-sync');
   btn.innerHTML='<span class="loader"></span>';btn.disabled=true;
@@ -613,9 +654,7 @@ function syncAssets(){
 
 // ─── Screen management ────────────────────────────────────────────────────────
 function showScreen(name){
-  document.querySelectorAll('.screen').forEach(function(s){
-    s.classList.remove('active');s.style.display='none';
-  });
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});
   var t=document.getElementById('screen-'+name);
   t.style.display='';t.classList.add('active');
 }
@@ -624,71 +663,61 @@ function showDashboard(){
   document.getElementById('btn-sync').style.display='inline-block';
   document.getElementById('btn-logout').style.display='inline-block';
   document.getElementById('sync-status').style.display='inline-block';
-  ['tab-dashboard','tab-makemodel','tab-settings'].forEach(function(id){
-    document.getElementById(id).classList.remove('active');
-  });
+  ['tab-dashboard','tab-clients','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   document.getElementById('tab-dashboard').classList.add('active');
-  showScreen('dashboard');
-  renderAll();
+  showScreen('dashboard');renderAll();
 }
 function showTab(tab){
-  ['tab-dashboard','tab-makemodel','tab-settings'].forEach(function(id){
-    document.getElementById(id).classList.remove('active');
-  });
+  ['tab-dashboard','tab-clients','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
   document.getElementById('tab-'+tab).classList.add('active');
   if(tab==='dashboard'){showScreen('dashboard');renderAll();}
+  else if(tab==='clients'){showScreen('clients');renderClientList();}
   else if(tab==='makemodel'){showScreen('makemodel');renderMakeModel();}
   else{showScreen('settings');renderSettings();}
+}
+function openClientDetail(uuid){
+  activeClientUuid=uuid;
+  document.getElementById('client-detail-name').textContent=clientMap[uuid]||'Unknown Client';
+  ['tab-dashboard','tab-clients','tab-makemodel','tab-settings'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  document.getElementById('tab-clients').classList.add('active');
+  showScreen('client-detail');
+  renderClientDetail();
 }
 
 // ─── Compliance ───────────────────────────────────────────────────────────────
 function updateComplianceField(uuid,newValue,selectEl){
-  selectEl.classList.remove('saved','error');
-  selectEl.classList.add('saving');
+  selectEl.classList.remove('saved','error');selectEl.classList.add('saving');
   var asset=assets.find(function(a){return a.uuid===uuid;});
   if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');toast('Asset not found.',true);return;}
-  fetch('/api/proxy?path=/asset/'+uuid+'.json',{
-    credentials:'include',headers:{'Accept':'application/json'}
-  })
-  .then(function(res){
-    if(res.status===401)throw new Error('SESSION_EXPIRED');
-    return res.json();
-  })
-  .then(function(liveAsset){
-    var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
-    var lower=COMPLIANCE_FIELD.toLowerCase();
-    var found=false;
-    fieldData=fieldData.map(function(f){
-      if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
-      return f;
+  fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
+    .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
+    .then(function(liveAsset){
+      var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
+      var lower=COMPLIANCE_FIELD.toLowerCase();var found=false;
+      fieldData=fieldData.map(function(f){
+        if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
+        return f;
+      });
+      if(!found){
+        var typeUuid=liveAsset.asset_type_uuid;
+        var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
+        var fieldDef=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
+        fieldData.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
+      }
+      return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
+    })
+    .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status+': '+text);});})
+    .then(function(){
+      setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);saveLocal();
+      selectEl.classList.remove('saving');selectEl.classList.add('saved');
+      setTimeout(function(){selectEl.classList.remove('saved');},2500);
+      renderAll();toast('Compliance updated to: '+newValue);
+    })
+    .catch(function(e){
+      selectEl.classList.remove('saving');selectEl.classList.add('error');
+      if(e.message==='SESSION_EXPIRED')handleFetchError(e);
+      else toast('Failed: '+e.message,true);
     });
-    if(!found){
-      var typeUuid=liveAsset.asset_type_uuid;
-      var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
-      var fieldDef=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
-      fieldData.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
-    }
-    return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
-  })
-  .then(function(res){
-    return res.text().then(function(text){
-      if(res.status===200||res.status===201||res.status===204)return text;
-      throw new Error('HTTP '+res.status+': '+text);
-    });
-  })
-  .then(function(){
-    setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
-    saveLocal();
-    selectEl.classList.remove('saving');selectEl.classList.add('saved');
-    setTimeout(function(){selectEl.classList.remove('saved');},2500);
-    renderAll();
-    toast('Compliance updated to: '+newValue);
-  })
-  .catch(function(e){
-    selectEl.classList.remove('saving');selectEl.classList.add('error');
-    if(e.message==='SESSION_EXPIRED')handleFetchError(e);
-    else toast('Failed: '+e.message,true);
-  });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -787,16 +816,7 @@ function toggleShowHidden(){
   renderAssets();
 }
 
-// ─── Rendering ────────────────────────────────────────────────────────────────
-function complianceSelectHTML(uuid,currentValue,cssClass){
-  var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
-  var selectedVal=isHidden?'':(currentValue||'');
-  var opts=COMPLIANCE_OPTIONS.map(function(o){
-    return '<option value="'+esc(o)+'"'+(o===selectedVal?' selected':'')+'>'+esc(o)+'</option>';
-  }).join('');
-  return '<select class="'+cssClass+'" onchange="updateComplianceField(\''+uuid+'\',this.value,this)" onclick="event.stopPropagation()">'
-    +'<option value="">— Set Status —</option>'+opts+'</select>';
-}
+// ─── Enriched assets ──────────────────────────────────────────────────────────
 function enrichedAssets(){
   return assets.map(function(a){
     var typeUuid=a.asset_type_uuid;
@@ -829,6 +849,8 @@ function sortedAssets(data){
     return da-db;
   });
 }
+
+// ─── Dashboard rendering ──────────────────────────────────────────────────────
 function renderAll(){updateKanbanLabels();populateFilters();renderStats();renderSummaryBar();renderAssets();}
 function updateKanbanLabels(){
   document.getElementById('kanban-elapsed-label').textContent='Elapsed (>'+ELAPSED_THRESHOLD+'d)';
@@ -909,9 +931,13 @@ function suppressionPill(reason){
   return '<span class="suppression-pill unknown">&#128123; Unknown</span>';
 }
 function hoursPill(hrs){if(!hrs)return '';return '<span class="hours-pill">&#128336; '+hrs+'</span>';}
-function compPill(val){
-  if(!val)return '';
-  return '<span class="comp-pill '+esc(compliancePillClass(val))+'">'+esc(val)+'</span>';
+function compPill(val){if(!val)return '';return '<span class="comp-pill '+esc(compliancePillClass(val))+'">'+esc(val)+'</span>';}
+function complianceSelectHTML(uuid,currentValue,cssClass){
+  var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
+  var selectedVal=isHidden?'':(currentValue||'');
+  var opts=COMPLIANCE_OPTIONS.map(function(o){return '<option value="'+esc(o)+'"'+(o===selectedVal?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+  return '<select class="'+cssClass+'" onchange="updateComplianceField(\''+uuid+'\',this.value,this)" onclick="event.stopPropagation()">'
+    +'<option value="">— Set Status —</option>'+opts+'</select>';
 }
 function renderAssets(){
   var data=filteredAssets();var sorted=sortedAssets(data);
@@ -989,6 +1015,120 @@ function assetCard(a){
     +'<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+worstCss+'"></div></div></div>'
     +'</div>';
 }
+
+// ─── Client list ──────────────────────────────────────────────────────────────
+function renderClientList(){
+  var search=(document.getElementById('client-list-search').value||'').toLowerCase();
+  var all=enrichedAssets();
+  var byClient={};
+  all.forEach(function(a){
+    var uuid=a.company_uuid||'__unknown__';
+    if(!byClient[uuid])byClient[uuid]=[];
+    byClient[uuid].push(a);
+  });
+  var clientUuids=Object.keys(byClient).sort(function(a,b){
+    return(clientMap[a]||'Unknown').localeCompare(clientMap[b]||'Unknown');
+  });
+  if(search){
+    clientUuids=clientUuids.filter(function(uuid){
+      return(clientMap[uuid]||'Unknown').toLowerCase().indexOf(search)!==-1;
+    });
+  }
+  if(!clientUuids.length){
+    document.getElementById('client-list-grid').innerHTML='<p style="color:var(--muted)">No clients found.</p>';return;
+  }
+  var html=clientUuids.map(function(uuid){
+    var clientAssets=byClient[uuid];
+    var visible=clientAssets.filter(function(a){return !a.suppressed;});
+    var name=clientMap[uuid]||'Unknown Client';
+    var el=visible.filter(function(a){return a.status==='elapsed';}).length;
+    var ov=visible.filter(function(a){return a.status==='overdue';}).length;
+    var so=visible.filter(function(a){return a.status==='due-soon';}).length;
+    var ok=visible.filter(function(a){return a.status==='ok';}).length;
+    var nd=visible.filter(function(a){return a.status==='no-date';}).length;
+    var total=visible.length;
+    var worstStatuses=visible.map(function(a){return a.status;});
+    var worst=worstStatus(worstStatuses.length?worstStatuses:['no-date']);
+    var worstColor=statusColor(worst);
+    function barSeg(n,col){if(!n||!total)return '';return '<div class="client-list-bar-seg" style="flex:'+n+';background:'+col+'"></div>';}
+    var bar=barSeg(el,'#7c3aed')+barSeg(ov,'#ef4444')+barSeg(so,'#f59e0b')+barSeg(ok,'#22c55e')+barSeg(nd,'#4b5563');
+    var pills='';
+    if(el)pills+='<span class="client-count-pill purple">'+el+' elapsed</span>';
+    if(ov)pills+='<span class="client-count-pill red">'+ov+' overdue</span>';
+    if(so)pills+='<span class="client-count-pill amber">'+so+' due soon</span>';
+    if(ok)pills+='<span class="client-count-pill green">'+ok+' ok</span>';
+    if(nd)pills+='<span class="client-count-pill grey">'+nd+' no date</span>';
+    return '<div class="client-list-card" onclick="openClientDetail(\''+esc(uuid)+'\')">'
+      +'<div class="client-list-name"><span style="color:var(--'+worstColor+')">&#9679;</span>'+esc(name)+'</div>'
+      +(total?'<div class="client-list-bar">'+bar+'</div>':'')
+      +'<div class="client-list-counts">'+pills+'</div>'
+      +'<div class="client-asset-count">'+total+' asset'+(total===1?'':'s')+(clientAssets.length>total?' &middot; '+(clientAssets.length-total)+' hidden':'')+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('client-list-grid').innerHTML=html;
+}
+
+// ─── Client detail ────────────────────────────────────────────────────────────
+function renderClientDetail(){
+  if(!activeClientUuid)return;
+  var search=(document.getElementById('client-detail-search').value||'').toLowerCase();
+  var statusFilter=document.getElementById('client-detail-status-filter').value;
+  var complianceFilter=document.getElementById('client-detail-compliance-filter').value;
+  var all=enrichedAssets().filter(function(a){return a.company_uuid===activeClientUuid;});
+  var visible=all.filter(function(a){return !a.suppressed;});
+  var el=visible.filter(function(a){return a.status==='elapsed';}).length;
+  var ov=visible.filter(function(a){return a.status==='overdue';}).length;
+  var so=visible.filter(function(a){return a.status==='due-soon';}).length;
+  var ok=visible.filter(function(a){return a.status==='ok';}).length;
+  var nd=visible.filter(function(a){return a.status==='no-date';}).length;
+  document.getElementById('client-detail-asset-count').textContent=visible.length+' asset'+(visible.length===1?'':'s');
+  document.getElementById('client-detail-stats').innerHTML=
+    '<div class="client-detail-stat purple"><div class="ds-value" style="color:var(--purple)">'+el+'</div><div class="ds-label">Elapsed</div></div>'+
+    '<div class="client-detail-stat red"><div class="ds-value" style="color:var(--red)">'+ov+'</div><div class="ds-label">Overdue</div></div>'+
+    '<div class="client-detail-stat amber"><div class="ds-value" style="color:var(--amber)">'+so+'</div><div class="ds-label">Due Soon</div></div>'+
+    '<div class="client-detail-stat green"><div class="ds-value" style="color:var(--green)">'+ok+'</div><div class="ds-label">OK</div></div>'+
+    '<div class="client-detail-stat"><div class="ds-value" style="color:var(--muted)">'+nd+'</div><div class="ds-label">No Date</div></div>';
+  var filtered=all.filter(function(a){
+    if(a.suppressed&&!showHidden)return false;
+    if(search&&String(a.name||'').toLowerCase().indexOf(search)===-1&&String(a.typeName||'').toLowerCase().indexOf(search)===-1)return false;
+    if(statusFilter&&a.status!==statusFilter)return false;
+    if(complianceFilter&&String(a.compliance||'')!==complianceFilter)return false;
+    return true;
+  });
+  filtered.sort(function(a,b){
+    var ra=STATUS_RANK[a.status]||99,rb=STATUS_RANK[b.status]||99;
+    if(ra!==rb)return ra-rb;
+    var da=a.urgentDays===null?999999:a.urgentDays;
+    var db=b.urgentDays===null?999999:b.urgentDays;
+    return da-db;
+  });
+  if(!filtered.length){
+    document.getElementById('client-assets-list').innerHTML='<p style="color:var(--muted);padding:20px 0">No assets match the current filters.</p>';return;
+  }
+  var html=filtered.map(function(a){
+    var worstColor=statusColor(a.status);
+    var checkBadges=CHECK_TYPES.map(function(ct){
+      var c=a.checks[ct.key];if(!c||c.date===null)return '';
+      var col=statusColor(c.status);
+      return '<div class="car-check">'
+        +'<div class="car-check-label">'+esc(ct.label.replace(' Due',''))+'</div>'
+        +'<div class="car-check-badge '+col+'">'+statusLabel(c.days,c.status)+'</div>'
+        +'</div>';
+    }).filter(Boolean).join('');
+    return '<div class="client-asset-row '+worstColor+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div class="car-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
+      +'<div class="car-type">'+esc(a.typeName)+'</div>'
+      +(a.make||a.model?'<div class="car-make">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')
+      +'</div>'
+      +(checkBadges?'<div class="car-checks">'+checkBadges+'</div>':'')
+      +'<div class="car-compliance" onclick="event.stopPropagation()">'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('client-assets-list').innerHTML=html;
+}
+
+// ─── Asset modal ──────────────────────────────────────────────────────────────
 function openModal(uuid){
   var all=enrichedAssets();var a=null;
   for(var i=0;i<all.length;i++){if(all[i].uuid===uuid){a=all[i];break;}}
@@ -1024,7 +1164,7 @@ function openModal(uuid){
     '<h2>'+esc(a.name||'Unnamed Asset')+'</h2>'
     +'<div class="modal-type">'
     +'<span class="tag">'+esc(a.typeName)+'</span>'
-    +'<span class="tag tag-client">&#128205; '+esc(a.clientName)+'</span>'
+    +'<span class="tag tag-client" style="cursor:pointer" onclick="closeModalDirect();openClientDetail(\''+esc(a.company_uuid||'')+'\')">&#128205; '+esc(a.clientName)+'</span>'
     +(a.make||a.model?'<span class="tag">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</span>':'')
     +(a.compliance?compPill(a.compliance):'')
     +'<span class="due-badge '+worstColor+'" style="margin-left:4px">'+esc(a.status)+'</span>'
@@ -1085,14 +1225,9 @@ function addMakeModelRow(){
     emc:document.getElementById('mm-new-emc').value||''
   });
   ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-perf','mm-new-emc'].forEach(function(id){document.getElementById(id).value='';});
-  saveMakeModel();
-  renderMakeModel();
+  saveMakeModel();renderMakeModel();
 }
-function deleteMakeModelRow(idx){
-  makeModelData.splice(idx,1);
-  saveMakeModel();
-  renderMakeModel();
-}
+function deleteMakeModelRow(idx){makeModelData.splice(idx,1);saveMakeModel();renderMakeModel();}
 function saveMakeModel(){
   saveLocal();
   document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
@@ -1103,9 +1238,7 @@ function saveMakeModel(){
 }
 function exportMakeModel(){
   var csv='Make,Model,Service (hrs),PVI (hrs),Performance (hrs),EMC (hrs)\n';
-  makeModelData.forEach(function(r){
-    csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';
-  });
+  makeModelData.forEach(function(r){csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';});
   var a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download='make-model-times.csv';a.click();
