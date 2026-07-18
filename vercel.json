@@ -21,3 +21,11 @@
     }
   ]
 }
+{
+  "rewrites": [
+    { "source": "/api/auth",     "destination": "/api/auth.js" },
+    { "source": "/api/callback", "destination": "/api/callback.js" },
+    { "source": "/api/logout",   "destination": "/api/logout.js" },
+    { "source": "/api/proxy",    "destination": "/api/proxy.js" }
+  ]
+}
