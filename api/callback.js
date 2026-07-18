@@ -1,6 +1,6 @@
-const https   = require('https');
-const qs      = require('querystring');
-const tokens  = require('./token');
+const https  = require('https');
+const qs     = require('querystring');
+const { setSessionCookie, parseCookies } = require('./token');
 
 function exchangeCode(code) {
   return new Promise(function(resolve, reject) {
@@ -27,7 +27,7 @@ function exchangeCode(code) {
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
         try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Bad response from ServiceM8: ' + data)); }
+        catch(e) { reject(new Error('Bad response: ' + data)); }
       });
     });
     req.on('error', reject);
@@ -43,18 +43,15 @@ module.exports = async function(req, res) {
     return res.redirect('/?error=' + encodeURIComponent(error));
   }
 
-  // Parse cookies
-  const cookies = {};
-  (req.headers.cookie || '').split(';').forEach(function(c) {
-    const parts = c.trim().split('=');
-    cookies[parts[0]] = parts.slice(1).join('=');
-  });
+  if (!code) {
+    return res.redirect('/?error=no_code');
+  }
 
-  const sessionId    = cookies['sm8_session'];
-  const storedState  = cookies['sm8_state'];
+  const cookies     = parseCookies(req);
+  const storedState = cookies['sm8_state'];
 
-  if (!sessionId || !storedState || storedState !== state) {
-    return res.status(400).send('Invalid state — possible CSRF attempt.');
+  if (!storedState || storedState !== state) {
+    return res.status(400).send('Invalid state parameter.');
   }
 
   try {
@@ -64,12 +61,18 @@ module.exports = async function(req, res) {
       return res.redirect('/?error=' + encodeURIComponent(tokenData.error_description || tokenData.error));
     }
 
-    tokens.save(sessionId, tokenData);
+    // Set encrypted token cookie and clear state cookie
+    const cookies_to_set = [
+      'sm8_tok=' + require('./token').getSession, // placeholder — use setSessionCookie below
+      'sm8_state=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0'
+    ];
 
-    // Set a long-lived session cookie and clear the state cookie
+    // Use setSessionCookie then append the state clear
+    setSessionCookie(res, tokenData);
+    const existing = res.getHeader('Set-Cookie');
     res.setHeader('Set-Cookie', [
-      'sm8_session=' + sessionId + '; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=86400',
-      'sm8_state=; Path=/; HttpOnly; Max-Age=0'
+      Array.isArray(existing) ? existing[0] : existing,
+      'sm8_state=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0'
     ]);
 
     res.redirect('/');
