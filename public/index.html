@@ -47,6 +47,7 @@ button:hover{opacity:0.85;}
 .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;}
 .toolbar input,.toolbar select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;}
 .toolbar input{min-width:200px;}
+.toolbar select{cursor:pointer;}
 .view-toggle{display:flex;gap:4px;margin-left:auto;}
 .view-toggle button{padding:7px 12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .view-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
@@ -196,6 +197,8 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .comp-pill.Scheduled{background:rgba(79,110,247,0.15);color:var(--amber);}
 .comp-pill.Query{background:rgba(124,58,237,0.15);color:var(--purple);}
 .comp-pill.GoneWithThirdParty{background:rgba(136,146,176,0.15);color:var(--muted);}
+.comp-pill.Decommissioned{background:rgba(239,68,68,0.1);color:#f87171;}
+.comp-pill.Unknown{background:rgba(136,146,176,0.1);color:var(--muted);}
 .mm-sync-status{font-size:0.78rem;color:var(--muted);margin-left:4px;}
 .mm-sync-status.saving{color:var(--amber);}
 .mm-sync-status.saved{color:var(--green);}
@@ -250,6 +253,17 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <input type="text" id="search-input" placeholder="&#128269; Search assets or clients&hellip;" oninput="renderAssets()"/>
     <select id="filter-type" onchange="renderAssets()"><option value="">All Types</option></select>
     <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
+    <select id="filter-compliance" onchange="renderAssets()">
+      <option value="">All Compliance</option>
+      <option value="Active">&#9989; Active</option>
+      <option value="Expired">&#128308; Expired</option>
+      <option value="Quoted">&#128993; Quoted</option>
+      <option value="Scheduled">&#128309; Scheduled</option>
+      <option value="Query">&#128995; Query</option>
+      <option value="Gone With Third Party">&#128100; Gone With Third Party</option>
+      <option value="Decommissioned">&#128683; Decommissioned</option>
+      <option value="Unknown">&#128123; Unknown</option>
+    </select>
     <select id="filter-check" onchange="renderAssets()">
       <option value="">All Checks</option>
       <option value="service">Service Due</option>
@@ -447,11 +461,11 @@ function saveMakeModelToServer(onSuccess,onError){
     return res.json();
   })
   .then(function(){
-    if(statusEl){statusEl.textContent='&#10003; Saved to server';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
+    if(statusEl){statusEl.innerHTML='&#10003; Saved to server';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
     if(onSuccess)onSuccess();
   })
   .catch(function(e){
-    if(statusEl){statusEl.textContent='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
+    if(statusEl){statusEl.innerHTML='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
     if(onError)onError(e);
   });
 }
@@ -841,13 +855,19 @@ function filteredAssets(){
   var clientFilter=document.getElementById('filter-client').value;
   var checkFilter=document.getElementById('filter-check').value;
   var statusFilter=document.getElementById('filter-status').value;
+  var complianceFilter=document.getElementById('filter-compliance').value;
   return enrichedAssets().filter(function(a){
     if(a.suppressed&&!showHidden)return false;
     if(search&&String(a.name||'').toLowerCase().indexOf(search)===-1&&String(a.typeName||'').toLowerCase().indexOf(search)===-1&&String(a.clientName||'').toLowerCase().indexOf(search)===-1)return false;
     if(typeFilter&&a.asset_type_uuid!==typeFilter)return false;
     if(clientFilter&&a.company_uuid!==clientFilter)return false;
-    if(checkFilter){if(!a.checks[checkFilter]||a.checks[checkFilter].date===null)return false;if(statusFilter&&a.checks[checkFilter].status!==statusFilter)return false;}
-    else{if(statusFilter&&a.status!==statusFilter)return false;}
+    if(complianceFilter&&String(a.compliance||'')!==complianceFilter)return false;
+    if(checkFilter){
+      if(!a.checks[checkFilter]||a.checks[checkFilter].date===null)return false;
+      if(statusFilter&&a.checks[checkFilter].status!==statusFilter)return false;
+    } else {
+      if(statusFilter&&a.status!==statusFilter)return false;
+    }
     return true;
   });
 }
