@@ -1,31 +1,18 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/proxy.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/index.html",
-      "use": "@vercel/static"
-    }
+    { "src": "api/proxy.js",    "use": "@vercel/node" },
+    { "src": "api/auth.js",     "use": "@vercel/node" },
+    { "src": "api/callback.js", "use": "@vercel/node" },
+    { "src": "api/logout.js",   "use": "@vercel/node" },
+    { "src": "api/token.js",    "use": "@vercel/node" },
+    { "src": "public/index.html", "use": "@vercel/static" }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/proxy.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/index.html"
-    }
-  ]
-}
-{
-  "rewrites": [
-    { "source": "/api/auth",     "destination": "/api/auth.js" },
-    { "source": "/api/callback", "destination": "/api/callback.js" },
-    { "source": "/api/logout",   "destination": "/api/logout.js" },
-    { "source": "/api/proxy",    "destination": "/api/proxy.js" }
+    { "src": "/api/auth",     "dest": "/api/auth.js" },
+    { "src": "/api/callback", "dest": "/api/callback.js" },
+    { "src": "/api/logout",   "dest": "/api/logout.js" },
+    { "src": "/api/(.*)",     "dest": "/api/proxy.js" },
+    { "src": "/(.*)",         "dest": "/public/index.html" }
   ]
 }
