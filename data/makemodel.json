@@ -94,5 +94,13 @@
     "pvi": "",
     "performance": "0.5",
     "emc": "0.5"
+  },
+  {
+    "make": "Acteon",
+    "model": "X-mind AC",
+    "service": "",
+    "pvi": "",
+    "performance": "0.5",
+    "emc": "0.5"
   }
 ]
