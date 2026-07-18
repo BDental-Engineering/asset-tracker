@@ -70,5 +70,13 @@
     "pvi": "",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Cattani",
+    "model": "AC100",
+    "service": "0.5",
+    "pvi": "1",
+    "performance": "",
+    "emc": ""
   }
 ]
