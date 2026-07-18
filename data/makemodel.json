@@ -78,5 +78,13 @@
     "pvi": "1",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Satalec",
+    "model": "X-mind AC",
+    "service": "",
+    "pvi": "",
+    "performance": "0.5",
+    "emc": "0.5"
   }
 ]
