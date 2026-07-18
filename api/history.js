@@ -1,15 +1,17 @@
 const { Octokit } = require('@octokit/rest');
 
 const OWNER_REPO = (process.env.GITHUB_REPO || '').split('/');
-const OWNER = OWNER_REPO[0];
-const REPO = OWNER_REPO[1];
+const OWNER  = OWNER_REPO[0];
+const REPO   = OWNER_REPO[1];
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
-const FILE_PATH = 'data/history.json';
+const FILE_PATH  = 'data/history.json';
 const MAX_RECORDS = 500;
 
 async function getFile(octokit) {
   try {
-    const res = await octokit.repos.getContent({ owner: OWNER, repo: REPO, path: FILE_PATH, ref: BRANCH });
+    const res = await octokit.repos.getContent({
+      owner: OWNER, repo: REPO, path: FILE_PATH, ref: BRANCH
+    });
     const content = Buffer.from(res.data.content, 'base64').toString('utf8');
     return { JSON.parse(content), sha: res.data.sha };
   } catch (e) {
