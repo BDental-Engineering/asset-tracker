@@ -174,5 +174,13 @@
     "pvi": "0.5",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Melag",
+    "model": "Vacuklav 41B+ Evolution",
+    "service": "2",
+    "pvi": "1",
+    "performance": "",
+    "emc": ""
   }
 ]
