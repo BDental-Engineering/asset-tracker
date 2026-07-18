@@ -589,17 +589,29 @@ function loadLocal(){
 // ─── User identity ────────────────────────────────────────────────────────────
 function resolveUserName(staffList){
   if(!Array.isArray(staffList)||!staffList.length)return 'Unknown User';
-  // Try to find the logged-in staff member — ServiceM8 returns all staff,
-  // active ones first. We pick the first active record as the session owner.
-  var active=staffList.find(function(s){return String(s.active)==='1';});
-  var s=active||staffList[0];
-  if(!s)return 'Unknown User';
-  var first=s.first_name||s.firstname||'';
-  var last=s.last_name||s.lastname||s.surname||'';
-  var full=(first+' '+last).trim();
+
+  // Try to find the logged-in user by matching the session email stored during OAuth
+  var sessionEmail=localStorage.getItem('sm8_session_email')||'';
+  var matched=null;
+
+  if(sessionEmail){
+    matched=staffList.find(function(s){
+      return String(s.email||'').toLowerCase()===sessionEmail.toLowerCase();
+    });
+  }
+
+  // Fall back to first active staff member
+  if(!matched){
+    matched=staffList.find(function(s){return String(s.active)==='1';});
+  }
+  if(!matched)matched=staffList[0];
+  if(!matched)return 'Unknown User';
+
+  // ServiceM8 uses 'first' and 'last', not 'first_name'/'last_name'
+  var full=[matched.first,matched.last].filter(Boolean).join(' ').trim();
   if(full)return full;
-  if(s.name)return s.name;
-  if(s.email)return s.email;
+  if(matched.name)return matched.name;
+  if(matched.email)return matched.email;
   return 'Unknown User';
 }
 
@@ -681,6 +693,15 @@ function checkSession(){
     })
     .then(function(staffList){
       if(!staffList)return;
+      // Try to read the session email from a cookie the server set
+      var cookieEmail='';
+      document.cookie.split(';').forEach(function(c){
+        var parts=c.trim().split('=');
+        if(parts[0]==='sm8_user_email')cookieEmail=decodeURIComponent(parts[1]||'');
+    });
+    if(cookieEmail)localStorage.setItem('sm8_session_email',cookieEmail);
+
+    currentUser=resolveUserName(Array.isArray(staffList)?staffList:[]);
       // Resolve user name gracefully
       currentUser=resolveUserName(Array.isArray(staffList)?staffList:[]);
       var badge=document.getElementById('user-badge');
