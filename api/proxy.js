@@ -1,16 +1,15 @@
 const https  = require('https');
-const tokens = require('./token');
+const qs     = require('querystring');
+const { getSession, setSessionCookie } = require('./token');
 
-function refreshAccessToken(sessionId, refreshToken) {
-  const qs   = require('querystring');
-  const body = qs.stringify({
-    grant_type:    'refresh_token',
-    refresh_token: refreshToken,
-    client_id:     process.env.SM8_CLIENT_ID,
-    client_secret: process.env.SM8_CLIENT_SECRET
-  });
-
+function refreshToken(refreshTok) {
   return new Promise(function(resolve, reject) {
+    const body = qs.stringify({
+      grant_type:    'refresh_token',
+      refresh_token: refreshTok,
+      client_id:     process.env.SM8_CLIENT_ID,
+      client_secret: process.env.SM8_CLIENT_SECRET
+    });
     const options = {
       hostname: 'go.servicem8.com',
       path:     '/oauth/access_token',
@@ -24,11 +23,8 @@ function refreshAccessToken(sessionId, refreshToken) {
       let data = '';
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
-        try {
-          const parsed = JSON.parse(data);
-          tokens.save(sessionId, parsed);
-          resolve(parsed.access_token);
-        } catch(e) { reject(e); }
+        try { resolve(JSON.parse(data)); }
+        catch(e) { reject(e); }
       });
     });
     req.on('error', reject);
@@ -40,30 +36,27 @@ function refreshAccessToken(sessionId, refreshToken) {
 module.exports = async function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-HTTP-Method-Override');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-HTTP-Method-Override');
 
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
-  // Parse session cookie
-  const cookies = {};
-  (req.headers.cookie || '').split(';').forEach(function(c) {
-    const parts = c.trim().split('=');
-    cookies[parts[0]] = parts.slice(1).join('=');
-  });
+  let session = getSession(req);
 
-  const sessionId  = cookies['sm8_session'];
-  const tokenData  = sessionId ? tokens.get(sessionId) : null;
-
-  if (!tokenData) {
+  if (!session) {
     res.status(401).json({ error: 'Not authenticated' });
     return;
   }
 
-  // Refresh token if it expires within 60 seconds
-  let accessToken = tokenData.access_token;
-  if (Date.now() > tokenData.expires_at - 60000) {
+  // Refresh if expiring within 60 seconds
+  if (Date.now() > session.expires_at - 60000) {
     try {
-      accessToken = await refreshAccessToken(sessionId, tokenData.refresh_token);
+      const newTokens = await refreshToken(session.refresh_token);
+      setSessionCookie(res, newTokens);
+      session = {
+        access_token:  newTokens.access_token,
+        refresh_token: newTokens.refresh_token,
+        expires_at:    Date.now() + ((newTokens.expires_in || 3600) * 1000)
+      };
     } catch(e) {
       res.status(401).json({ error: 'Token refresh failed' });
       return;
@@ -83,7 +76,7 @@ module.exports = async function(req, res) {
       path:     '/api_1.0' + sm8Path,
       method:   method,
       headers: {
-        'Authorization': 'Bearer ' + accessToken,
+        'Authorization': 'Bearer ' + session.access_token,
         'Accept':        'application/json'
       }
     };
@@ -99,10 +92,9 @@ module.exports = async function(req, res) {
       sm8Res.on('end', function() {
         res.setHeader('Content-Type', 'application/json');
         try {
-          const parsed = JSON.parse(data);
-          res.status(sm8Res.statusCode).json(parsed);
+          res.status(sm8Res.statusCode).json(JSON.parse(data));
         } catch(e) {
-          if ([200,201,204].includes(sm8Res.statusCode)) {
+          if ([200, 201, 204].includes(sm8Res.statusCode)) {
             res.status(sm8Res.statusCode).json({ success: true });
           } else {
             res.status(500).json({ error: 'Invalid JSON', status: sm8Res.statusCode });
