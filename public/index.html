@@ -19,6 +19,8 @@ button:hover{opacity:0.85;}
 .btn-sm{padding:5px 11px;font-size:0.78rem;}
 .btn-hidden-toggle{background:rgba(146,64,14,0.3);color:#fde68a;border:1px solid #b45309;}
 .btn-hidden-toggle.active{background:#b45309;color:#fff;border-color:#92400e;}
+.btn-bulk{background:rgba(79,110,247,0.15);color:var(--accent);border:1px solid rgba(79,110,247,0.4);}
+.btn-bulk.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .screen{display:none;padding:32px;max-width:100%;margin:0 auto;}
 .screen.active{display:block;}
 #screen-auth{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);}
@@ -52,14 +54,22 @@ button:hover{opacity:0.85;}
 .view-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .hidden-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:10px 14px;background:rgba(146,64,14,0.12);border:1px solid #92400e;border-radius:10px;font-size:0.85rem;color:#fde68a;}
 .hidden-bar span{flex:1;}
-.kanban{display:none;}
-.kanban.active{display:block;overflow-x:auto;padding-bottom:12px;}
-.kanban-inner{display:grid;grid-template-columns:repeat(5,minmax(260px,1fr));gap:16px;min-width:1300px;}
-.kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0;}
-.kanban-col-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700;font-size:0.88rem;}
-.col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.col-count{margin-left:auto;background:var(--surface2);border-radius:20px;padding:2px 9px;font-size:0.78rem;color:var(--muted);}
-.kanban-cards{display:flex;flex-direction:column;gap:10px;min-height:60px;}
+
+/* ── Bulk action bar ── */
+.bulk-bar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);z-index:250;background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 40px rgba(0,0,0,0.5);transition:transform 0.25s,opacity 0.25s;opacity:0;pointer-events:none;min-width:420px;flex-wrap:wrap;}
+.bulk-bar.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:all;}
+.bulk-bar-count{font-size:0.88rem;font-weight:700;color:var(--accent);white-space:nowrap;}
+.bulk-bar-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:180px;}
+.bulk-bar-select:focus{border-color:var(--accent);}
+.bulk-bar-apply{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:0.85rem;font-weight:700;cursor:pointer;}
+.bulk-bar-apply:disabled{opacity:0.5;cursor:not-allowed;}
+.bulk-bar-clear{background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:0.82rem;cursor:pointer;}
+.bulk-bar-progress{font-size:0.78rem;color:var(--muted);white-space:nowrap;}
+.bulk-select-all-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:0.82rem;color:var(--muted);}
+.bulk-select-all-row label{cursor:pointer;display:flex;align-items:center;gap:6px;}
+
+/* ── Asset checkboxes ── */
+.asset-cb{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
 .asset-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color 0.2s;position:relative;overflow:hidden;}
 .asset-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
 .asset-card.green::before{background:var(--green);}
@@ -69,6 +79,9 @@ button:hover{opacity:0.85;}
 .asset-card.grey::before{background:var(--muted);}
 .asset-card.is-suppressed{opacity:0.6;border-style:dashed;}
 .asset-card:hover{border-color:var(--accent);}
+.asset-card.bulk-selected{border-color:var(--accent);background:rgba(79,110,247,0.08);}
+.asset-card-top{display:flex;align-items:flex-start;gap:8px;}
+.asset-card-top-content{flex:1;min-width:0;}
 .asset-card-name{font-weight:600;font-size:0.88rem;margin-bottom:2px;padding-left:8px;}
 .asset-card-client{font-size:0.75rem;color:var(--accent);padding-left:8px;margin-bottom:2px;font-weight:500;}
 .asset-card-type{font-size:0.72rem;color:var(--muted);padding-left:8px;margin-bottom:6px;}
@@ -111,10 +124,19 @@ th{text-align:left;padding:10px 14px;font-size:0.78rem;color:var(--muted);text-t
 tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
 tbody tr:hover{background:var(--surface2);}
 tbody tr.row-suppressed{opacity:0.55;}
+tbody tr.row-bulk-selected{background:rgba(79,110,247,0.08);}
 td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .td-name{font-weight:600;}
 .client-group-header{background:var(--surface);pointer-events:none;}
 .client-group-header td{padding:10px 14px 6px;font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid var(--border);}
+.kanban{display:none;}
+.kanban.active{display:block;overflow-x:auto;padding-bottom:12px;}
+.kanban-inner{display:grid;grid-template-columns:repeat(5,minmax(260px,1fr));gap:16px;min-width:1300px;}
+.kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0;}
+.kanban-col-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700;font-size:0.88rem;}
+.col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.col-count{margin-left:auto;background:var(--surface2);border-radius:20px;padding:2px 9px;font-size:0.78rem;color:var(--muted);}
+.kanban-cards{display:flex;flex-direction:column;gap:10px;min-height:60px;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;position:relative;}
@@ -209,7 +231,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .mm-sync-status.saving{color:var(--amber);}
 .mm-sync-status.saved{color:var(--green);}
 .mm-sync-status.error{color:var(--red);}
-/* Client list */
 .client-list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .client-list-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:border-color 0.2s,transform 0.15s;}
 .client-list-card:hover{border-color:var(--accent);transform:translateY(-2px);}
@@ -224,7 +245,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .client-count-pill.green{background:rgba(34,197,94,0.15);color:var(--green);}
 .client-count-pill.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
 .client-asset-count{font-size:0.75rem;color:var(--muted);margin-top:8px;}
-/* Client detail */
 .client-detail-header{display:flex;align-items:center;gap:16px;margin-bottom:28px;flex-wrap:wrap;}
 .client-detail-header h2{font-size:1.6rem;font-weight:800;}
 .client-detail-back{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);cursor:pointer;}
@@ -256,7 +276,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .car-check-badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
 .car-check-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
 .car-check-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
-/* History */
 .history-filters{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;}
 .history-filters input,.history-filters select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;}
 .history-filters input{min-width:200px;}
@@ -320,25 +339,8 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <p>Enter your work email then sign in with ServiceM8.</p>
     <div id="auth-error-banner" class="error-banner" style="display:none"></div>
     <form id="auth-form" onsubmit="handleAuthSubmit(event)">
-      <input
-        type="email"
-        id="auth-email-input"
-        placeholder="your@email.com"
-        required
-        autocomplete="email"
-        style="
-          width:100%;
-          padding:12px 16px;
-          margin-bottom:14px;
-          background:var(--surface2);
-          border:1px solid var(--border);
-          border-radius:10px;
-          color:var(--text);
-          font-size:0.95rem;
-          outline:none;
-          box-sizing:border-box;
-        "
-      />
+      <input type="email" id="auth-email-input" placeholder="your@email.com" required autocomplete="email"
+        style="width:100%;padding:12px 16px;margin-bottom:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.95rem;outline:none;box-sizing:border-box;"/>
       <button type="submit" class="oauth-btn">
         <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M8 22 L16 10 L24 22" stroke="#4f6ef7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2.5" fill="#4f6ef7"/></svg>
         Sign in with ServiceM8
@@ -347,7 +349,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <p class="hint">You will be redirected to ServiceM8 to authorise access.</p>
   </div>
 </div>
-
 
 <!-- LOADING -->
 <div id="screen-loading" class="screen">
@@ -393,6 +394,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
       <option value="no-date">No Date</option>
     </select>
     <button class="btn-hidden-toggle btn-sm" id="btn-show-hidden" onclick="toggleShowHidden()">&#128065; Show Hidden</button>
+    <button class="btn-bulk btn-sm" id="btn-bulk-mode" onclick="toggleBulkMode()">&#9745; Bulk Select</button>
     <div class="view-toggle">
       <button class="active" id="btn-kanban" onclick="setView('kanban')">&#8862; Kanban</button>
       <button id="btn-list" onclick="setView('list')">&#9776; List</button>
@@ -401,6 +403,11 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div class="hidden-bar" id="hidden-bar" style="display:none">
     <span id="hidden-bar-text"></span>
     <button class="btn-sm btn-ghost" onclick="toggleShowHidden()">Hide them again</button>
+  </div>
+  <!-- Bulk select-all row (shown in bulk mode) -->
+  <div class="bulk-select-all-row" id="bulk-select-all-row" style="display:none">
+    <label><input type="checkbox" id="bulk-select-all-cb" onchange="toggleSelectAll(this.checked)"/> Select all visible assets</label>
+    <span id="bulk-selected-label" style="color:var(--accent);font-weight:600;font-size:0.82rem"></span>
   </div>
   <div class="kanban active" id="kanban-view"><div class="kanban-inner">
     <div class="kanban-col"><div class="kanban-col-header"><span class="col-dot" style="background:var(--purple)"></span><span id="kanban-elapsed-label">Elapsed</span><span class="col-count" id="count-elapsed">0</span></div><div class="kanban-cards" id="col-elapsed"></div></div>
@@ -411,6 +418,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div></div>
   <div class="list-view" id="list-view">
     <table><thead><tr>
+      <th id="list-cb-header" style="display:none;width:36px"></th>
       <th>Asset Name</th><th>Compliance</th><th>Type</th>
       <th>Service Due</th><th>PVI Due</th><th>Validation Due</th><th>Performance Due</th><th>EMC Due</th>
       <th>Worst Status</th>
@@ -558,6 +566,25 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div style="margin-top:24px"><button class="btn-primary" onclick="saveSettings()">Save Settings</button></div>
 </div>
 
+<!-- Bulk action floating bar -->
+<div class="bulk-bar" id="bulk-bar">
+  <span class="bulk-bar-count" id="bulk-bar-count">0 selected</span>
+  <select class="bulk-bar-select" id="bulk-bar-compliance">
+    <option value="">— Set Compliance —</option>
+    <option value="Active">Active</option>
+    <option value="Expired">Expired</option>
+    <option value="Quoted">Quoted</option>
+    <option value="Scheduled">Scheduled</option>
+    <option value="Query">Query</option>
+    <option value="Gone With Third Party">Gone With Third Party</option>
+    <option value="Decommissioned">Decommissioned</option>
+    <option value="Unknown">Unknown</option>
+  </select>
+  <button class="bulk-bar-apply" id="bulk-bar-apply" onclick="applyBulkCompliance()">Apply to All</button>
+  <span class="bulk-bar-progress" id="bulk-bar-progress"></span>
+  <button class="bulk-bar-clear" onclick="clearBulkSelection()">&#10005; Clear</button>
+</div>
+
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModalDirect()">&#10005;</button>
@@ -573,6 +600,7 @@ var ELAPSED_THRESHOLD=100,SOON_THRESHOLD=30;
 var COMPLIANCE_FIELD='Compliance',MAKE_FIELD='Make',MODEL_FIELD='Model';
 var showHidden=false,makeModelData=[],historyData=[];
 var activeClientUuid=null,currentUser='Unknown User';
+var bulkMode=false,selectedUuids=new Set();
 var CHECK_TYPES=[
   {key:'service',label:'Service Due'},
   {key:'pvi',label:'PVI Due'},
@@ -596,14 +624,6 @@ function saveLocal(){
   localStorage.setItem('sm8_make_field',MAKE_FIELD);
   localStorage.setItem('sm8_model_field',MODEL_FIELD);
 }
-
-function handleAuthSubmit(e) {
-  e.preventDefault();
-  var email = document.getElementById('auth-email-input').value.trim();
-  if (!email) return;
-  window.location.href = '/api/auth?email=' + encodeURIComponent(email);
-}
-  
 function loadLocal(){
   assets=JSON.parse(localStorage.getItem('sm8_assets')||'[]');
   assetTypes=JSON.parse(localStorage.getItem('sm8_types')||'{}');
@@ -616,56 +636,34 @@ function loadLocal(){
   MODEL_FIELD=localStorage.getItem('sm8_model_field')||'Model';
 }
 
+function handleAuthSubmit(e){
+  e.preventDefault();
+  var email=document.getElementById('auth-email-input').value.trim();
+  if(!email)return;
+  window.location.href='/api/auth?email='+encodeURIComponent(email);
+}
+
 // ─── User identity ────────────────────────────────────────────────────────────
 function readIdentityCookies(){
   var email='',name='';
   document.cookie.split(';').forEach(function(c){
-    var parts=c.trim().split('=');
-    var key=parts[0];
-    var val=decodeURIComponent(parts.slice(1).join('='));
-    if(key==='sm8_user_email')email=val;
-    if(key==='sm8_user_name')name=val;
+    var parts=c.trim().split('=');var key=parts[0];var val=decodeURIComponent(parts.slice(1).join('='));
+    if(key==='sm8_user_email')email=val;if(key==='sm8_user_name')name=val;
   });
   return{email:email,name:name};
-}
-function resolveUserName(staffList,cookieEmail){
-  if(!Array.isArray(staffList)||!staffList.length)return 'Unknown User';
-  var matched=null;
-  var storedEmail=cookieEmail||localStorage.getItem('sm8_session_email')||'';
-  if(storedEmail){
-    matched=staffList.find(function(s){
-      return String(s.email||'').toLowerCase()===storedEmail.toLowerCase();
-    });
-  }
-  if(!matched)matched=staffList.find(function(s){return String(s.active)==='1';});
-  if(!matched)matched=staffList[0];
-  if(!matched)return 'Unknown User';
-  // ServiceM8 uses 'first' and 'last'
-  var full=[matched.first,matched.last].filter(Boolean).join(' ').trim();
-  if(full)return full;
-  if(matched.name)return matched.name;
-  if(matched.email)return matched.email;
-  return 'Unknown User';
 }
 
 // ─── History API ──────────────────────────────────────────────────────────────
 function writeHistory(record){
-  record.changed_by=currentUser;
-  record.timestamp=new Date().toISOString();
+  record.changed_by=currentUser;record.timestamp=new Date().toISOString();
   historyData.unshift(record);
-  fetch('/api/history',{
-    method:'POST',credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(record)
-  }).catch(function(){});
+  fetch('/api/history',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(record)}).catch(function(){});
 }
 function loadHistory(){
   fetch('/api/history',{credentials:'include'})
     .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
-    .then(function(data){
-      historyData=Array.isArray(data)?data:[];
-      if(document.getElementById('screen-history').classList.contains('active'))renderHistory();
-    }).catch(function(){});
+    .then(function(data){historyData=Array.isArray(data)?data:[];if(document.getElementById('screen-history').classList.contains('active'))renderHistory();})
+    .catch(function(){});
 }
 
 // ─── Make & Model server sync ─────────────────────────────────────────────────
@@ -717,65 +715,32 @@ function checkSession(){
   }
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
-
-  // Read identity cookies set by callback.js
   var identity=readIdentityCookies();
   if(identity.email)localStorage.setItem('sm8_session_email',identity.email);
   if(identity.name)localStorage.setItem('sm8_session_name',identity.name);
-
-  // Use stored name immediately if available
   var storedName=identity.name||localStorage.getItem('sm8_session_name')||'';
   if(storedName)currentUser=storedName;
-
   fetch('/api/proxy?path=/assettype.json',{credentials:'include',headers:{'Accept':'application/json'}})
-  .then(function(res){
-    if(res.status===401){showScreen('auth');return null;}
-    return res.json();
-  })
+  .then(function(res){if(res.status===401){showScreen('auth');return null;}return res.json();})
   .then(function(result){
     if(!result)return;
-
-    // Use name from cookie set by callback.js
-    if(identity.name){
-      currentUser=identity.name;
-    } else if(localStorage.getItem('sm8_session_name')){
-      currentUser=localStorage.getItem('sm8_session_name');
+    if(identity.name)currentUser=identity.name;
+    else if(localStorage.getItem('sm8_session_name'))currentUser=localStorage.getItem('sm8_session_name');
+    localStorage.setItem('sm8_session_name',currentUser);
+    var badge=document.getElementById('user-badge');badge.textContent='\uD83D\uDC64 '+currentUser;badge.style.display='inline-block';
+    loadLocal();
+    if(assets.length>0){
+      showDashboard();document.getElementById('sync-status').textContent='Loaded from cache';
+      loadMakeModelFromServer();loadHistory();backgroundSync();
+    } else {
+      showScreen('loading');document.getElementById('loading-msg').textContent='Loading your assets\u2026';
+      fetchAll().then(function(){saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
     }
-
-      localStorage.setItem('sm8_session_name',currentUser);
-
-      var badge=document.getElementById('user-badge');
-      badge.textContent='\uD83D\uDC64 '+currentUser;
-      badge.style.display='inline-block';
-
-      loadLocal();
-      if(assets.length>0){
-        showDashboard();
-        document.getElementById('sync-status').textContent='Loaded from cache';
-        loadMakeModelFromServer();
-        loadHistory();
-        backgroundSync();
-      } else {
-        showScreen('loading');
-        document.getElementById('loading-msg').textContent='Loading your assets\u2026';
-        fetchAll()
-          .then(function(){
-            saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();
-            toast('Loaded '+assets.length+' assets.');
-          })
-          .catch(handleFetchError);
-      }
-    })
-    .catch(function(){
-      // Network error — use cache if available
-      loadLocal();
-      if(assets.length>0){
-        showDashboard();
-        document.getElementById('sync-status').textContent='Offline \u2014 showing cached data';
-      } else {
-        showScreen('auth');
-      }
-    });
+  }).catch(function(){
+    loadLocal();
+    if(assets.length>0){showDashboard();document.getElementById('sync-status').textContent='Offline \u2014 showing cached data';}
+    else{showScreen('auth');}
+  });
 }
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
@@ -785,10 +750,8 @@ function handleFetchError(e){
   } else {toast('Error: '+e.message,true);showScreen('auth');}
 }
 function backgroundSync(){
-  fetchAll().then(function(){
-    saveLocal();renderAll();
-    document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
-  }).catch(function(e){if(e.message==='SESSION_EXPIRED')handleFetchError(e);});
+  fetchAll().then(function(){saveLocal();renderAll();document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();})
+    .catch(function(e){if(e.message==='SESSION_EXPIRED')handleFetchError(e);});
 }
 
 // ─── Data fetching ────────────────────────────────────────────────────────────
@@ -814,21 +777,15 @@ function fetchAll(){
       });
     });
     return sm8Get('/company');
-  }).then(function(companies){
-    clientMap={};companies.forEach(function(c){clientMap[c.uuid]=c.name;});
-  });
+  }).then(function(companies){clientMap={};companies.forEach(function(c){clientMap[c.uuid]=c.name;});});
 }
 function syncAssets(){
-  var btn=document.getElementById('btn-sync');
-  btn.innerHTML='<span class="loader"></span>';btn.disabled=true;
+  var btn=document.getElementById('btn-sync');btn.innerHTML='<span class="loader"></span>';btn.disabled=true;
   fetchAll().then(function(){
-    saveLocal();renderAll();
-    document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
-    toast('Synced! '+assets.length+' assets.');
-    btn.innerHTML='&#8635; Sync';btn.disabled=false;
+    saveLocal();renderAll();document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
+    toast('Synced! '+assets.length+' assets.');btn.innerHTML='&#8635; Sync';btn.disabled=false;
   }).catch(function(e){
-    toast('Sync failed: '+e.message,true);
-    btn.innerHTML='&#8635; Sync';btn.disabled=false;
+    toast('Sync failed: '+e.message,true);btn.innerHTML='&#8635; Sync';btn.disabled=false;
     if(e.message==='SESSION_EXPIRED')handleFetchError(e);
   });
 }
@@ -836,8 +793,7 @@ function syncAssets(){
 // ─── Screen management ────────────────────────────────────────────────────────
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});
-  var t=document.getElementById('screen-'+name);
-  t.style.display='';t.classList.add('active');
+  var t=document.getElementById('screen-'+name);t.style.display='';t.classList.add('active');
 }
 function showDashboard(){
   document.getElementById('nav-tabs').style.display='flex';
@@ -866,7 +822,104 @@ function openClientDetail(uuid){
   showScreen('client-detail');renderClientDetail();
 }
 
-// ─── Compliance update ────────────────────────────────────────────────────────
+// ─── Bulk select ──────────────────────────────────────────────────────────────
+function toggleBulkMode(){
+  bulkMode=!bulkMode;
+  var btn=document.getElementById('btn-bulk-mode');
+  btn.classList.toggle('active',bulkMode);
+  btn.innerHTML=bulkMode?'&#10005; Exit Bulk':'&#9745; Bulk Select';
+  document.getElementById('bulk-select-all-row').style.display=bulkMode?'flex':'none';
+  document.getElementById('list-cb-header').style.display=bulkMode?'':'none';
+  if(!bulkMode){selectedUuids.clear();updateBulkBar();}
+  renderAssets();
+}
+function toggleAssetSelection(uuid,checked){
+  if(checked)selectedUuids.add(uuid);else selectedUuids.delete(uuid);
+  updateBulkBar();
+  // update card/row highlight without full re-render
+  var card=document.querySelector('[data-uuid="'+uuid+'"]');
+  if(card){card.classList.toggle('bulk-selected',checked);card.classList.toggle('row-bulk-selected',checked);}
+}
+function toggleSelectAll(checked){
+  var visible=filteredAssets();
+  visible.forEach(function(a){if(checked)selectedUuids.add(a.uuid);else selectedUuids.delete(a.uuid);});
+  updateBulkBar();renderAssets();
+}
+function updateBulkBar(){
+  var n=selectedUuids.size;
+  var bar=document.getElementById('bulk-bar');
+  bar.classList.toggle('visible',bulkMode&&n>0);
+  document.getElementById('bulk-bar-count').textContent=n+' asset'+(n===1?'':'s')+' selected';
+  document.getElementById('bulk-bar-progress').textContent='';
+  var label=document.getElementById('bulk-selected-label');
+  if(label)label.textContent=n>0?n+' selected':'';
+  var allCb=document.getElementById('bulk-select-all-cb');
+  if(allCb){var visible=filteredAssets();allCb.checked=visible.length>0&&visible.every(function(a){return selectedUuids.has(a.uuid);});}
+}
+function clearBulkSelection(){selectedUuids.clear();updateBulkBar();renderAssets();}
+
+// ─── Bulk compliance apply ────────────────────────────────────────────────────
+function applyBulkCompliance(){
+  var newValue=document.getElementById('bulk-bar-compliance').value;
+  if(!newValue){toast('Please select a compliance status first.',true);return;}
+  var uuids=Array.from(selectedUuids);
+  if(!uuids.length){toast('No assets selected.',true);return;}
+  var btn=document.getElementById('bulk-bar-apply');
+  var progressEl=document.getElementById('bulk-bar-progress');
+  btn.disabled=true;
+  var done=0,failed=0;
+  progressEl.textContent='0 / '+uuids.length;
+
+  function next(i){
+    if(i>=uuids.length){
+      btn.disabled=false;
+      progressEl.textContent='';
+      var msg='Updated '+done+' asset'+(done===1?'':'s');
+      if(failed)msg+=' ('+failed+' failed)';
+      toast(msg,failed>0);
+      selectedUuids.clear();
+      document.getElementById('bulk-bar-compliance').value='';
+      updateBulkBar();
+      renderAll();
+      return;
+    }
+    var uuid=uuids[i];
+    var asset=assets.find(function(a){return a.uuid===uuid;});
+    if(!asset){failed++;done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);return;}
+    var oldValue=getAnyFieldValue(asset,COMPLIANCE_FIELD)||'';
+    fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
+      .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
+      .then(function(liveAsset){
+        var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
+        var lower=COMPLIANCE_FIELD.toLowerCase();var found=false;
+        fieldData=fieldData.map(function(f){
+          if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
+          return f;
+        });
+        if(!found){
+          var typeUuid=liveAsset.asset_type_uuid;
+          var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
+          var fieldDef=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
+          fieldData.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
+        }
+        return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
+      })
+      .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status);});})
+      .then(function(){
+        setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
+        writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
+        done++;progressEl.textContent=done+' / '+uuids.length;
+        next(i+1);
+      })
+      .catch(function(e){
+        if(e.message==='SESSION_EXPIRED'){handleFetchError(e);btn.disabled=false;return;}
+        failed++;done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);
+      });
+  }
+  next(0);
+}
+
+// ─── Compliance update (single) ───────────────────────────────────────────────
 function updateComplianceField(uuid,newValue,selectEl){
   selectEl.classList.remove('saved','error');selectEl.classList.add('saving');
   var asset=assets.find(function(a){return a.uuid===uuid;});
@@ -915,10 +968,7 @@ function saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName){
       if(!fieldName)throw new Error('No field mapped for '+checkKey);
       var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
       var found=false;
-      fieldData=fieldData.map(function(f){
-        if(f.fieldName===fieldName){found=true;return Object.assign({},f,{fieldValue:newDate});}
-        return f;
-      });
+      fieldData=fieldData.map(function(f){if(f.fieldName===fieldName){found=true;return Object.assign({},f,{fieldValue:newDate});}return f;});
       if(!found){
         var typeFields=(assetTypes[liveAsset.asset_type_uuid]&&assetTypes[liveAsset.asset_type_uuid].fields)||[];
         var fieldDef=typeFields.find(function(f){return f.name===fieldName;});
@@ -944,10 +994,8 @@ function compliancePillClass(val){if(!val)return '';return val.replace(/\s+/g,''
 function mmKey(make,model){return(String(make||'').trim()+'|||'+String(model||'').trim()).toLowerCase();}
 function getMMLookup(){var map={};makeModelData.forEach(function(r){map[mmKey(r.make,r.model)]=r;});return map;}
 function getAssetHours(asset){
-  var make=getAnyFieldValue(asset,MAKE_FIELD)||'';
-  var model=getAnyFieldValue(asset,MODEL_FIELD)||'';
-  if(!make&&!model)return null;
-  return getMMLookup()[mmKey(make,model)]||null;
+  var make=getAnyFieldValue(asset,MAKE_FIELD)||'';var model=getAnyFieldValue(asset,MODEL_FIELD)||'';
+  if(!make&&!model)return null;return getMMLookup()[mmKey(make,model)]||null;
 }
 function suppressionReason(asset,overallStatus){
   var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);if(!c)return null;
@@ -987,11 +1035,8 @@ function daysUntil(dateStr){
   return Math.round((due.getTime()-today.getTime())/86400000);
 }
 function statusOf(days){
-  if(days===null)return 'no-date';
-  if(days<-ELAPSED_THRESHOLD)return 'elapsed';
-  if(days<0)return 'overdue';
-  if(days<=SOON_THRESHOLD)return 'due-soon';
-  return 'ok';
+  if(days===null)return 'no-date';if(days<-ELAPSED_THRESHOLD)return 'elapsed';
+  if(days<0)return 'overdue';if(days<=SOON_THRESHOLD)return 'due-soon';return 'ok';
 }
 function worstStatus(statuses){
   var best='no-date';
@@ -1000,33 +1045,20 @@ function worstStatus(statuses){
 }
 function statusColor(status){return{'elapsed':'purple','overdue':'red','due-soon':'amber','ok':'green'}[status]||'grey';}
 function statusLabel(days,status){
-  if(days===null)return 'No date';
-  if(status==='elapsed')return Math.abs(days)+'d elapsed';
-  if(days<0)return Math.abs(days)+'d overdue';
-  if(days===0)return 'Due today';
-  return days+'d left';
+  if(days===null)return 'No date';if(status==='elapsed')return Math.abs(days)+'d elapsed';
+  if(days<0)return Math.abs(days)+'d overdue';if(days===0)return 'Due today';return days+'d left';
 }
-function progressPct(days){
-  if(days===null)return 0;if(days<=0)return 100;if(days>=365)return 2;
-  return Math.max(2,Math.round((1-days/365)*100));
-}
+function progressPct(days){if(days===null)return 0;if(days<=0)return 100;if(days>=365)return 2;return Math.max(2,Math.round((1-days/365)*100));}
 function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function formatDate(str){
-  if(!str)return '\u2014';
-  var d=new Date(String(str).trim().substring(0,10)+'T00:00:00');
-  if(isNaN(d.getTime()))return str;
-  return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+  if(!str)return '\u2014';var d=new Date(String(str).trim().substring(0,10)+'T00:00:00');
+  if(isNaN(d.getTime()))return str;return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
 }
 function formatDateTime(str){
-  if(!str)return '';
-  var d=new Date(str);if(isNaN(d.getTime()))return str;
+  if(!str)return '';var d=new Date(str);if(isNaN(d.getTime()))return str;
   return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
 }
-function fmtHrs(val){
-  if(val===null||val===undefined||val==='')return null;
-  var n=parseFloat(val);if(isNaN(n)||n<=0)return null;
-  return n+'h';
-}
+function fmtHrs(val){if(val===null||val===undefined||val==='')return null;var n=parseFloat(val);if(isNaN(n)||n<=0)return null;return n+'h';}
 function toast(msg,isError){
   var el=document.getElementById('toast');el.textContent=msg;
   el.style.borderColor=isError?'var(--red)':'var(--accent)';
@@ -1047,10 +1079,7 @@ function enrichedAssets(){
     var typeName=(assetTypes[typeUuid]&&assetTypes[typeUuid].name)||'Unknown Type';
     var clientName=getClientName(a);
     var checks={};
-    CHECK_TYPES.forEach(function(ct){
-      var date=getCheckDate(a,ct.key);var days=daysUntil(date);var status=statusOf(days);
-      checks[ct.key]={date:date,days:days,status:status};
-    });
+    CHECK_TYPES.forEach(function(ct){var date=getCheckDate(a,ct.key);var days=daysUntil(date);var status=statusOf(days);checks[ct.key]={date:date,days:days,status:status};});
     var allStatuses=CHECK_TYPES.map(function(ct){return checks[ct.key].status;});
     var overall=worstStatus(allStatuses);
     var urgentDays=null;
@@ -1068,8 +1097,7 @@ function sortedAssets(data){
   return data.slice().sort(function(a,b){
     var ca=a.clientName.toLowerCase(),cb=b.clientName.toLowerCase();
     if(ca<cb)return -1;if(ca>cb)return 1;
-    var da=a.urgentDays===null?999999:a.urgentDays;
-    var db=b.urgentDays===null?999999:b.urgentDays;
+    var da=a.urgentDays===null?999999:a.urgentDays;var db=b.urgentDays===null?999999:b.urgentDays;
     return da-db;
   });
 }
@@ -1108,12 +1136,8 @@ function filteredAssets(){
     if(typeFilter&&a.asset_type_uuid!==typeFilter)return false;
     if(clientFilter&&a.company_uuid!==clientFilter)return false;
     if(complianceFilter&&String(a.compliance||'')!==complianceFilter)return false;
-    if(checkFilter){
-      if(!a.checks[checkFilter]||a.checks[checkFilter].date===null)return false;
-      if(statusFilter&&a.checks[checkFilter].status!==statusFilter)return false;
-    } else {
-      if(statusFilter&&a.status!==statusFilter)return false;
-    }
+    if(checkFilter){if(!a.checks[checkFilter]||a.checks[checkFilter].date===null)return false;if(statusFilter&&a.checks[checkFilter].status!==statusFilter)return false;}
+    else{if(statusFilter&&a.status!==statusFilter)return false;}
     return true;
   });
 }
@@ -1163,6 +1187,7 @@ function complianceSelectHTML(uuid,currentValue,cssClass){
   return '<select class="'+cssClass+'" onchange="updateComplianceField(\''+uuid+'\',this.value,this)" onclick="event.stopPropagation()">'
     +'<option value="">— Set Status —</option>'+opts+'</select>';
 }
+
 function renderAssets(){
   var data=filteredAssets();var sorted=sortedAssets(data);
   var hiddenCount=enrichedAssets().filter(function(a){return a.suppressed;}).length;
@@ -1171,6 +1196,11 @@ function renderAssets(){
     hidBar.style.display='flex';
     document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s');
   } else {hidBar.style.display='none';}
+
+  // update select-all checkbox state
+  var allCb=document.getElementById('bulk-select-all-cb');
+  if(allCb)allCb.checked=sorted.length>0&&sorted.every(function(a){return selectedUuids.has(a.uuid);});
+
   var cols={'elapsed':[],'overdue':[],'due-soon':[],'ok':[],'no-date':[]};
   sorted.forEach(function(a){cols[a.status].push(a);});
   var colMap={'elapsed':'elapsed','overdue':'overdue','due-soon':'soon','ok':'ok','no-date':'nodate'};
@@ -1181,15 +1211,20 @@ function renderAssets(){
       ?'<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
       :cols[status].map(assetCard).join('');
   });
+
+  // list view
+  var cbHeader=document.getElementById('list-cb-header');
+  if(cbHeader)cbHeader.style.display=bulkMode?'':'none';
   var tbody=document.getElementById('list-body');
-  if(sorted.length===0){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';return;}
+  if(sorted.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';return;}
   var html='';var lastClient=null;
   sorted.forEach(function(a){
     if(a.clientName!==lastClient){
-      html+='<tr class="client-group-header"><td colspan="9">&#128205; '+esc(a.clientName)+'</td></tr>';
+      html+='<tr class="client-group-header"><td colspan="10">&#128205; '+esc(a.clientName)+'</td></tr>';
       lastClient=a.clientName;
     }
     var worstColor=statusColor(a.status);
+    var isSelected=selectedUuids.has(a.uuid);
     var checkCells=CHECK_TYPES.map(function(ct){
       var c=a.checks[ct.key];
       if(!c||c.date===null)return '<td><span style="color:var(--muted);font-size:0.78rem">\u2014</span></td>';
@@ -1200,7 +1235,8 @@ function renderAssets(){
         +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
         +(hrs?'<div>'+hoursPill(hrs)+'</div>':'')+'</td>';
     }).join('');
-    html+='<tr class="'+(a.suppressed?'row-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
+    html+='<tr class="'+(a.suppressed?'row-suppressed':'')+(isSelected?' row-bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+(bulkMode?'toggleAssetSelection(\''+esc(a.uuid)+'\',!selectedUuids.has(\''+esc(a.uuid)+'\'));renderAssets()':'openModal(\''+esc(a.uuid)+'\')')+'">'
+      +(bulkMode?'<td onclick="event.stopPropagation()"><input type="checkbox" class="asset-cb" '+(isSelected?'checked':'')+' onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/></td>':'')
       +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')
       +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')+'</td>'
       +'<td onclick="event.stopPropagation()">'+compPill(a.compliance)+'<br/>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</td>'
@@ -1211,10 +1247,12 @@ function renderAssets(){
   });
   tbody.innerHTML=html;
 }
+
 function assetCard(a){
   var worstColor=statusColor(a.status);
   var worstCss=worstColor==='purple'?'var(--purple)':'var(--'+worstColor+')';
   var pct=progressPct(a.urgentDays);
+  var isSelected=selectedUuids.has(a.uuid);
   var checkRows=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];if(!c||c.date===null)return '';
     var col=statusColor(c.status);
@@ -1225,10 +1263,17 @@ function assetCard(a){
       +'<span class="check-date">'+formatDate(c.date)+'</span>'
       +(hrs?'<span class="check-hours">&#128336; '+hrs+'</span>':'')+'</span></div>';
   }).join('');
-  return '<div class="asset-card '+worstColor+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
+  var cardClick=bulkMode
+    ?'toggleAssetSelection(\''+esc(a.uuid)+'\',!selectedUuids.has(\''+esc(a.uuid)+'\'));renderAssets()'
+    :'openModal(\''+esc(a.uuid)+'\')';
+  return '<div class="asset-card '+worstColor+(a.suppressed?' is-suppressed':'')+(isSelected?' bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+cardClick+'">'
+    +'<div class="asset-card-top">'
+    +(bulkMode?'<input type="checkbox" class="asset-cb" '+(isSelected?'checked':'')+' onclick="event.stopPropagation()" onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/>':'')
+    +'<div class="asset-card-top-content">'
     +'<div class="asset-card-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
     +'<div class="asset-card-client">&#128205; '+esc(a.clientName)+'</div>'
     +'<div class="asset-card-type">'+esc(a.typeName)+(a.make||a.model?' &middot; '+esc([a.make,a.model].filter(Boolean).join(' ')):'')+'</div>'
+    +'</div></div>'
     +'<div class="compliance-wrap"><div class="compliance-label">Compliance</div>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</div>'
     +(checkRows?'<div class="asset-card-checks">'+checkRows+'</div>':'')
     +'<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+worstCss+'"></div></div></div>'
@@ -1245,8 +1290,7 @@ function renderClientList(){
   if(search)clientUuids=clientUuids.filter(function(uuid){return(clientMap[uuid]||'Unknown').toLowerCase().indexOf(search)!==-1;});
   if(!clientUuids.length){document.getElementById('client-list-grid').innerHTML='<p style="color:var(--muted)">No clients found.</p>';return;}
   var html=clientUuids.map(function(uuid){
-    var clientAssets=byClient[uuid];
-    var visible=clientAssets.filter(function(a){return !a.suppressed;});
+    var clientAssets=byClient[uuid];var visible=clientAssets.filter(function(a){return !a.suppressed;});
     var name=clientMap[uuid]||'Unknown Client';
     var el=visible.filter(function(a){return a.status==='elapsed';}).length;
     var ov=visible.filter(function(a){return a.status==='overdue';}).length;
@@ -1302,11 +1346,8 @@ function renderClientDetail(){
     return true;
   });
   filtered.sort(function(a,b){
-    var ra=STATUS_RANK[a.status]||99,rb=STATUS_RANK[b.status]||99;
-    if(ra!==rb)return ra-rb;
-    var da=a.urgentDays===null?999999:a.urgentDays;
-    var db=b.urgentDays===null?999999:b.urgentDays;
-    return da-db;
+    var ra=STATUS_RANK[a.status]||99,rb=STATUS_RANK[b.status]||99;if(ra!==rb)return ra-rb;
+    var da=a.urgentDays===null?999999:a.urgentDays;var db=b.urgentDays===null?999999:b.urgentDays;return da-db;
   });
   if(!filtered.length){document.getElementById('client-assets-list').innerHTML='<p style="color:var(--muted);padding:20px 0">No assets match the current filters.</p>';return;}
   var html=filtered.map(function(a){
@@ -1334,38 +1375,23 @@ function renderHistory(){
   var search=(document.getElementById('history-search').value||'').toLowerCase();
   var typeFilter=document.getElementById('history-type-filter').value;
   var userFilter=document.getElementById('history-user-filter').value;
-  var users={};
-  historyData.forEach(function(h){if(h.changed_by)users[h.changed_by]=true;});
-  var userSel=document.getElementById('history-user-filter');
-  var currentUserFilter=userSel.value;
+  var users={};historyData.forEach(function(h){if(h.changed_by)users[h.changed_by]=true;});
+  var userSel=document.getElementById('history-user-filter');var currentUserFilter=userSel.value;
   userSel.innerHTML='<option value="">All Users</option>';
-  Object.keys(users).sort().forEach(function(u){
-    var opt=document.createElement('option');opt.value=u;opt.textContent=u;
-    if(u===currentUserFilter)opt.selected=true;
-    userSel.appendChild(opt);
-  });
+  Object.keys(users).sort().forEach(function(u){var opt=document.createElement('option');opt.value=u;opt.textContent=u;if(u===currentUserFilter)opt.selected=true;userSel.appendChild(opt);});
   var filtered=historyData.filter(function(h){
     if(typeFilter&&h.type!==typeFilter)return false;
     if(userFilter&&h.changed_by!==userFilter)return false;
-    if(search&&
-      String(h.asset_name||'').toLowerCase().indexOf(search)===-1&&
-      String(h.client_name||'').toLowerCase().indexOf(search)===-1&&
-      String(h.changed_by||'').toLowerCase().indexOf(search)===-1)return false;
+    if(search&&String(h.asset_name||'').toLowerCase().indexOf(search)===-1&&String(h.client_name||'').toLowerCase().indexOf(search)===-1&&String(h.changed_by||'').toLowerCase().indexOf(search)===-1)return false;
     return true;
   });
-  if(!filtered.length){
-    document.getElementById('history-list').innerHTML='<div class="history-empty">&#128336; No history yet. Changes to compliance and due dates will appear here.</div>';return;
-  }
+  if(!filtered.length){document.getElementById('history-list').innerHTML='<div class="history-empty">&#128336; No history yet. Changes to compliance and due dates will appear here.</div>';return;}
   var html='<div class="history-timeline">';
   filtered.forEach(function(h,i){
-    var isLast=i===filtered.length-1;
-    var dotClass=h.type==='compliance'?'compliance':'date_change';
+    var isLast=i===filtered.length-1;var dotClass=h.type==='compliance'?'compliance':'date_change';
     var desc='';
-    if(h.type==='compliance'){
-      desc='Compliance: <span class="history-val-old">'+esc(h.old_value||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(h.new_value||'\u2014')+'</span>';
-    } else {
-      desc=esc(h.field||'Date')+': <span class="history-val-old">'+esc(formatDate(h.old_value)||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(formatDate(h.new_value)||'\u2014')+'</span>';
-    }
+    if(h.type==='compliance'){desc='Compliance: <span class="history-val-old">'+esc(h.old_value||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(h.new_value||'\u2014')+'</span>';}
+    else{desc=esc(h.field||'Date')+': <span class="history-val-old">'+esc(formatDate(h.old_value)||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(formatDate(h.new_value)||'\u2014')+'</span>';}
     html+='<div class="history-item">'
       +'<div class="history-dot-col"><div class="history-dot '+dotClass+'"></div>'+(isLast?'':'<div class="history-line"></div>')+'</div>'
       +'<div class="history-content">'
@@ -1375,13 +1401,12 @@ function renderHistory(){
       +'<div class="history-meta"><span class="by">&#128100; '+esc(h.changed_by||'Unknown')+'</span><span>&#128336; '+esc(formatDateTime(h.timestamp))+'</span></div>'
       +'</div></div>';
   });
-  html+='</div>';
-  document.getElementById('history-list').innerHTML=html;
+  html+='</div>';document.getElementById('history-list').innerHTML=html;
 }
 
 // ─── Asset modal ──────────────────────────────────────────────────────────────
 function openModal(uuid){
-  if(!uuid)return;
+  if(!uuid||bulkMode)return;
   var all=enrichedAssets();var a=null;
   for(var i=0;i<all.length;i++){if(all[i].uuid===uuid){a=all[i];break;}}
   if(!a)return;
@@ -1394,8 +1419,7 @@ function openModal(uuid){
     var css=col==='purple'?'var(--purple)':'var(--'+col+')';
     var absD=c&&c.days!==null?Math.abs(c.days):'\u2014';
     var sub=!c||c.date===null?'No date':c.status==='elapsed'?'days elapsed':c.days<0?'days overdue':c.days===0?'Due today':'days left';
-    var hrsKey=ct.key==='validation'?null:ct.key;
-    var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
+    var hrsKey=ct.key==='validation'?null:ct.key;var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
     var currentDate=c?c.date||'':'';
     return '<div class="modal-check-card">'
       +'<button class="mc-edit-btn" onclick="toggleDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')" title="Edit date">&#9998;</button>'
@@ -1435,8 +1459,7 @@ function openModal(uuid){
   var cfRows='';
   if(Array.isArray(a.field_data)&&a.field_data.length>0){
     a.field_data.slice().sort(function(x,y){return(x.sortOrder||0)-(y.sortOrder||0);}).forEach(function(f){
-      var val=f.fieldValue||'\u2014';
-      if(f.fieldType==='Date'&&f.fieldValue)val=formatDate(f.fieldValue);
+      var val=f.fieldValue||'\u2014';if(f.fieldType==='Date'&&f.fieldValue)val=formatDate(f.fieldValue);
       cfRows+='<div class="field-row"><span class="field-label">'+esc(f.fieldName)+'</span><span class="field-value">'+esc(val)+'</span></div>';
     });
   } else {cfRows='<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';}
@@ -1465,37 +1488,20 @@ function openModal(uuid){
 
 // ─── Date edit UI ─────────────────────────────────────────────────────────────
 function toggleDateEdit(uuid,checkKey,currentDate,assetName,clientName){
-  var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);
-  if(!editEl)return;
+  var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);if(!editEl)return;
   var isOpen=editEl.style.display!=='none';
   document.querySelectorAll('.mc-date-edit').forEach(function(el){el.style.display='none';});
-  if(!isOpen){
-    editEl.style.display='flex';
-    var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);
-    if(inp){inp.value=currentDate?currentDate.substring(0,10):'';inp.focus();}
-  }
+  if(!isOpen){editEl.style.display='flex';var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);if(inp){inp.value=currentDate?currentDate.substring(0,10):'';inp.focus();}}
 }
-function cancelDateEdit(uuid,checkKey){
-  var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);
-  if(editEl)editEl.style.display='none';
-}
+function cancelDateEdit(uuid,checkKey){var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);if(editEl)editEl.style.display='none';}
 function commitDateEdit(uuid,checkKey,oldDate,assetName,clientName){
-  var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);
-  if(!inp)return;
-  var newDate=inp.value;
-  if(!newDate){toast('Please pick a date.',true);return;}
+  var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);if(!inp)return;
+  var newDate=inp.value;if(!newDate){toast('Please pick a date.',true);return;}
   if(newDate===oldDate.substring(0,10)){cancelDateEdit(uuid,checkKey);return;}
   inp.disabled=true;
   saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName)
-    .then(function(){
-      closeModalDirect();
-      setTimeout(function(){openModal(uuid);},200);
-    })
-    .catch(function(e){
-      inp.disabled=false;
-      if(e.message==='SESSION_EXPIRED')handleFetchError(e);
-      else toast('Failed to save date: '+e.message,true);
-    });
+    .then(function(){closeModalDirect();setTimeout(function(){openModal(uuid);},200);})
+    .catch(function(e){inp.disabled=false;if(e.message==='SESSION_EXPIRED')handleFetchError(e);else toast('Failed to save date: '+e.message,true);});
 }
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
@@ -1522,8 +1528,7 @@ function renderMakeModel(){
 }
 function mmChanged(input,idx,field){input.classList.add('changed');makeModelData[idx][field]=input.value;}
 function addMakeModelRow(){
-  var make=document.getElementById('mm-new-make').value.trim();
-  var model=document.getElementById('mm-new-model').value.trim();
+  var make=document.getElementById('mm-new-make').value.trim();var model=document.getElementById('mm-new-model').value.trim();
   if(!make&&!model){toast('Please enter at least a Make or Model.',true);return;}
   if(makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);})){toast('Already exists.',true);return;}
   makeModelData.push({make:make,model:model,service:document.getElementById('mm-new-service').value||'',pvi:document.getElementById('mm-new-pvi').value||'',performance:document.getElementById('mm-new-perf').value||'',emc:document.getElementById('mm-new-emc').value||''});
@@ -1532,8 +1537,7 @@ function addMakeModelRow(){
 }
 function deleteMakeModelRow(idx){makeModelData.splice(idx,1);saveMakeModel();renderMakeModel();}
 function saveMakeModel(){
-  saveLocal();
-  document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
+  saveLocal();document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
   saveMakeModelToServer(function(){toast('Saved!');},function(e){toast('Saved locally. Server error: '+e.message,true);});
 }
 function exportMakeModel(){
@@ -1579,8 +1583,7 @@ function renderSettings(){
   document.getElementById('input-make-field').value=MAKE_FIELD;
   document.getElementById('input-model-field').value=MODEL_FIELD;
   updateThresholdPreviews();
-  var grid=document.getElementById('settings-grid');
-  var keys=Object.keys(assetTypes);
+  var grid=document.getElementById('settings-grid');var keys=Object.keys(assetTypes);
   if(!keys.length){grid.innerHTML='<p style="color:var(--muted)">No asset types loaded.</p>';return;}
   grid.innerHTML='<div class="settings-grid">'+keys.sort(function(a,b){return assetTypes[a].name.localeCompare(assetTypes[b].name);}).map(function(uuid){
     var t=assetTypes[uuid];var mappings=fieldMappings[uuid]||{};
