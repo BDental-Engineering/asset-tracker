@@ -10,7 +10,10 @@ const MAX_RECORDS = 500;
 async function getFile(octokit) {
   try {
     const res = await octokit.repos.getContent({
-      owner: OWNER, repo: REPO, path: FILE_PATH, ref: BRANCH
+      owner: OWNER,
+      repo:  REPO,
+      path:  FILE_PATH,
+      ref:   BRANCH
     });
     const content = Buffer.from(res.data.content, 'base64').toString('utf8');
     return { JSON.parse(content), sha: res.data.sha };
@@ -26,11 +29,17 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  if (!OWNER || !REPO) {
+    console.log('[history] GITHUB_REPO env var not set correctly');
+    return res.status(500).json({ error: 'GitHub repo not configured' });
+  }
+
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   if (req.method === 'GET') {
     try {
       const { data } = await getFile(octokit);
+      console.log('[history] GET returning', data.length, 'records');
       return res.status(200).json(data);
     } catch (e) {
       console.log('[history] GET error:', e.message);
@@ -44,9 +53,15 @@ module.exports = async (req, res) => {
       if (!newRecord || typeof newRecord !== 'object') {
         return res.status(400).json({ error: 'Invalid record' });
       }
+
+      console.log('[history] POST new record:', JSON.stringify(newRecord).substring(0, 120));
+
       const { existing, sha } = await getFile(octokit);
+      console.log('[history] existing records:', existing.length, '| sha:', sha);
+
       const updated = [newRecord, ...existing].slice(0, MAX_RECORDS);
       const encoded = Buffer.from(JSON.stringify(updated, null, 2)).toString('base64');
+
       await octokit.repos.createOrUpdateFileContents({
         owner:   OWNER,
         repo:    REPO,
@@ -56,9 +71,12 @@ module.exports = async (req, res) => {
         content: encoded,
         ...(sha ? { sha } : {})
       });
+
+      console.log('[history] POST saved', updated.length, 'records to GitHub');
       return res.status(200).json({ ok: true });
     } catch (e) {
       console.log('[history] POST error:', e.message);
+      console.log('[history] POST error stack:', e.stack);
       return res.status(500).json({ error: 'GitHub write failed: ' + e.message });
     }
   }
