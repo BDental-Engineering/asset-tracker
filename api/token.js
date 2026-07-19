@@ -63,4 +63,4 @@ function clearSessionCookie(res) {
   );
 }
 
-module.exports = { getSession, setSessionCookie, clearSessionCookie, parseCookies };
+module.exports = { encrypt, getSession, setSessionCookie, clearSessionCookie, parseCookies };
