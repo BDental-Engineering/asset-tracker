@@ -38,7 +38,7 @@ function fetchStaffMe(accessToken) {
   return new Promise(function(resolve) {
     const options = {
       hostname: 'api.servicem8.com',
-      path:     '/api/staff/me.json',
+      path:     '/api_1.0/staff/me.json',
       method:   'GET',
       headers: {
         'Accept':        'application/json',
