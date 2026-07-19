@@ -34,11 +34,11 @@ function exchangeCode(code) {
   });
 }
 
-function fetchStaffMe(accessToken) {
+function fetchStaffList(accessToken) {
   return new Promise(function(resolve) {
     const options = {
       hostname: 'api.servicem8.com',
-      path:     '/api_1.0/staff/me.json',
+      path:     '/api_1.0/staff.json',
       method:   'GET',
       headers: {
         'Accept':        'application/json',
@@ -49,19 +49,17 @@ function fetchStaffMe(accessToken) {
       let data = '';
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
-        console.log('[callback] staff/me status:', sm8Res.statusCode);
-        console.log('[callback] staff/me raw:', data.substring(0, 300));
-        try {
-          const parsed = JSON.parse(data);
-          resolve(parsed);
-        } catch(e) {
-          console.log('[callback] staff/me parse error:', e.message);
+        console.log('[callback] staff.json status:', sm8Res.statusCode);
+        console.log('[callback] staff.json raw:', data.substring(0, 500));
+        try   { resolve(JSON.parse(data)); }
+        catch (e) {
+          console.log('[callback] staff.json parse error:', e.message);
           resolve(null);
         }
       });
     });
     req.on('error', function(e) {
-      console.log('[callback] staff/me error:', e.message);
+      console.log('[callback] staff.json error:', e.message);
       resolve(null);
     });
     req.end();
@@ -101,21 +99,30 @@ module.exports = async function(req, res) {
     };
     const encrypted = encrypt(payload);
 
-    // Fetch user identity
-    let userEmail = tokenData.email || '';
+    // Fetch staff list to identify the logged-in user
+    let userEmail = '';
     let userName  = '';
+    let userUuid  = '';
 
-    if (tokenData.access_token) {
-      const me = await fetchStaffMe(tokenData.access_token);
-      if (me && !me.error) {
-        console.log('[callback] staff/me keys:', Object.keys(me));
-        const first = me.first      || me.first_name  || me.firstName  || '';
-        const last  = me.last       || me.last_name   || me.lastName   || me.surname || '';
-        const full  = [first, last].filter(Boolean).join(' ').trim();
-        userName  = full || me.name || me.display_name || me.displayName || '';
-        userEmail = me.email || me.username || userEmail;
-        console.log('[callback] userName:', userName, 'userEmail:', userEmail);
-      }
+    const staffList = await fetchStaffList(tokenData.access_token);
+    console.log('[callback] staff sample:', JSON.stringify(staffList && staffList[0]));
+
+    if (Array.isArray(staffList) && staffList.length > 0) {
+      // Log all fields of first record so we can see what's available
+      console.log('[callback] staff[0] fields:', Object.keys(staffList[0]));
+
+      // We'll refine this matching once we see the field names
+      // For now store the first active staff member as a placeholder
+      const me = staffList.find(function(s) { return String(s.active) === '1'; })
+                 || staffList[0];
+
+      const first = me.first      || me.first_name  || '';
+      const last  = me.last       || me.last_name   || me.surname || '';
+      userName  = [first, last].filter(Boolean).join(' ').trim() || me.name || '';
+      userEmail = me.email        || me.username     || me.login_email || '';
+      userUuid  = me.uuid         || me.staff_uuid   || '';
+
+      console.log('[callback] resolved user:', userName, userEmail, userUuid);
     }
 
     // Build ALL cookies in one array
@@ -134,6 +141,12 @@ module.exports = async function(req, res) {
     if (userName) {
       cookiesToSet.push(
         'sm8_user_name=' + encodeURIComponent(userName) +
+        '; Path=/; SameSite=None; Secure; Max-Age=86400'
+      );
+    }
+    if (userUuid) {
+      cookiesToSet.push(
+        'sm8_user_uuid=' + encodeURIComponent(userUuid) +
         '; Path=/; SameSite=None; Secure; Max-Age=86400'
       );
     }
