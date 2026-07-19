@@ -697,21 +697,21 @@ function checkSession(){
   var storedName=identity.name||localStorage.getItem('sm8_session_name')||'';
   if(storedName)currentUser=storedName;
 
-  fetch('/api/proxy?path=/staff.json',{credentials:'include',headers:{'Accept':'application/json'}})
-    .then(function(res){
-      if(res.status===401){showScreen('auth');return null;}
-      return res.json();
-    })
-    .then(function(staffList){
-      if(!staffList)return;
+  fetch('/api/proxy?path=/assettype.json',{credentials:'include',headers:{'Accept':'application/json'}})
+  .then(function(res){
+    if(res.status===401){showScreen('auth');return null;}
+    return res.json();
+  })
+  .then(function(result){
+    if(!result)return;
 
-      // If callback set a name cookie use it directly — it came from /staff/me.json
-      if(identity.name){
-        currentUser=identity.name;
-      } else {
-        // Fall back to matching by email in the staff list
-        currentUser=resolveUserName(Array.isArray(staffList)?staffList:[],identity.email);
-      }
+    // Use name from cookie set by callback.js
+    if(identity.name){
+      currentUser=identity.name;
+    } else if(localStorage.getItem('sm8_session_name')){
+      currentUser=localStorage.getItem('sm8_session_name');
+    }
+
       localStorage.setItem('sm8_session_name',currentUser);
 
       var badge=document.getElementById('user-badge');
