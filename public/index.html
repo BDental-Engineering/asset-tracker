@@ -317,15 +317,37 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 <div id="screen-auth" class="screen active">
   <div class="auth-card">
     <h2>Asset Tracker</h2>
-    <p>Sign in with your ServiceM8 account to continue.</p>
+    <p>Enter your work email then sign in with ServiceM8.</p>
     <div id="auth-error-banner" class="error-banner" style="display:none"></div>
-    <a href="/api/auth" class="oauth-btn">
-      <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M8 22 L16 10 L24 22" stroke="#4f6ef7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2.5" fill="#4f6ef7"/></svg>
-      Sign in with ServiceM8
-    </a>
+    <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+      <input
+        type="email"
+        id="auth-email-input"
+        placeholder="your@email.com"
+        required
+        autocomplete="email"
+        style="
+          width:100%;
+          padding:12px 16px;
+          margin-bottom:14px;
+          background:var(--surface2);
+          border:1px solid var(--border);
+          border-radius:10px;
+          color:var(--text);
+          font-size:0.95rem;
+          outline:none;
+          box-sizing:border-box;
+        "
+      />
+      <button type="submit" class="oauth-btn">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M8 22 L16 10 L24 22" stroke="#4f6ef7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22" r="2.5" fill="#4f6ef7"/></svg>
+        Sign in with ServiceM8
+      </button>
+    </form>
     <p class="hint">You will be redirected to ServiceM8 to authorise access.</p>
   </div>
 </div>
+
 
 <!-- LOADING -->
 <div id="screen-loading" class="screen">
@@ -574,6 +596,14 @@ function saveLocal(){
   localStorage.setItem('sm8_make_field',MAKE_FIELD);
   localStorage.setItem('sm8_model_field',MODEL_FIELD);
 }
+
+function handleAuthSubmit(e) {
+  e.preventDefault();
+  var email = document.getElementById('auth-email-input').value.trim();
+  if (!email) return;
+  window.location.href = '/api/auth?email=' + encodeURIComponent(email);
+}
+  
 function loadLocal(){
   assets=JSON.parse(localStorage.getItem('sm8_assets')||'[]');
   assetTypes=JSON.parse(localStorage.getItem('sm8_types')||'{}');
