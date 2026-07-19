@@ -9,7 +9,6 @@ const MAX_RECORDS = 500;
 
 function parseBody(req) {
   return new Promise(function(resolve, reject) {
-    // If Vercel already parsed it
     if (req.body && typeof req.body === 'object') {
       return resolve(req.body);
     }
@@ -26,7 +25,7 @@ function parseBody(req) {
 
 async function getFile(octokit) {
   try {
-    const res = await octokit.repos.getContent({
+    const res     = await octokit.repos.getContent({
       owner: OWNER,
       repo:  REPO,
       path:  FILE_PATH,
