@@ -1,6 +1,6 @@
 const https  = require('https');
 const qs     = require('querystring');
-const { setSessionCookie, parseCookies } = require('./token');
+const { encrypt, parseCookies } = require('./token');
 
 function exchangeCode(code) {
   return new Promise(function(resolve, reject) {
@@ -11,7 +11,6 @@ function exchangeCode(code) {
       client_id:     process.env.SM8_CLIENT_ID,
       client_secret: process.env.SM8_CLIENT_SECRET
     });
-
     const options = {
       hostname: 'go.servicem8.com',
       path:     '/oauth/access_token',
@@ -21,7 +20,6 @@ function exchangeCode(code) {
         'Content-Length': Buffer.byteLength(body)
       }
     };
-
     const req = https.request(options, function(sm8Res) {
       let data = '';
       sm8Res.on('data', function(chunk) { data += chunk; });
@@ -53,16 +51,16 @@ function fetchStaffMe(accessToken) {
       sm8Res.on('end', function() {
         try {
           const parsed = JSON.parse(data);
-          console.log('[callback] staff/me raw response:', JSON.stringify(parsed));
+          console.log('[callback] staff/me:', JSON.stringify(parsed));
           resolve(parsed);
         } catch(e) {
-          console.log('[callback] staff/me parse error:', e.message, 'raw:', data);
+          console.log('[callback] staff/me parse error:', e.message);
           resolve(null);
         }
       });
     });
     req.on('error', function(e) {
-      console.log('[callback] staff/me request error:', e.message);
+      console.log('[callback] staff/me error:', e.message);
       resolve(null);
     });
     req.end();
@@ -75,7 +73,6 @@ module.exports = async function(req, res) {
   if (error) {
     return res.redirect('/?error=' + encodeURIComponent(error));
   }
-
   if (!code) {
     return res.redirect('/?error=no_code');
   }
@@ -95,39 +92,36 @@ module.exports = async function(req, res) {
       return res.redirect('/?error=' + encodeURIComponent(tokenData.error_description || tokenData.error));
     }
 
+    // Build session payload and encrypt it
+    const payload = {
+      access_token:  tokenData.access_token,
+      refresh_token: tokenData.refresh_token,
+      expires_at:    Date.now() + ((tokenData.expires_in || 3600) * 1000)
+    };
+    const { encrypt: encryptFn } = require('./token');
+    const encrypted = encryptFn(payload);
+
+    // Fetch user identity
     let userEmail = tokenData.email || '';
     let userName  = '';
 
     if (tokenData.access_token) {
       const me = await fetchStaffMe(tokenData.access_token);
-
       if (me && !me.error) {
-        // Log all keys so we can see exact field names ServiceM8 returns
         console.log('[callback] staff/me keys:', Object.keys(me));
-
-        // Try every known variation of name fields
         const first = me.first      || me.first_name  || me.firstName  || '';
         const last  = me.last       || me.last_name   || me.lastName   || me.surname || '';
         const full  = [first, last].filter(Boolean).join(' ').trim();
-
         userName  = full || me.name || me.display_name || me.displayName || '';
         userEmail = me.email || me.username || userEmail;
-
-        console.log('[callback] resolved userName:', userName, '| userEmail:', userEmail);
-      } else {
-        console.log('[callback] staff/me returned error or null:', JSON.stringify(me));
+        console.log('[callback] userName:', userName, 'userEmail:', userEmail);
       }
     }
 
-    // Set session cookie
-    setSessionCookie(res, tokenData);
-
-    // Build full cookie array
-    const existingCookie = res.getHeader('Set-Cookie');
-    const sessionCookie  = Array.isArray(existingCookie) ? existingCookie[0] : existingCookie;
-
+    // Build ALL cookies in one array — never call setSessionCookie separately
+    const cookieFlags = '; Path=/; HttpOnly; SameSite=None; Secure';
     const cookiesToSet = [
-      sessionCookie,
+      'sm8_tok=' + encrypted + cookieFlags + '; Max-Age=86400',
       'sm8_state=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0'
     ];
 
@@ -137,7 +131,6 @@ module.exports = async function(req, res) {
         '; Path=/; SameSite=None; Secure; Max-Age=86400'
       );
     }
-
     if (userName) {
       cookiesToSet.push(
         'sm8_user_name=' + encodeURIComponent(userName) +
@@ -145,12 +138,11 @@ module.exports = async function(req, res) {
       );
     }
 
-    res.setHeader('Set-Cookie', cookiesToSet);
-
-    console.log('[callback] cookies being set:', cookiesToSet.map(function(c) {
-      return c.split(';')[0]; // log name=value only, not flags
+    console.log('[callback] setting cookies:', cookiesToSet.map(function(c) {
+      return c.split(';')[0];
     }));
 
+    res.setHeader('Set-Cookie', cookiesToSet);
     res.redirect('/');
 
   } catch(e) {
