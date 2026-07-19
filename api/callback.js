@@ -92,14 +92,13 @@ module.exports = async function(req, res) {
       return res.redirect('/?error=' + encodeURIComponent(tokenData.error_description || tokenData.error));
     }
 
-    // Build session payload and encrypt it
+    // Build and encrypt session payload
     const payload = {
       access_token:  tokenData.access_token,
       refresh_token: tokenData.refresh_token,
       expires_at:    Date.now() + ((tokenData.expires_in || 3600) * 1000)
     };
-    const { encrypt: encryptFn } = require('./token');
-    const encrypted = encryptFn(payload);
+    const encrypted = encrypt(payload);
 
     // Fetch user identity
     let userEmail = tokenData.email || '';
@@ -118,7 +117,7 @@ module.exports = async function(req, res) {
       }
     }
 
-    // Build ALL cookies in one array — never call setSessionCookie separately
+    // Build ALL cookies in one array
     const cookieFlags = '; Path=/; HttpOnly; SameSite=None; Secure';
     const cookiesToSet = [
       'sm8_tok=' + encrypted + cookieFlags + '; Max-Age=86400',
