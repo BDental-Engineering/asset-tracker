@@ -7,6 +7,23 @@ const BRANCH      = process.env.GITHUB_BRANCH || 'main';
 const FILE_PATH   = 'data/history.json';
 const MAX_RECORDS = 500;
 
+function parseBody(req) {
+  return new Promise(function(resolve, reject) {
+    // If Vercel already parsed it
+    if (req.body && typeof req.body === 'object') {
+      return resolve(req.body);
+    }
+    let raw = '';
+    req.on('data', function(chunk) { raw += chunk; });
+    req.on('end', function() {
+      if (!raw) return resolve(null);
+      try { resolve(JSON.parse(raw)); }
+      catch(e) { reject(new Error('Invalid JSON body')); }
+    });
+    req.on('error', reject);
+  });
+}
+
 async function getFile(octokit) {
   try {
     const res = await octokit.repos.getContent({
@@ -16,8 +33,8 @@ async function getFile(octokit) {
       ref:   BRANCH
     });
     const content = Buffer.from(res.data.content, 'base64').toString('utf8');
-    const data = JSON.parse(content);
-    const sha  = res.data.sha;
+    const data    = JSON.parse(content);
+    const sha     = res.data.sha;
     return { data, sha: sha };
   } catch (e) {
     if (e.status === 404) return { [], sha: null };
@@ -51,8 +68,10 @@ module.exports = async (req, res) => {
 
   if (req.method === 'POST') {
     try {
-      const newRecord = req.body;
+      const newRecord = await parseBody(req);
+
       if (!newRecord || typeof newRecord !== 'object') {
+        console.log('[history] POST bad body:', newRecord);
         return res.status(400).json({ error: 'Invalid record' });
       }
 
