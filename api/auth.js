@@ -12,7 +12,7 @@ module.exports = function(req, res) {
     response_type: 'code',
     client_id:     process.env.SM8_CLIENT_ID,
     redirect_uri:  process.env.SM8_REDIRECT_URI,
-    scope:         'manage_assets read_customers',
+    scope: 'manage_assets read_customers manage_staff read_staff read_job_contacts',
     state:         state
   });
 
