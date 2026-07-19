@@ -25,6 +25,7 @@ function decrypt(token) {
     const text = decipher.update(encrypted) + decipher.final('utf8');
     return JSON.parse(text);
   } catch(e) {
+    console.log('[token] decrypt error:', e.message);
     return null;
   }
 }
@@ -41,7 +42,10 @@ function parseCookies(req) {
 function getSession(req) {
   const cookies = parseCookies(req);
   const raw = cookies['sm8_tok'];
-  if (!raw) return null;
+  if (!raw) {
+    console.log('[token] no sm8_tok cookie found');
+    return null;
+  }
   return decrypt(raw);
 }
 
