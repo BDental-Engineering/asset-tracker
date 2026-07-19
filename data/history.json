@@ -5,6 +5,17 @@
     "asset_name": "1912004",
     "client_name": "Great Horkesley Dental Studio",
     "field": "Compliance",
+    "old_value": "Expired",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-19T11:32:32.416Z"
+  },
+  {
+    "type": "compliance",
+    "asset_uuid": "fbcb1a39-3cf0-4115-ac48-220cf2abffda",
+    "asset_name": "1912004",
+    "client_name": "Great Horkesley Dental Studio",
+    "field": "Compliance",
     "old_value": "Active",
     "new_value": "Expired",
     "changed_by": "Richard Buckingham",
