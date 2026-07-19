@@ -34,7 +34,7 @@ async function getFile(octokit) {
     const content = Buffer.from(res.data.content, 'base64').toString('utf8');
     const data    = JSON.parse(content);
     const sha     = res.data.sha;
-    return { data: data, sha: sha };
+    return { data, sha: sha };
   } catch (e) {
     if (e.status === 404) return { [], sha: null };
     throw e;
