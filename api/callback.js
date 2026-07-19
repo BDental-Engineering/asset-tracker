@@ -49,9 +49,10 @@ function fetchStaffMe(accessToken) {
       let data = '';
       sm8Res.on('data', function(chunk) { data += chunk; });
       sm8Res.on('end', function() {
+        console.log('[callback] staff/me status:', sm8Res.statusCode);
+        console.log('[callback] staff/me raw:', data.substring(0, 300));
         try {
           const parsed = JSON.parse(data);
-          console.log('[callback] staff/me:', JSON.stringify(parsed));
           resolve(parsed);
         } catch(e) {
           console.log('[callback] staff/me parse error:', e.message);
