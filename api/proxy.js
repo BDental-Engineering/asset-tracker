@@ -81,7 +81,7 @@ module.exports = async function(req, res) {
 
     const options = {
       hostname: 'api.servicem8.com',
-      path:     '/api' + sm8Path,
+      path:     '/api_1.0' + sm8Path,
       method:   method,
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
