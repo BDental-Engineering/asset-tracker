@@ -34,13 +34,17 @@ function refreshToken(refreshTok) {
 }
 
 module.exports = async function(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || 'https://asset-tracker-flax-zeta.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-HTTP-Method-Override');
 
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
   let session = getSession(req);
+  console.log('[proxy] session:', session ? 'OK' : 'NULL');
+  console.log('[proxy] cookies:', req.headers.cookie || 'NONE');
 
   if (!session) {
     res.status(401).json({ error: 'Not authenticated' });
@@ -58,6 +62,7 @@ module.exports = async function(req, res) {
         expires_at:    Date.now() + ((newTokens.expires_in || 3600) * 1000)
       };
     } catch(e) {
+      console.log('[proxy] refresh error:', e.message);
       res.status(401).json({ error: 'Token refresh failed' });
       return;
     }
@@ -66,7 +71,6 @@ module.exports = async function(req, res) {
   let sm8Path = req.query.path || '';
   if (!sm8Path) { res.status(400).json({ error: 'No path provided' }); return; }
 
-  // Ensure path starts with a single /
   if (!sm8Path.startsWith('/')) sm8Path = '/' + sm8Path;
 
   const method = req.headers['x-http-method-override'] || req.method;
@@ -77,7 +81,7 @@ module.exports = async function(req, res) {
 
     const options = {
       hostname: 'api.servicem8.com',
-      path:     '/api' + sm8Path,   // ← was '/api_1.0' which returns 403
+      path:     '/api' + sm8Path,
       method:   method,
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
