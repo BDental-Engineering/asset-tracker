@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tasks — Asset Tracker</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
+  --accent:#4f6ef7;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --purple:#7c3aed;--text:#e2e8f0;--muted:#8892b0;--radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── Header ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap;
+}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;text-decoration:none;color:var(--text);}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);
+  text-decoration:none;cursor:pointer;transition:border-color 0.15s;
+}
+.back-btn:hover{border-color:var(--accent);}
+.user-badge{font-size:0.78rem;color:var(--muted);}
+.sync-msg{font-size:0.78rem;color:var(--muted);}
+
+/* ── Buttons ── */
+button{cursor:pointer;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;padding:8px 16px;transition:opacity 0.15s,background 0.15s;}
+button:hover{opacity:0.87;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:0.78rem;}
+
+/* ── Page body ── */
+.page{padding:28px 32px;max-width:1400px;margin:0 auto;}
+
+/* ── Page header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
+.page-header-left h1{font-size:1.5rem;font-weight:800;margin-bottom:4px;}
+.page-header-left p{color:var(--muted);font-size:0.85rem;}
+.page-header-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+
+/* ── Stats bar ── */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.stat-val{font-size:1.7rem;font-weight:800;line-height:1;}
+.stat-lbl{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;}
+
+/* ── Toolbar ── */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px;}
+.toolbar input,.toolbar select{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:8px 13px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;
+}
+.toolbar input{min-width:180px;}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--accent);}
+
+/* ── Segment toggle ── */
+.seg-toggle{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;}
+.seg-btn{
+  background:transparent;color:var(--muted);border:none;border-radius:7px;
+  padding:5px 13px;font-size:0.8rem;font-weight:600;
+  transition:background 0.15s,color 0.15s;cursor:pointer;
+}
+.seg-btn.active{background:var(--accent);color:#fff;}
+.seg-btn.soft{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.25);}
+
+/* ── Sync bar ── */
+.sync-bar{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+  font-size:0.8rem;color:var(--muted);padding:8px 12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+}
+.sync-bar span{flex:1;}
+.sm8-link{
+  display:inline-flex;align-items:center;gap:5px;
+  color:var(--accent);font-size:0.78rem;font-weight:600;text-decoration:none;
+}
+.sm8-link:hover{text-decoration:underline;}
+
+/* ── Loading / empty ── */
+.loading-wrap{text-align:center;padding:60px 20px;color:var(--muted);}
+.loader{
+  display:inline-block;width:22px;height:22px;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-wrap{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:2.8rem;margin-bottom:12px;}
+.empty-wrap p{font-size:0.9rem;}
+
+/* ── Group header ── */
+.group-hdr{
+  display:flex;align-items:center;gap:8px;
+  font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+  padding:14px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;
+}
+.group-hdr .gh-ct{
+  background:var(--surface2);border-radius:10px;
+  padding:1px 8px;font-size:0.68rem;color:var(--muted);
+}
+
+/* ── Task list ── */
+.task-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+
+/* ── Task card ── */
+.task-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:15px 18px;display:flex;gap:13px;align-items:flex-start;
+  transition:border-color 0.18s,transform 0.15s,box-shadow 0.15s;
+  position:relative;overflow:hidden;cursor:pointer;
+}
+.task-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:4px;border-radius:4px 0 0 4px;
+}
+.task-card.src-job::before{background:var(--accent);}
+.task-card.src-todo::before{background:var(--green);}
+.task-card.src-overdue::before{background:var(--red);}
+.task-card.is-done{opacity:0.52;}
+.task-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.25);}
+
+.task-cb{width:17px;height:17px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:3px;}
+.task-body{flex:1;min-width:0;}
+
+.title-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px;}
+.task-title{font-weight:600;font-size:0.92rem;}
+.task-title.struck{text-decoration:line-through;color:var(--muted);}
+
+/* badges */
+.badge{display:inline-block;font-size:0.67rem;font-weight:700;padding:2px 7px;border-radius:7px;white-space:nowrap;}
+.badge.job{background:rgba(79,110,247,0.15);color:var(--accent);}
+.badge.todo{background:rgba(34,197,94,0.12);color:var(--green);}
+.badge.queued{background:rgba(245,158,11,0.12);color:var(--amber);}
+.badge.inprogress{background:rgba(79,110,247,0.15);color:var(--accent);}
+.badge.completed{background:rgba(34,197,94,0.12);color:var(--green);}
+.badge.cancelled{background:rgba(136,146,176,0.12);color:var(--muted);}
+.badge.overdue{background:rgba(239,68,68,0.15);color:var(--red);}
+
+.meta-row{display:flex;flex-wrap:wrap;gap:10px;font-size:0.75rem;color:var(--muted);margin-bottom:5px;align-items:center;}
+.asset-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(79,110,247,0.08);border:1px solid rgba(79,110,247,0.25);
+  border-radius:6px;padding:2px 8px;font-size:0.72rem;color:var(--accent);
+  cursor:pointer;font-weight:600;
+}
+.asset-chip:hover{background:rgba(79,110,247,0.18);}
+.sm8-job-link{
+  display:inline-flex;align-items:center;gap:4px;
+  color:var(--accent);font-size:0.72rem;font-weight:600;text-decoration:none;
+}
+.sm8-job-link:hover{text-decoration:underline;}
+.task-desc{font-size:0.78rem;color:var(--muted);line-height:1.5;margin-top:4px;}
+
+.task-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;}
+
+/* due pill */
+.due-pill{font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+.due-pill.overdue{background:rgba(239,68,68,0.15);color:var(--red);}
+.due-pill.today{background:rgba(245,158,11,0.15);color:var(--amber);}
+.due-pill.soon{background:rgba(79,110,247,0.1);color:var(--accent);}
+.due-pill.ok{background:rgba(34,197,94,0.1);color:var(--green);}
+.due-pill.none{background:rgba(136,146,176,0.08);color:var(--muted);}
+
+/* sm8 open button on card */
+.open-sm8-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.25);
+  border-radius:6px;padding:3px 8px;font-size:0.68rem;color:var(--accent);
+  font-weight:600;text-decoration:none;white-space:nowrap;
+}
+.open-sm8-btn:hover{background:rgba(79,110,247,0.22);}
+
+/* ── Modal overlay ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.72);z-index:200;
+  align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;position:relative;
+}
+.modal-close{
+  position:absolute;top:14px;right:14px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);padding:4px 10px;font-size:1rem;cursor:pointer;
+}
+.modal-close:hover{border-color:var(--accent);}
+.modal h3{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
+.modal-source{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:6px 12px;font-size:0.78rem;color:var(--muted);margin-bottom:18px;
+}
+.modal-sm8-link{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.3);
+  border-radius:8px;padding:7px 14px;font-size:0.82rem;font-weight:600;
+  color:var(--accent);text-decoration:none;margin-bottom:18px;
+}
+.modal-sm8-link:hover{background:rgba(79,110,247,0.2);}
+
+/* form rows */
+.frow{margin-bottom:14px;}
+.frow label{display:block;font-size:0.72rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;}
+.frow input[type=text],.frow input[type=date],.frow input[type=datetime-local],
+.frow textarea,.frow select{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
+  outline:none;font-family:inherit;
+}
+.frow input:focus,.frow textarea:focus,.frow select:focus{border-color:var(--accent);}
+.frow textarea{resize:vertical;min-height:70px;}
+.frow .hint{font-size:0.72rem;color:var(--muted);margin-top:4px;}
+.frow .readonly-field{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;font-size:0.85rem;color:var(--muted);
+}
+
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
+
+/* asset search dropdown */
+.asset-wrap{position:relative;}
+.asset-dd{
+  position:absolute;top:100%;left:0;right:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  z-index:60;max-height:210px;overflow-y:auto;
+  box-shadow:0 4px 24px rgba(0,0,0,0.45);margin-top:2px;display:none;
+}
+.asset-opt{padding:9px 14px;font-size:0.85rem;cursor:pointer;border-bottom:1px solid var(--border);}
+.asset-opt:last-child{border-bottom:none;}
+.asset-opt:hover{background:var(--surface2);}
+.asset-opt-name{font-weight:600;}
+.asset-opt-client{font-size:0.72rem;color:var(--accent);margin-top:1px;}
+.linked-asset{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.3);
+  border-radius:8px;padding:7px 10px;font-size:0.82rem;margin-top:6px;
+}
+.linked-asset-name{font-weight:600;color:var(--accent);}
+.linked-asset-client{font-size:0.7rem;color:var(--muted);}
+.linked-asset-rm{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px;line-height:1;}
+.linked-asset-rm:hover{color:var(--red);}
+
+/* status save feedback */
+.save-msg{font-size:0.78rem;font-weight:600;padding:4px 0;}
+.save-msg.saving{color:var(--amber);}
+.save-msg.saved{color:var(--green);}
+.save-msg.error{color:var(--red);}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:13px 18px;font-size:0.88rem;
+  z-index:400;transform:translateY(80px);opacity:0;
+  transition:all 0.3s;max-width:320px;pointer-events:none;
+}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* ── Auth screen ── */
+#auth-screen{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  min-height:calc(100vh - 70px);padding:32px;
+}
+#auth-screen.show{display:flex;}
+.auth-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:40px;width:100%;max-width:420px;text-align:center;
+}
+.auth-card h2{margin-bottom:8px;}
+.auth-card p{color:var(--muted);font-size:0.9rem;margin-bottom:24px;}
+.auth-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:13px 24px;background:var(--accent);color:#fff;
+  border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;
+  border:none;cursor:pointer;transition:opacity 0.15s;
+}
+.auth-btn:hover{opacity:0.85;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#4f6ef7"/>
+      <path d="M8 22 L16 10 L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="22" r="2.5" fill="white"/>
+    </svg>
+    Asset Tracker
+  </a>
+  <div class="header-right">
+    <span class="user-badge" id="user-badge"></span>
+    <span class="sync-msg" id="sync-msg"></span>
+    <a class="back-btn" href="index.html">&#8592; Back to Dashboard</a>
+    <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;padding:5px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--text);">Sign Out</a>
+  </div>
+</header>
+
+<!-- Auth required screen -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <h2>Session Expired</h2>
+    <p>Your session has expired. Please sign in again to continue.</p>
+    <a class="auth-btn" href="index.html">&#8594; Go to Sign In</a>
+  </div>
+</div>
+
+<!-- Main page -->
+<div class="page" id="main-page" style="display:none">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>&#10003; Tasks</h1>
+      <p>Live job activities and checklist tasks from ServiceM8.</p>
+    </div>
+    <div class="page-header-right">
+      <button class="btn-ghost btn-sm" onclick="loadTasks(true)">&#8635; Refresh</button>
+      <button class="btn-primary" onclick="openNewModal()">+ New Checklist Task</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <!-- Sync info bar -->
+  <div class="sync-bar">
+    <span id="sync-detail">Loading&hellip;</span>
+    <a class="sm8-link" href="https://go.servicem8.com" target="_blank" rel="noopener">
+      &#128279; Open ServiceM8
+    </a>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <!-- Source type -->
+    <div class="seg-toggle">
+      <button class="seg-btn active" id="tt-all"  onclick="setType('all')">All</button>
+      <button class="seg-btn"        id="tt-job"  onclick="setType('job')">&#128188; Job Activities</button>
+      <button class="seg-btn"        id="tt-todo" onclick="setType('todo')">&#9989; Checklist Tasks</button>
+    </div>
+    <!-- Scope -->
+    <div class="seg-toggle">
+      <button class="seg-btn soft" id="ts-mine" onclick="setScope('mine')">&#128100; My Tasks</button>
+      <button class="seg-btn"      id="ts-all"  onclick="setScope('all')">&#128101; All Staff</button>
+    </div>
+    <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
+    <select id="q-status" onchange="render()">
+      <option value="">All Statuses</option>
+      <option value="queued">Queued</option>
+      <option value="inprogress">In Progress</option>
+      <option value="completed">Completed</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
+    <select id="q-staff" onchange="render()"><option value="">All Staff</option></select>
+    <select id="q-asset" onchange="render()"><option value="">All Assets</option></select>
+    <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
+  </div>
+
+  <!-- Task body -->
+  <div id="task-body"></div>
+
+</div>
+
+<!-- ── Edit / New Task Modal ── -->
+<div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    <h3 id="m-title">Task</h3>
+    <div class="modal-source" id="m-source" style="display:none"></div>
+
+    <!-- ServiceM8 deep link (shown when editing existing record) -->
+    <a class="modal-sm8-link" id="m-sm8-link" href="#" target="_blank" rel="noopener" style="display:none">
+      &#128279; Open in ServiceM8
+    </a>
+
+    <div class="frow">
+      <label>Task / Activity Name *</label>
+      <input type="text" id="m-name" placeholder="Name&hellip;"/>
+    </div>
+    <div class="frow">
+      <label>Notes / Description</label>
+      <textarea id="m-notes" placeholder="Optional notes&hellip;"></textarea>
+    </div>
+    <div class="frow">
+      <label>Assigned Staff</label>
+      <select id="m-staff"><option value="">— Unassigned —</option></select>
+    </div>
+    <div class="frow">
+      <label>Status</label>
+      <select id="m-status">
+        <option value="queued">Queued</option>
+        <option value="inprogress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <!-- Scheduled start — job activities only -->
+    <div class="frow" id="m-scheduled-row" style="display:none">
+      <label>Scheduled Start</label>
+      <input type="datetime-local" id="m-scheduled"/>
+      <div class="hint">Editing this updates the job activity in ServiceM8.</div>
+    </div>
+    <!-- Due date — checklist items -->
+    <div class="frow" id="m-due-row">
+      <label>Due Date</label>
+      <input type="date" id="m-due"/>
+    </div>
+    <!-- Linked job (read-only info) -->
+    <div class="frow" id="m-job-row" style="display:none">
+      <label>Linked Job</label>
+      <div class="readonly-field" id="m-job-display"></div>
+    </div>
+    <!-- Asset link -->
+    <div class="frow">
+      <label>Link to Asset <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <div class="asset-wrap">
+        <input type="text" id="m-asset-q" placeholder="&#128269; Search asset name&hellip;" oninput="assetSearch()" autocomplete="off"/>
+        <div class="asset-dd" id="m-asset-dd"></div>
+      </div>
+      <div id="m-asset-linked" style="display:none"></div>
+    </div>
+
+    <div class="save-msg" id="m-save-msg"></div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-danger btn-sm" id="m-delete-btn" onclick="deleteRecord()" style="display:none">&#128465; Delete</button>
+      <button class="btn-primary" id="m-save-btn" onclick="saveRecord()">Save to ServiceM8</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+var SM8_BASE = 'https://go.servicem8.com';  // for deep links
+
+var tasksData   = [];   // normalised task records
+var staffList   = [];   // [{uuid, name}]
+var staffMap    = {};   // uuid -> name
+var jobMap      = {};   // uuid -> {number, desc, clientUuid}
+var assetList   = [];   // from localStorage (loaded from index)
+var clientMap   = {};   // from localStorage
+var tasksLoaded = false;
+
+var tType  = 'all';    // 'all' | 'job' | 'todo'
+var tScope = 'mine';   // 'mine' | 'all'
+
+var currentUser     = '';
+var currentUserUuid = '';
+
+var editRecord      = null;   // task being edited (null = new)
+var editLinkedAsset = null;   // {uuid, name, clientName}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function () {
+  // Load cached assets + clients from localStorage (written by index.html)
+  try { assetList = JSON.parse(localStorage.getItem('sm8_assets') || '[]'); } catch(e){ assetList=[]; }
+  try { clientMap = JSON.parse(localStorage.getItem('sm8_clients') || '{}'); } catch(e){ clientMap={}; }
+
+  // Read identity
+  var id = readCookies();
+  currentUser     = id.name || localStorage.getItem('sm8_session_name') || '';
+  currentUserUuid = id.uuid || localStorage.getItem('sm8_session_uuid') || '';
+  if (currentUser) {
+    document.getElementById('user-badge').textContent = '\uD83D\uDC64 ' + currentUser;
+  }
+
+  // Check session then load
+  checkSession();
+});
+
+function readCookies() {
+  var r = { email:'', name:'', uuid:'' };
+  document.cookie.split(';').forEach(function(c) {
+    var p = c.trim().split('=');
+    var k = p[0]; var v = decodeURIComponent(p.slice(1).join('='));
+    if (k === 'sm8_user_email') r.email = v;
+    if (k === 'sm8_user_name')  r.name  = v;
+    if (k === 'sm8_user_uuid')  r.uuid  = v;
+  });
+  return r;
+}
+
+function checkSession() {
+  fetch('/api/proxy?path=/staff.json', { credentials:'include', headers:{ 'Accept':'application/json' } })
+    .then(function(r) {
+      if (r.status === 401) { showAuth(); return null; }
+      return r.json();
+    })
+    .then(function(data) {
+      if (!data) return;
+      showMain();
+      loadTasks(false);
+    })
+    .catch(function() { showAuth(); });
+}
+
+function showAuth() {
+  document.getElementById('auth-screen').classList.add('show');
+  document.getElementById('main-page').style.display = 'none';
+}
+function showMain() {
+  document.getElementById('auth-screen').classList.remove('show');
+  document.getElementById('main-page').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SM8 PROXY HELPERS
+// ═══════════════════════════════════════════════════════════════
+function sm8Get(path) {
+  return fetch('/api/proxy?path=' + path, {
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  }).then(function(r) {
+    if (r.status === 401) throw new Error('SESSION_EXPIRED');
+    return r.json().then(function(d) {
+      if (!r.ok) throw new Error(d.message || ('HTTP ' + r.status));
+      return d;
+    });
+  });
+}
+
+function sm8Put(path, payload) {
+  return fetch('/api/proxy?path=' + path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'X-HTTP-Method-Override': 'PUT'
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
+function sm8Post(path, payload) {
+  return fetch('/api/proxy?path=' + path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
+function sm8Delete(path) {
+  return fetch('/api/proxy?path=' + path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'X-HTTP-Method-Override': 'DELETE'
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD TASKS FROM SERVICEM8
+// ═══════════════════════════════════════════════════════════════
+function loadTasks(force) {
+  if (tasksLoaded && !force) return;
+  setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks from ServiceM8&hellip;</p></div>');
+  setSyncMsg('Loading&hellip;');
+
+  Promise.all([
+    sm8Get('/staff.json'),
+    sm8Get('/jobactivity.json'),
+    sm8Get('/jobchecklistitem.json'),
+    sm8Get('/job.json')
+  ]).then(function(results) {
+    var rawStaff      = results[0];
+    var rawActivities = results[1];
+    var rawChecklist  = results[2];
+    var rawJobs       = results[3];
+
+    // ── Staff ──
+    staffList = rawStaff
+      .filter(function(s) { return String(s.active) === '1'; })
+      .map(function(s) {
+        return {
+          uuid: s.uuid,
+          name: ((s.first || '') + ' ' + (s.last || '')).trim() || s.email || s.uuid
+        };
+      });
+    staffMap = {};
+    staffList.forEach(function(s) { staffMap[s.uuid] = s.name; });
+
+    // ── Jobs ──
+    jobMap = {};
+    rawJobs
+      .filter(function(j) { return String(j.active) === '1'; })
+      .forEach(function(j) {
+        jobMap[j.uuid] = {
+          number:     j.generated_job_id || '',
+          desc:       j.job_description  || '',
+          clientUuid: j.company_uuid     || '',
+          uuid:       j.uuid
+        };
+      });
+
+    // ── Normalise job activities ──
+    var activities = rawActivities
+      .filter(function(a) { return String(a.active) === '1'; })
+      .map(function(a) {
+        var job        = jobMap[a.job_uuid] || {};
+        var clientUuid = job.clientUuid || '';
+        var assetUuid  = a.asset_uuid   || '';
+        var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
+        var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
+        var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
+        var status     = normaliseStatus(a.status);
+        return {
+          _id:            a.uuid,
+          _source:        'job_activity',
+          _raw:           a,
+          name:           a.activity_was || a.name || ('Activity — Job #' + (job.number || '?')),
+          notes:          a.notes        || '',
+          status:         status,
+          staffUuid:      a.staff_uuid   || '',
+          staffName:      staffMap[a.staff_uuid] || 'Unassigned',
+          scheduledStart: a.start_date   || '',
+          dueDate:        '',
+          jobUuid:        a.job_uuid     || '',
+          jobNumber:      job.number     || '',
+          jobDesc:        job.desc       || '',
+          jobSm8Uuid:     job.uuid       || '',
+          assetUuid:      assetUuid,
+          assetName:      assetName,
+          clientName:     clientName,
+          clientUuid:     clientUuid
+        };
+      });
+
+    // ── Normalise checklist items ──
+    var checklist = rawChecklist
+      .filter(function(c) { return String(c.active) === '1'; })
+      .map(function(c) {
+        var job        = jobMap[c.job_uuid] || {};
+        var clientUuid = job.clientUuid || '';
+        var assetUuid  = c.asset_uuid || c.asset_uuid || '';
+        var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
+        var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
+        var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
+        var status     = (c.is_completed === '1' || c.is_completed === 1)
+                         ? 'completed' : normaliseStatus(c.status);
+        return {
+          _id:            c.uuid,
+          _source:        'checklist',
+          _raw:           c,
+          name:           c.name || c.task || 'Checklist Item',
+          notes:          c.notes || c.description || '',
+          status:         status,
+          staffUuid:      c.staff_uuid || c.assigned_to_staff_uuid || '',
+          staffName:      staffMap[c.staff_uuid || c.assigned_to_staff_uuid || ''] || 'Unassigned',
+          scheduledStart: '',
+          dueDate:        c.due_date || c.reminder_date || '',
+          jobUuid:        c.job_uuid || '',
+          jobNumber:      job.number || '',
+          jobDesc:        job.desc   || '',
+          jobSm8Uuid:     job.uuid   || '',
+          assetUuid:      assetUuid,
+          assetName:      assetName,
+          clientName:     clientName,
+          clientUuid:     clientUuid
+        };
+      });
+
+    tasksData   = activities.concat(checklist);
+    tasksLoaded = true;
+
+    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
+               ' &mdash; ' + activities.length + ' job activities, ' +
+               checklist.length + ' checklist tasks');
+
+    populateFilters();
+    render();
+
+  }).catch(function(e) {
+    if (e.message === 'SESSION_EXPIRED') { showAuth(); return; }
+    setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div><p>Failed to load: ' + esc(e.message) + '</p><br/><button class="btn-ghost" onclick="loadTasks(true)">Retry</button></div>');
+    toast('Load failed: ' + e.message, true);
+  });
+}
+
+function normaliseStatus(raw) {
+  var s = String(raw || '').toLowerCase().replace(/\s+/g, '');
+  if (s === 'inprogress' || s === 'in progress') return 'inprogress';
+  if (s === 'completed'  || s === 'complete')     return 'completed';
+  if (s === 'cancelled'  || s === 'canceled')     return 'cancelled';
+  return 'queued';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTERS & POPULATION
+// ═══════════════════════════════════════════════════════════════
+function populateFilters() {
+  // Staff
+  var staffSel = document.getElementById('q-staff');
+  var curStaff = staffSel.value;
+  staffSel.innerHTML = '<option value="">All Staff</option>';
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid; o.textContent = s.name;
+    if (s.uuid === curStaff) o.selected = true;
+    staffSel.appendChild(o);
+  });
+
+  // Assets (only those that appear in tasks)
+  var assetSel = document.getElementById('q-asset');
+  var curAsset = assetSel.value;
+  var seen = {};
+  tasksData.forEach(function(t) { if (t.assetUuid && t.assetName) seen[t.assetUuid] = t.assetName; });
+  assetSel.innerHTML = '<option value="">All Assets</option>';
+  Object.keys(seen).sort(function(a,b){ return seen[a].localeCompare(seen[b]); }).forEach(function(uuid) {
+    var o = document.createElement('option');
+    o.value = uuid; o.textContent = seen[uuid];
+    if (uuid === curAsset) o.selected = true;
+    assetSel.appendChild(o);
+  });
+
+  // Clients
+  var clientSel = document.getElementById('q-client');
+  var curClient = clientSel.value;
+  var seenC = {};
+  tasksData.forEach(function(t) { if (t.clientUuid && t.clientName) seenC[t.clientUuid] = t.clientName; });
+  clientSel.innerHTML = '<option value="">All Clients</option>';
+  Object.keys(seenC).sort(function(a,b){ return seenC[a].localeCompare(seenC[b]); }).forEach(function(uuid) {
+    var o = document.createElement('option');
+    o.value = uuid; o.textContent = seenC[uuid];
+    if (uuid === curClient) o.selected = true;
+    clientSel.appendChild(o);
+  });
+
+  // Modal staff select
+  var mStaff = document.getElementById('m-staff');
+  mStaff.innerHTML = '<option value="">— Unassigned —</option>';
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid; o.textContent = s.name;
+    mStaff.appendChild(o);
+  });
+}
+
+function setType(t) {
+  tType = t;
+  ['all','job','todo'].forEach(function(x) {
+    var b = document.getElementById('tt-' + x);
+    if (b) b.className = 'seg-btn' + (x === t ? ' active' : '');
+  });
+  render();
+}
+
+function setScope(s) {
+  tScope = s;
+  document.getElementById('ts-mine').className = 'seg-btn' + (s === 'mine' ? ' soft' : '');
+  document.getElementById('ts-all').className  = 'seg-btn' + (s === 'all'  ? ' soft' : '');
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTER + RENDER
+// ═══════════════════════════════════════════════════════════════
+function getFiltered() {
+  var q       = (document.getElementById('q-search').value  || '').toLowerCase();
+  var statusF = document.getElementById('q-status').value;
+  var staffF  = document.getElementById('q-staff').value;
+  var assetF  = document.getElementById('q-asset').value;
+  var clientF = document.getElementById('q-client').value;
+
+  return tasksData.filter(function(t) {
+    if (tType === 'job'  && t._source !== 'job_activity') return false;
+    if (tType === 'todo' && t._source !== 'checklist')    return false;
+    if (tScope === 'mine') {
+      var isMe = (currentUserUuid && t.staffUuid === currentUserUuid) ||
+                 (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
+      if (!isMe) return false;
+    }
+    if (statusF && t.status !== statusF) return false;
+    if (staffF  && t.staffUuid  !== staffF)  return false;
+    if (assetF  && t.assetUuid  !== assetF)  return false;
+    if (clientF && t.clientUuid !== clientF) return false;
+    if (q) {
+      var hay = [t.name, t.notes, t.staffName, t.assetName, t.jobNumber, t.clientName].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  if (!tasksLoaded) { loadTasks(false); return; }
+
+  var filtered = getFiltered();
+
+  // ── Stats (full scope, not filtered) ──
+  var scope = tScope === 'all' ? tasksData : tasksData.filter(function(t) {
+    return (currentUserUuid && t.staffUuid === currentUserUuid) ||
+           (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
+  });
+
+  renderStats(scope);
+
+  if (!filtered.length) {
+    setBody('<div class="empty-wrap"><div class="empty-icon">&#10003;</div><p>' +
+      (tScope === 'mine' ? 'No tasks assigned to you match the current filters.' : 'No tasks match the current filters.') +
+      '</p></div>');
+    return;
+  }
+
+  // Sort: in-progress first, then queued by due date, then done, then cancelled
+  filtered.sort(function(a, b) {
+    var rank = { inprogress:0, queued:1, completed:2, cancelled:3 };
+    var ra = rank[a.status] !== undefined ? rank[a.status] : 4;
+    var rb = rank[b.status] !== undefined ? rank[b.status] : 4;
+    if (ra !== rb) return ra - rb;
+    var da = dueDays(a); var db = dueDays(b);
+    return (da === null ? 9999 : da) - (db === null ? 9999 : db);
+  });
+
+  // Group
+  var groups = [
+    { key:'inprogress', label:'&#9654; In Progress', color:'var(--accent)', items:[] },
+    { key:'queued',     label:'&#9711; Queued',       color:'var(--amber)', items:[] },
+    { key:'completed',  label:'&#10003; Completed',   color:'var(--green)', items:[] },
+    { key:'cancelled',  label:'&#10005; Cancelled',   color:'var(--muted)', items:[] }
+  ];
+  filtered.forEach(function(t) {
+    var g = groups.find(function(g) { return g.key === t.status; });
+    if (g) g.items.push(t);
+  });
+
+  var html = '<div class="task-list">';
+  groups.forEach(function(g) {
+    if (!g.items.length) return;
+    html += '<div class="group-hdr" style="color:' + g.color + '">' +
+            g.label + '<span class="gh-ct">' + g.items.length + '</span></div>';
+    g.items.forEach(function(t) { html += taskCard(t); });
+  });
+  html += '</div>';
+  setBody(html);
+}
+
+function renderStats(scope) {
+  var total    = scope.length;
+  var queued   = scope.filter(function(t){ return t.status==='queued'; }).length;
+  var inprog   = scope.filter(function(t){ return t.status==='inprogress'; }).length;
+  var done     = scope.filter(function(t){ return t.status==='completed'; }).length;
+  var overdue  = scope.filter(function(t){
+    var d = dueDays(t);
+    return t.status !== 'completed' && t.status !== 'cancelled' && d !== null && d < 0;
+  }).length;
+  var jobs     = scope.filter(function(t){ return t._source==='job_activity'; }).length;
+  var todos    = scope.filter(function(t){ return t._source==='checklist'; }).length;
+
+  document.getElementById('stats-bar').innerHTML =
+    stat(total,   'Total',           'var(--text)') +
+    stat(queued,  'Queued',          'var(--amber)') +
+    stat(inprog,  'In Progress',     'var(--accent)') +
+    stat(overdue, 'Overdue',         'var(--red)') +
+    stat(done,    'Completed',       'var(--green)') +
+    stat(jobs,    'Job Activities',  'var(--accent)') +
+    stat(todos,   'Checklist Tasks', 'var(--green)');
+}
+function stat(v, l, c) {
+  return '<div class="stat-card"><div class="stat-val" style="color:' + c + '">' + v + '</div><div class="stat-lbl">' + l + '</div></div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TASK CARD HTML
+// ═══════════════════════════════════════════════════════════════
+function taskCard(t) {
+  var isDone    = t.status === 'completed' || t.status === 'cancelled';
+  var d         = dueDays(t);
+  var isOverdue = !isDone && d !== null && d < 0;
+  var colorCls  = isOverdue ? 'src-overdue' : (t._source === 'job_activity' ? 'src-job' : 'src-todo');
+
+  var srcBadge = t._source === 'job_activity'
+    ? '<span class="badge job">&#128188; Job Activity</span>'
+    : '<span class="badge todo">&#9989; Checklist</span>';
+
+  var statusLabels = { queued:'Queued', inprogress:'In Progress', completed:'Completed', cancelled:'Cancelled' };
+  var statusBadge = '<span class="badge ' + t.status + '">' + (statusLabels[t.status] || t.status) + '</span>';
+
+  var assetChip = t.assetUuid
+    ? '<span class="asset-chip" onclick="event.stopPropagation()"><a href="index.html#asset=' + esc(t.assetUuid) + '" style="color:inherit;text-decoration:none">&#128279; ' + esc(t.assetName) + '</a></span>'
+    : '';
+
+  // Deep link to ServiceM8 job
+  var sm8JobLink = '';
+  if (t.jobSm8Uuid) {
+    sm8JobLink = '<a class="sm8-job-link" href="' + SM8_BASE + '/job/' + esc(t.jobSm8Uuid) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Job #' + esc(t.jobNumber) + '</a>';
+  } else if (t.jobNumber) {
+    sm8JobLink = '<span>&#128188; Job #' + esc(t.jobNumber) + '</span>';
+  }
+
+  var dateStr = t.dueDate || t.scheduledStart;
+  var dateDisplay = t.dueDate
+    ? 'Due ' + fmtDate(t.dueDate)
+    : t.scheduledStart
+      ? 'Scheduled ' + fmtDateTime(t.scheduledStart)
+      : '';
+
+  // Open in SM8 button
+  var sm8Btn = '';
+  if (t._source === 'job_activity' && t.jobSm8Uuid) {
+    sm8Btn = '<a class="open-sm8-btn" href="' + SM8_BASE + '/job/' + esc(t.jobSm8Uuid) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; SM8</a>';
+  } else if (t._source === 'checklist' && t.jobSm8Uuid) {
+    sm8Btn = '<a class="open-sm8-btn" href="' + SM8_BASE + '/job/' + esc(t.jobSm8Uuid) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; SM8</a>';
+  }
+
+  return '<div class="task-card ' + colorCls + (isDone ? ' is-done' : '') + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
+    + '<input type="checkbox" class="task-cb" ' + (isDone ? 'checked' : '') + ' onclick="event.stopPropagation()" onchange="quickToggle(\'' + esc(t._id) + '\',this.checked)"/>'
+    + '<div class="task-body">'
+    + '<div class="title-row">'
+    + '<span class="task-title' + (isDone ? ' struck' : '') + '">' + esc(t.name) + '</span>'
+    + srcBadge + statusBadge
+    + (isOverdue ? '<span class="badge overdue">Overdue</span>' : '')
+    + '</div>'
+    + '<div class="meta-row">'
+    + '<span>&#128100; ' + esc(t.staffName) + '</span>'
+    + (t.clientName ? '<span style="color:var(--accent)">&#128205; ' + esc(t.clientName) + '</span>' : '')
+    + (dateDisplay  ? '<span>&#128336; ' + esc(dateDisplay) + '</span>' : '')
+    + (assetChip    || '')
+    + (sm8JobLink   || '')
+    + '</div>'
+    + (t.notes ? '<div class="task-desc">' + esc(t.notes.substring(0,140)) + (t.notes.length > 140 ? '&hellip;' : '') + '</div>' : '')
+    + '</div>'
+    + '<div class="task-right">'
+    + duePill(t)
+    + sm8Btn
+    + '</div>'
+    + '</div>';
+}
+
+function duePill(t) {
+  if (t.status === 'completed') return '<span class="due-pill ok">&#10003; Done</span>';
+  if (t.status === 'cancelled') return '<span class="due-pill none">Cancelled</span>';
+  var dateStr = t.dueDate || t.scheduledStart;
+  if (!dateStr) return '<span class="due-pill none">No date</span>';
+  var d = daysUntil(dateStr.substring(0, 10));
+  if (d === null) return '';
+  if (d < 0)  return '<span class="due-pill overdue">&#9888; ' + Math.abs(d) + 'd overdue</span>';
+  if (d === 0) return '<span class="due-pill today">Due today</span>';
+  if (d <= 7)  return '<span class="due-pill soon">' + d + 'd left</span>';
+  return '<span class="due-pill ok">' + fmtDate(dateStr.substring(0,10)) + '</span>';
+}
+
+function dueDays(t) {
+  var ds = t.dueDate || t.scheduledStart;
+  if (!ds) return null;
+  return daysUntil(ds.substring(0, 10));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK TOGGLE (checkbox)
+// ═══════════════════════════════════════════════════════════════
+function quickToggle(id, checked) {
+  var t = tasksData.find(function(x) { return x._id === id; });
+  if (!t) return;
+  var newStatus = checked ? 'completed' : 'queued';
+  pushStatus(t, newStatus, function() {
+    t.status = newStatus;
+    render();
+    toast(checked ? 'Marked as completed.' : 'Marked as queued.');
+  });
+}
+
+function pushStatus(t, newStatus, onDone) {
+  var path, payload;
+  if (t._source === 'job_activity') {
+    var sm8s = { completed:'Completed', inprogress:'In Progress', cancelled:'Cancelled', queued:'Queued' };
+    path    = '/jobactivity/' + t._id + '.json';
+    payload = Object.assign({}, t._raw, { status: sm8s[newStatus] || 'Queued' });
+  } else {
+    path    = '/jobchecklistitem/' + t._id + '.json';
+    payload = Object.assign({}, t._raw, {
+      status:       newStatus,
+      is_completed: newStatus === 'completed' ? '1' : '0'
+    });
+  }
+  sm8Put(path, payload).then(function(r) {
+    if (r.status === 200 || r.status === 201 || r.status === 204) {
+      if (onDone) onDone();
+    } else {
+      r.text().then(function(txt) { toast('Save failed: HTTP ' + r.status, true); });
+    }
+  }).catch(function(e) { toast('Save failed: ' + e.message, true); });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDIT MODAL — open existing
+// ═══════════════════════════════════════════════════════════════
+function openEdit(id) {
+  var t = tasksData.find(function(x) { return x._id === id; });
+  if (!t) return;
+  editRecord      = t;
+  editLinkedAsset = t.assetUuid ? { uuid:t.assetUuid, name:t.assetName, clientName:t.clientName } : null;
+
+  document.getElementById('m-title').textContent =
+    t._source === 'job_activity' ? 'Edit Job Activity' : 'Edit Checklist Task';
+
+  // Source badge
+  var sb = document.getElementById('m-source');
+  sb.style.display = 'inline-flex';
+  sb.textContent   = t._source === 'job_activity'
+    ? '&#128188; Job Activity' + (t.jobNumber ? ' — Job #' + t.jobNumber : '')
+    : '&#9989; Checklist Task' + (t.jobNumber ? ' — Job #' + t.jobNumber : '');
+  sb.innerHTML = sb.textContent; // allow emoji
+
+  // ServiceM8 deep link
+  var sm8Link = document.getElementById('m-sm8-link');
+  if (t.jobSm8Uuid) {
+    sm8Link.href        = SM8_BASE + '/job/' + t.jobSm8Uuid;
+    sm8Link.style.display = 'inline-flex';
+    sm8Link.innerHTML   = '&#128279; Open Job #' + esc(t.jobNumber) + ' in ServiceM8';
+  } else {
+    sm8Link.style.display = 'none';
+  }
+
+  document.getElementById('m-name').value   = t.name   || '';
+  document.getElementById('m-notes').value  = t.notes  || '';
+  document.getElementById('m-staff').value  = t.staffUuid || '';
+  document.getElementById('m-status').value = t.status || 'queued';
+
+  // Scheduled (job activities)
+  var schedRow = document.getElementById('m-scheduled-row');
+  schedRow.style.display = t._source === 'job_activity' ? '' : 'none';
+  if (t._source === 'job_activity') {
+    document.getElementById('m-scheduled').value = t.scheduledStart ? t.scheduledStart.substring(0,16) : '';
+  }
+
+  // Due date (checklist)
+  var dueRow = document.getElementById('m-due-row');
+  dueRow.style.display = t._source === 'checklist' ? '' : 'none';
+  if (t._source === 'checklist') {
+    document.getElementById('m-due').value = t.dueDate ? t.dueDate.substring(0,10) : '';
+  }
+
+  // Job info
+  var jobRow = document.getElementById('m-job-row');
+  if (t.jobNumber) {
+    jobRow.style.display = '';
+    document.getElementById('m-job-display').textContent =
+      'Job #' + t.jobNumber + (t.jobDesc ? ' — ' + t.jobDesc : '');
+  } else {
+    jobRow.style.display = 'none';
+  }
+
+  // Asset
+  document.getElementById('m-asset-q').value = '';
+  document.getElementById('m-asset-dd').style.display = 'none';
+  renderLinkedAsset();
+
+  // Delete only for checklist items
+  document.getElementById('m-delete-btn').style.display = t._source === 'checklist' ? 'inline-block' : 'none';
+  document.getElementById('m-save-msg').textContent = '';
+  document.getElementById('m-save-msg').className   = 'save-msg';
+
+  openModal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NEW TASK MODAL
+// ═══════════════════════════════════════════════════════════════
+function openNewModal(preAssetUuid, preAssetName, preClientName) {
+  editRecord      = null;
+  editLinkedAsset = preAssetUuid ? { uuid:preAssetUuid, name:preAssetName, clientName:preClientName||'' } : null;
+
+  document.getElementById('m-title').textContent = 'New Checklist Task';
+  var sb = document.getElementById('m-source');
+  sb.style.display = 'inline-flex';
+  sb.innerHTML     = '&#9989; New Checklist Task &mdash; will be created in ServiceM8';
+
+  document.getElementById('m-sm8-link').style.display = 'none';
+  document.getElementById('m-name').value    = '';
+  document.getElementById('m-notes').value   = '';
+  document.getElementById('m-staff').value   = currentUserUuid || '';
+  document.getElementById('m-status').value  = 'queued';
+  document.getElementById('m-scheduled-row').style.display = 'none';
+  document.getElementById('m-due-row').style.display       = '';
+  document.getElementById('m-due').value     = '';
+  document.getElementById('m-job-row').style.display       = 'none';
+  document.getElementById('m-asset-q').value = '';
+  document.getElementById('m-asset-dd').style.display      = 'none';
+  document.getElementById('m-delete-btn').style.display    = 'none';
+  document.getElementById('m-save-msg').textContent        = '';
+  document.getElementById('m-save-msg').className          = 'save-msg';
+
+  renderLinkedAsset();
+  openModal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ASSET SEARCH IN MODAL
+// ═══════════════════════════════════════════════════════════════
+function assetSearch() {
+  var q  = (document.getElementById('m-asset-q').value || '').toLowerCase().trim();
+  var dd = document.getElementById('m-asset-dd');
+  if (!q) { dd.style.display = 'none'; return; }
+  var hits = assetList.filter(function(a) {
+    return String(a.name || '').toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 10);
+  if (!hits.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = hits.map(function(a) {
+    var client = clientMap[a.company_uuid] || '';
+    return '<div class="asset-opt" onclick="selectAsset(\'' + esc(a.uuid) + '\',\'' + esc(a.name||'') + '\',\'' + esc(client) + '\')">'
+      + '<div class="asset-opt-name">' + esc(a.name || 'Unnamed') + '</div>'
+      + '<div class="asset-opt-client">&#128205; ' + esc(client) + '</div>'
+      + '</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function selectAsset(uuid, name, clientName) {
+  editLinkedAsset = { uuid:uuid, name:name, clientName:clientName };
+  document.getElementById('m-asset-q').value = '';
+  document.getElementById('m-asset-dd').style.display = 'none';
+  renderLinkedAsset();
+}
+function removeAsset() { editLinkedAsset = null; renderLinkedAsset(); }
+
+function renderLinkedAsset() {
+  var wrap = document.getElementById('m-asset-linked');
+  if (!editLinkedAsset) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div class="linked-asset">'
+    + '<div>'
+    + '<div class="linked-asset-name">&#128279; ' + esc(editLinkedAsset.name) + '</div>'
+    + '<div class="linked-asset-client">&#128205; ' + esc(editLinkedAsset.clientName) + '</div>'
+    + '</div>'
+    + '<button class="linked-asset-rm" onclick="removeAsset()" title="Remove link">&#10005;</button>'
+    + '</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE RECORD
+// ═══════════════════════════════════════════════════════════════
+function saveRecord() {
+  var name      = document.getElementById('m-name').value.trim();
+  if (!name) { toast('Please enter a task name.', true); return; }
+
+  var staffUuid = document.getElementById('m-staff').value;
+  var status    = document.getElementById('m-status').value;
+  var notes     = document.getElementById('m-notes').value.trim();
+  var dueDate   = document.getElementById('m-due').value       || '';
+  var scheduled = document.getElementById('m-scheduled').value || '';
+  var assetUuid = editLinkedAsset ? editLinkedAsset.uuid : '';
+
+  var saveBtn = document.getElementById('m-save-btn');
+  var msgEl   = document.getElementById('m-save-msg');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving\u2026';
+  msgEl.className = 'save-msg saving';
+  msgEl.textContent = 'Saving to ServiceM8\u2026';
+
+  function restoreBtn() {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save to ServiceM8';
+  }
+
+  // ── UPDATE existing ──
+  if (editRecord) {
+    var t = editRecord;
+    var path, payload;
+
+    if (t._source === 'job_activity') {
+      var sm8s = { completed:'Completed', inprogress:'In Progress', cancelled:'Cancelled', queued:'Queued' };
+      path    = '/jobactivity/' + t._id + '.json';
+      payload = Object.assign({}, t._raw, {
+        activity_was: name,
+        notes:        notes,
+        staff_uuid:   staffUuid,
+        status:       sm8s[status] || 'Queued',
+        start_date:   scheduled || t._raw.start_date || '',
+        asset_uuid:   assetUuid || t._raw.asset_uuid || ''
+      });
+    } else {
+      path    = '/jobchecklistitem/' + t._id + '.json';
+      payload = Object.assign({}, t._raw, {
+        name:                    name,
+        notes:                   notes,
+        staff_uuid:              staffUuid,
+        assigned_to_staff_uuid:  staffUuid,
+        status:                  status,
+        is_completed:            status === 'completed' ? '1' : '0',
+        due_date:                dueDate,
+        asset_uuid:              assetUuid
+      });
+    }
+
+    sm8Put(path, payload).then(function(r) {
+      return r.text().then(function(txt) {
+        if (r.status === 200 || r.status === 201 || r.status === 204) {
+          // Update local record
+          t.name      = name;
+          t.notes     = notes;
+          t.staffUuid = staffUuid;
+          t.staffName = staffMap[staffUuid] || 'Unassigned';
+          t.status    = status;
+          t._raw      = payload;
+          if (t._source === 'job_activity') t.scheduledStart = scheduled;
+          else                              t.dueDate        = dueDate;
+          t.assetUuid  = assetUuid;
+          t.assetName  = editLinkedAsset ? editLinkedAsset.name       : '';
+          t.clientName = editLinkedAsset ? editLinkedAsset.clientName : '';
+          t.clientUuid = editLinkedAsset ? (editLinkedAsset.clientUuid || '') : '';
+
+          msgEl.className   = 'save-msg saved';
+          msgEl.textContent = '&#10003; Saved to ServiceM8';
+          restoreBtn();
+          setTimeout(function() { closeModal(); render(); }, 600);
+          toast('Task updated in ServiceM8.');
+        } else {
+          msgEl.className   = 'save-msg error';
+          msgEl.textContent = 'Error: HTTP ' + r.status;
+          restoreBtn();
+          toast('Save failed: HTTP ' + r.status + ' — ' + txt, true);
+        }
+      });
+    }).catch(function(e) {
+      msgEl.className   = 'save-msg error';
+      msgEl.textContent = 'Error: ' + e.message;
+      restoreBtn();
+      toast('Save failed: ' + e.message, true);
+    });
+
+  // ── CREATE new checklist item ──
+  } else {
+    var newPayload = {
+      active:                 '1',
+      name:                   name,
+      notes:                  notes,
+      staff_uuid:             staffUuid,
+      assigned_to_staff_uuid: staffUuid,
+      status:                 status,
+      is_completed:           status === 'completed' ? '1' : '0',
+      due_date:               dueDate,
+      asset_uuid:             assetUuid,
+      job_uuid:               ''
+    };
+
+    sm8Post('/jobchecklistitem.json', newPayload).then(function(r) {
+      return r.json().then(function(created) {
+        if (r.status === 200 || r.status === 201) {
+          var newUuid = typeof created === 'string' ? created : (created.uuid || created);
+          var sr = staffList.find(function(s) { return s.uuid === staffUuid; });
+          var newRec = {
+            _id:            newUuid,
+            _source:        'checklist',
+            _raw:           Object.assign({ uuid:newUuid }, newPayload),
+            name:           name,
+            notes:          notes,
+            status:         status,
+            staffUuid:      staffUuid,
+            staffName:      sr ? sr.name : 'Unassigned',
+            scheduledStart: '',
+            dueDate:        dueDate,
+            jobUuid:        '',
+            jobNumber:      '',
+            jobDesc:        '',
+            jobSm8Uuid:     '',
+            assetUuid:      assetUuid,
+            assetName:      editLinkedAsset ? editLinkedAsset.name       : '',
+            clientName:     editLinkedAsset ? editLinkedAsset.clientName : '',
+            clientUuid:     editLinkedAsset ? (editLinkedAsset.clientUuid || '') : ''
+          };
+          tasksData.unshift(newRec);
+          populateFilters();
+          msgEl.className   = 'save-msg saved';
+          msgEl.textContent = '&#10003; Created in ServiceM8';
+          restoreBtn();
+          setTimeout(function() { closeModal(); render(); }, 600);
+          toast('Checklist task created in ServiceM8.');
+        } else {
+          msgEl.className   = 'save-msg error';
+          msgEl.textContent = 'Create failed: HTTP ' + r.status;
+          restoreBtn();
+        }
+      });
+    }).catch(function(e) {
+      msgEl.className   = 'save-msg error';
+      msgEl.textContent = 'Error: ' + e.message;
+      restoreBtn();
+      toast('Create failed: ' + e.message, true);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════════════════════
+function deleteRecord() {
+  if (!editRecord || editRecord._source !== 'checklist') return;
+  if (!confirm('Delete this checklist task from ServiceM8? This cannot be undone.')) return;
+  var id = editRecord._id;
+  sm8Delete('/jobchecklistitem/' + id + '.json').then(function(r) {
+    if (r.status === 200 || r.status === 201 || r.status === 204) {
+      tasksData = tasksData.filter(function(t) { return t._id !== id; });
+      populateFilters();
+      closeModal();
+      render();
+      toast('Checklist task deleted from ServiceM8.');
+    } else {
+      r.text().then(function(txt) { toast('Delete failed: HTTP ' + r.status + ' — ' + txt, true); });
+    }
+  }).catch(function(e) { toast('Delete failed: ' + e.message, true); });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  setTimeout(function() { document.getElementById('m-name').focus(); }, 80);
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('m-asset-dd').style.display = 'none';
+  editRecord = null; editLinkedAsset = null;
+}
+function onOverlayClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATE / FORMAT HELPERS
+// ═══════════════════════════════════════════════════════════════
+function parseDate(str) {
+  if (!str) return null;
+  var s = String(str).trim();
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  var m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m2) return new Date(+m2[3], +m2[2]-1, +m2[1]);
+  var d = new Date(s); return isNaN(d.getTime()) ? null : d;
+}
+function daysUntil(str) {
+  var d = parseDate(str); if (!d) return null;
+  var now = new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  return Math.round((d - now) / 86400000);
+}
+function fmtDate(str) {
+  var d = parseDate(str); if (!d) return str || '—';
+  return d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateTime(str) {
+  if (!str) return '—';
+  var d = new Date(str); if (isNaN(d.getTime())) return str;
+  return d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' }) +
+         ' ' + d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MISC HELPERS
+// ═══════════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function setBody(html) { document.getElementById('task-body').innerHTML = html; }
+function setSyncMsg(html) { document.getElementById('sync-detail').innerHTML = html; }
+
+var toastTimer = null;
+function toast(msg, isError) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = isError ? 'var(--red)'   : 'var(--green)';
+  el.style.color       = isError ? 'var(--red)'   : 'var(--text)';
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 3500);
+}
+</script>
+</body>
+</html>
