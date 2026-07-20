@@ -54,8 +54,6 @@ button:hover{opacity:0.85;}
 .view-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .hidden-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:10px 14px;background:rgba(146,64,14,0.12);border:1px solid #92400e;border-radius:10px;font-size:0.85rem;color:#fde68a;}
 .hidden-bar span{flex:1;}
-
-/* ── Bulk action bar ── */
 .bulk-bar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);z-index:250;background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 40px rgba(0,0,0,0.5);transition:transform 0.25s,opacity 0.25s;opacity:0;pointer-events:none;min-width:420px;flex-wrap:wrap;}
 .bulk-bar.visible{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:all;}
 .bulk-bar-count{font-size:0.88rem;font-weight:700;color:var(--accent);white-space:nowrap;}
@@ -67,8 +65,6 @@ button:hover{opacity:0.85;}
 .bulk-bar-progress{font-size:0.78rem;color:var(--muted);white-space:nowrap;}
 .bulk-select-all-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:0.82rem;color:var(--muted);}
 .bulk-select-all-row label{cursor:pointer;display:flex;align-items:center;gap:6px;}
-
-/* ── Asset checkboxes ── */
 .asset-cb{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
 .asset-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color 0.2s;position:relative;overflow:hidden;}
 .asset-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
@@ -404,7 +400,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <span id="hidden-bar-text"></span>
     <button class="btn-sm btn-ghost" onclick="toggleShowHidden()">Hide them again</button>
   </div>
-  <!-- Bulk select-all row (shown in bulk mode) -->
   <div class="bulk-select-all-row" id="bulk-select-all-row" style="display:none">
     <label><input type="checkbox" id="bulk-select-all-cb" onchange="toggleSelectAll(this.checked)"/> Select all visible assets</label>
     <span id="bulk-selected-label" style="color:var(--accent);font-weight:600;font-size:0.82rem"></span>
@@ -508,7 +503,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <table class="mm-table">
       <thead><tr>
         <th>Make</th><th>Model</th>
-        <th>Service (hrs)</th><th>PVI (hrs)</th><th>Performance (hrs)</th><th>EMC (hrs)</th>
+        <th>Service (hrs)</th><th>PVI (hrs)</th><th>Validation (hrs)</th><th>Performance (hrs)</th><th>EMC (hrs)</th>
         <th></th>
       </tr></thead>
       <tbody id="mm-body"></tbody>
@@ -520,6 +515,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <input type="text" id="mm-new-model" placeholder="Model&hellip;"/>
     <span class="mm-add-label">Service</span><input type="number" id="mm-new-service" min="0" step="0.5" placeholder="hrs"/>
     <span class="mm-add-label">PVI</span><input type="number" id="mm-new-pvi" min="0" step="0.5" placeholder="hrs"/>
+    <span class="mm-add-label">Validation</span><input type="number" id="mm-new-validation" min="0" step="0.5" placeholder="hrs"/>
     <span class="mm-add-label">Perf</span><input type="number" id="mm-new-perf" min="0" step="0.5" placeholder="hrs"/>
     <span class="mm-add-label">EMC</span><input type="number" id="mm-new-emc" min="0" step="0.5" placeholder="hrs"/>
     <button class="btn-primary btn-sm" onclick="addMakeModelRow()">+ Add</button>
@@ -601,12 +597,14 @@ var COMPLIANCE_FIELD='Compliance',MAKE_FIELD='Make',MODEL_FIELD='Model';
 var showHidden=false,makeModelData=[],historyData=[];
 var activeClientUuid=null,currentUser='Unknown User';
 var bulkMode=false,selectedUuids=new Set();
+
+// ── Validation is now fully first-class alongside service, pvi, performance, emc ──
 var CHECK_TYPES=[
-  {key:'service',label:'Service Due'},
-  {key:'pvi',label:'PVI Due'},
-  {key:'validation',label:'Validation Due'},
+  {key:'service',    label:'Service Due'},
+  {key:'pvi',        label:'PVI Due'},
+  {key:'validation', label:'Validation Due'},
   {key:'performance',label:'Performance Due'},
-  {key:'emc',label:'EMC Due'}
+  {key:'emc',        label:'EMC Due'}
 ];
 var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
 var COMPLIANCE_OPTIONS=['Active','Expired','Quoted','Scheduled','Query','Gone With Third Party'];
@@ -770,8 +768,14 @@ function fetchAll(){
       var fields=assetTypes[typeUuid].fields;
       CHECK_TYPES.forEach(function(ct){
         if(!fieldMappings[typeUuid][ct.key]){
-          var guess=fields.find(function(f){return f.name.toLowerCase().indexOf(ct.label.toLowerCase())!==-1||f.name.toLowerCase().indexOf(ct.key.toLowerCase())!==-1;});
-          if(!guess&&ct.key==='service')guess=fields.find(function(f){return /due|expir|next.service|service.date|renewal|review/i.test(f.name);});
+          var guess=fields.find(function(f){
+            return f.name.toLowerCase().indexOf(ct.label.toLowerCase())!==-1
+              ||f.name.toLowerCase().indexOf(ct.key.toLowerCase())!==-1;
+          });
+          if(!guess&&ct.key==='service')
+            guess=fields.find(function(f){return /due|expir|next.service|service.date|renewal|review/i.test(f.name);});
+          if(!guess&&ct.key==='validation')
+            guess=fields.find(function(f){return /valid/i.test(f.name);});
           if(guess)fieldMappings[typeUuid][ct.key]=guess.name;
         }
       });
@@ -836,7 +840,6 @@ function toggleBulkMode(){
 function toggleAssetSelection(uuid,checked){
   if(checked)selectedUuids.add(uuid);else selectedUuids.delete(uuid);
   updateBulkBar();
-  // update card/row highlight without full re-render
   var card=document.querySelector('[data-uuid="'+uuid+'"]');
   if(card){card.classList.toggle('bulk-selected',checked);card.classList.toggle('row-bulk-selected',checked);}
 }
@@ -866,25 +869,15 @@ function applyBulkCompliance(){
   if(!uuids.length){toast('No assets selected.',true);return;}
   var btn=document.getElementById('bulk-bar-apply');
   var progressEl=document.getElementById('bulk-bar-progress');
-  btn.disabled=true;
-  var done=0,failed=0;
-  progressEl.textContent='0 / '+uuids.length;
-
+  btn.disabled=true;var done=0,failed=0;progressEl.textContent='0 / '+uuids.length;
   function next(i){
     if(i>=uuids.length){
-      btn.disabled=false;
-      progressEl.textContent='';
-      var msg='Updated '+done+' asset'+(done===1?'':'s');
-      if(failed)msg+=' ('+failed+' failed)';
-      toast(msg,failed>0);
-      selectedUuids.clear();
-      document.getElementById('bulk-bar-compliance').value='';
-      updateBulkBar();
-      renderAll();
-      return;
+      btn.disabled=false;progressEl.textContent='';
+      var msg='Updated '+done+' asset'+(done===1?'':'s');if(failed)msg+=' ('+failed+' failed)';
+      toast(msg,failed>0);selectedUuids.clear();document.getElementById('bulk-bar-compliance').value='';
+      updateBulkBar();renderAll();return;
     }
-    var uuid=uuids[i];
-    var asset=assets.find(function(a){return a.uuid===uuid;});
+    var uuid=uuids[i];var asset=assets.find(function(a){return a.uuid===uuid;});
     if(!asset){failed++;done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);return;}
     var oldValue=getAnyFieldValue(asset,COMPLIANCE_FIELD)||'';
     fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
@@ -908,8 +901,7 @@ function applyBulkCompliance(){
       .then(function(){
         setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
         writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
-        done++;progressEl.textContent=done+' / '+uuids.length;
-        next(i+1);
+        done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);
       })
       .catch(function(e){
         if(e.message==='SESSION_EXPIRED'){handleFetchError(e);btn.disabled=false;return;}
@@ -994,8 +986,19 @@ function compliancePillClass(val){if(!val)return '';return val.replace(/\s+/g,''
 function mmKey(make,model){return(String(make||'').trim()+'|||'+String(model||'').trim()).toLowerCase();}
 function getMMLookup(){var map={};makeModelData.forEach(function(r){map[mmKey(r.make,r.model)]=r;});return map;}
 function getAssetHours(asset){
-  var make=getAnyFieldValue(asset,MAKE_FIELD)||'';var model=getAnyFieldValue(asset,MODEL_FIELD)||'';
-  if(!make&&!model)return null;return getMMLookup()[mmKey(make,model)]||null;
+  var make=getAnyFieldValue(asset,MAKE_FIELD)||'';
+  var model=getAnyFieldValue(asset,MODEL_FIELD)||'';
+  if(!make&&!model)return null;
+  return getMMLookup()[mmKey(make,model)]||null;
+}
+// ── getCheckHours: returns formatted hours string for any check key ──
+function getCheckHours(hours,checkKey){
+  if(!hours)return null;
+  // map check key to the field stored in makeModelData
+  var fieldMap={service:'service',pvi:'pvi',validation:'validation',performance:'performance',emc:'emc'};
+  var field=fieldMap[checkKey];
+  if(!field)return null;
+  return fmtHrs(hours[field]);
 }
 function suppressionReason(asset,overallStatus){
   var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);if(!c)return null;
@@ -1196,11 +1199,8 @@ function renderAssets(){
     hidBar.style.display='flex';
     document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s');
   } else {hidBar.style.display='none';}
-
-  // update select-all checkbox state
   var allCb=document.getElementById('bulk-select-all-cb');
   if(allCb)allCb.checked=sorted.length>0&&sorted.every(function(a){return selectedUuids.has(a.uuid);});
-
   var cols={'elapsed':[],'overdue':[],'due-soon':[],'ok':[],'no-date':[]};
   sorted.forEach(function(a){cols[a.status].push(a);});
   var colMap={'elapsed':'elapsed','overdue':'overdue','due-soon':'soon','ok':'ok','no-date':'nodate'};
@@ -1211,8 +1211,6 @@ function renderAssets(){
       ?'<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
       :cols[status].map(assetCard).join('');
   });
-
-  // list view
   var cbHeader=document.getElementById('list-cb-header');
   if(cbHeader)cbHeader.style.display=bulkMode?'':'none';
   var tbody=document.getElementById('list-body');
@@ -1229,8 +1227,8 @@ function renderAssets(){
       var c=a.checks[ct.key];
       if(!c||c.date===null)return '<td><span style="color:var(--muted);font-size:0.78rem">\u2014</span></td>';
       var col=statusColor(c.status);var css=col==='purple'?'var(--purple)':'var(--'+col+')';
-      var hrsKey=ct.key==='validation'?null:ct.key;
-      var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
+      // ── validation now gets hours just like the others ──
+      var hrs=getCheckHours(a.hours,ct.key);
       return '<td><div style="font-size:0.8rem;font-weight:600;color:'+css+'">'+statusLabel(c.days,c.status)+'</div>'
         +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
         +(hrs?'<div>'+hoursPill(hrs)+'</div>':'')+'</td>';
@@ -1256,8 +1254,8 @@ function assetCard(a){
   var checkRows=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];if(!c||c.date===null)return '';
     var col=statusColor(c.status);
-    var hrsKey=ct.key==='validation'?null:ct.key;
-    var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
+    // ── validation now gets hours just like the others ──
+    var hrs=getCheckHours(a.hours,ct.key);
     return '<div class="check-row"><span class="check-label">'+esc(ct.label)+'</span>'
       +'<span class="check-right"><span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span>'
       +'<span class="check-date">'+formatDate(c.date)+'</span>'
@@ -1419,7 +1417,8 @@ function openModal(uuid){
     var css=col==='purple'?'var(--purple)':'var(--'+col+')';
     var absD=c&&c.days!==null?Math.abs(c.days):'\u2014';
     var sub=!c||c.date===null?'No date':c.status==='elapsed'?'days elapsed':c.days<0?'days overdue':c.days===0?'Due today':'days left';
-    var hrsKey=ct.key==='validation'?null:ct.key;var hrs=hrsKey&&a.hours?fmtHrs(a.hours[hrsKey]):null;
+    // ── validation now gets hours in the modal too ──
+    var hrs=getCheckHours(a.hours,ct.key);
     var currentDate=c?c.date||'':'';
     return '<div class="modal-check-card">'
       +'<button class="mc-edit-btn" onclick="toggleDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')" title="Edit date">&#9998;</button>'
@@ -1511,39 +1510,59 @@ function renderMakeModel(){
   var search=(document.getElementById('mm-search').value||'').toLowerCase();
   var rows=makeModelData.filter(function(r){if(!search)return true;return r.make.toLowerCase().indexOf(search)!==-1||r.model.toLowerCase().indexOf(search)!==-1;});
   var html='';
-  if(!rows.length){html='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No entries yet.</td></tr>';}
-  else{rows.forEach(function(r){
-    var realIdx=makeModelData.indexOf(r);
-    html+='<tr>'
-      +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
-      +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
-      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="\u2014"/></td>'
-      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="\u2014"/></td>'
-      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="\u2014"/></td>'
-      +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="\u2014"/></td>'
-      +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
-      +'</tr>';
-  });}
+  if(!rows.length){html='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No entries yet.</td></tr>';}
+  else{
+    rows.forEach(function(r){
+      var realIdx=makeModelData.indexOf(r);
+      html+='<tr>'
+        +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
+        +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.validation||'')+'" oninput="mmChanged(this,'+realIdx+',\'validation\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="\u2014"/></td>'
+        +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
+        +'</tr>';
+    });
+  }
   document.getElementById('mm-body').innerHTML=html;
 }
 function mmChanged(input,idx,field){input.classList.add('changed');makeModelData[idx][field]=input.value;}
 function addMakeModelRow(){
-  var make=document.getElementById('mm-new-make').value.trim();var model=document.getElementById('mm-new-model').value.trim();
+  var make=document.getElementById('mm-new-make').value.trim();
+  var model=document.getElementById('mm-new-model').value.trim();
   if(!make&&!model){toast('Please enter at least a Make or Model.',true);return;}
   if(makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);})){toast('Already exists.',true);return;}
-  makeModelData.push({make:make,model:model,service:document.getElementById('mm-new-service').value||'',pvi:document.getElementById('mm-new-pvi').value||'',performance:document.getElementById('mm-new-perf').value||'',emc:document.getElementById('mm-new-emc').value||''});
-  ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-perf','mm-new-emc'].forEach(function(id){document.getElementById(id).value='';});
+  makeModelData.push({
+    make:make,
+    model:model,
+    service:document.getElementById('mm-new-service').value||'',
+    pvi:document.getElementById('mm-new-pvi').value||'',
+    validation:document.getElementById('mm-new-validation').value||'',
+    performance:document.getElementById('mm-new-perf').value||'',
+    emc:document.getElementById('mm-new-emc').value||''
+  });
+  ['mm-new-make','mm-new-model','mm-new-service','mm-new-pvi','mm-new-validation','mm-new-perf','mm-new-emc'].forEach(function(id){
+    document.getElementById(id).value='';
+  });
   saveMakeModel();renderMakeModel();
 }
 function deleteMakeModelRow(idx){makeModelData.splice(idx,1);saveMakeModel();renderMakeModel();}
 function saveMakeModel(){
-  saveLocal();document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
+  saveLocal();
+  document.querySelectorAll('.mm-input.changed').forEach(function(el){el.classList.remove('changed');});
   saveMakeModelToServer(function(){toast('Saved!');},function(e){toast('Saved locally. Server error: '+e.message,true);});
 }
 function exportMakeModel(){
-  var csv='Make,Model,Service (hrs),PVI (hrs),Performance (hrs),EMC (hrs)\n';
-  makeModelData.forEach(function(r){csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';});
-  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='make-model-times.csv';a.click();
+  var csv='Make,Model,Service (hrs),PVI (hrs),Validation (hrs),Performance (hrs),EMC (hrs)\n';
+  makeModelData.forEach(function(r){
+    csv+='"'+r.make+'","'+r.model+'","'+(r.service||'')+'","'+(r.pvi||'')+'","'+(r.validation||'')+'","'+(r.performance||'')+'","'+(r.emc||'')+'"\n';
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='make-model-times.csv';
+  a.click();
 }
 function importMakeModel(event){
   var file=event.target.files[0];if(!file)return;
@@ -1554,11 +1573,16 @@ function importMakeModel(event){
       if(!line.trim())return;
       var cols=line.match(/(".*?"|[^,]+)(?=,|$)/g)||[];
       function clean(s){return(s||'').replace(/^"|"$/g,'').trim();}
-      var make=clean(cols[0]),model=clean(cols[1]),service=clean(cols[2]),pvi=clean(cols[3]),perf=clean(cols[4]),emc=clean(cols[5]);
+      var make=clean(cols[0]),model=clean(cols[1]);
+      var service=clean(cols[2]),pvi=clean(cols[3]),validation=clean(cols[4]),perf=clean(cols[5]),emc=clean(cols[6]);
       if(!make&&!model)return;
       var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
-      if(existing){existing.service=service;existing.pvi=pvi;existing.performance=perf;existing.emc=emc;}
-      else{makeModelData.push({make:make,model:model,service:service,pvi:pvi,performance:perf,emc:emc});}
+      if(existing){
+        existing.service=service;existing.pvi=pvi;existing.validation=validation;
+        existing.performance=perf;existing.emc=emc;
+      } else {
+        makeModelData.push({make:make,model:model,service:service,pvi:pvi,validation:validation,performance:perf,emc:emc});
+      }
     });
     saveMakeModel();renderMakeModel();toast('CSV imported!');event.target.value='';
   };
@@ -1617,3 +1641,4 @@ checkSession();
 </script>
 </body>
 </html>
+
