@@ -94,6 +94,7 @@ button:hover{opacity:0.87;}
 .badge{display:inline-block;font-size:0.67rem;font-weight:700;padding:2px 7px;border-radius:7px;white-space:nowrap;}
 .badge.overdue{background:rgba(239,68,68,0.15);color:var(--red);}
 .badge.task{background:rgba(79,110,247,0.12);color:var(--accent);}
+.badge.section{background:rgba(124,58,237,0.12);color:#a78bfa;}
 .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-size:0.75rem;color:var(--muted);margin-bottom:5px;align-items:center;}
 .asset-chip{
   display:inline-flex;align-items:center;gap:4px;
@@ -115,6 +116,14 @@ button:hover{opacity:0.87;}
   font-weight:600;text-decoration:none;white-space:nowrap;
 }
 .open-sm8-btn:hover{background:rgba(79,110,247,0.22);}
+/* debug panel */
+.debug-panel{
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:20px;font-size:0.72rem;color:var(--muted);
+  font-family:monospace;white-space:pre-wrap;word-break:break-all;
+  max-height:260px;overflow-y:auto;display:none;
+}
+.debug-panel.show{display:block;}
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);
   z-index:200;align-items:center;justify-content:center;padding:16px;
@@ -156,27 +165,6 @@ button:hover{opacity:0.87;}
 .save-msg.saving{color:var(--amber);}
 .save-msg.saved{color:var(--green);}
 .save-msg.error{color:var(--red);}
-.asset-wrap{position:relative;}
-.asset-dd{
-  position:absolute;top:100%;left:0;right:0;
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  z-index:60;max-height:210px;overflow-y:auto;
-  box-shadow:0 4px 24px rgba(0,0,0,0.45);margin-top:2px;display:none;
-}
-.asset-opt{padding:9px 14px;font-size:0.85rem;cursor:pointer;border-bottom:1px solid var(--border);}
-.asset-opt:last-child{border-bottom:none;}
-.asset-opt:hover{background:var(--surface2);}
-.asset-opt-name{font-weight:600;}
-.asset-opt-client{font-size:0.72rem;color:var(--accent);margin-top:1px;}
-.linked-asset{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.3);
-  border-radius:8px;padding:7px 10px;font-size:0.82rem;margin-top:6px;
-}
-.linked-asset-name{font-weight:600;color:var(--accent);}
-.linked-asset-client{font-size:0.7rem;color:var(--muted);}
-.linked-asset-rm{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0 2px;}
-.linked-asset-rm:hover{color:var(--red);}
 #toast{
   position:fixed;bottom:24px;right:24px;
   background:var(--surface);border:1px solid var(--border);
@@ -238,6 +226,7 @@ button:hover{opacity:0.87;}
       <p>Incomplete checklist tasks from ServiceM8.</p>
     </div>
     <div class="page-header-right">
+      <button class="btn-ghost btn-sm" onclick="toggleDebug()">&#128269; Debug</button>
       <button class="btn-ghost btn-sm" onclick="loadTasks(true)">&#8635; Refresh</button>
     </div>
   </div>
@@ -249,6 +238,9 @@ button:hover{opacity:0.87;}
     <a class="sm8-link" href="https://go.servicem8.com" target="_blank" rel="noopener">&#128279; Open ServiceM8</a>
   </div>
 
+  <!-- Debug panel — shows raw first record from ServiceM8 -->
+  <div class="debug-panel" id="debug-panel">Loading&hellip;</div>
+
   <div class="toolbar">
     <div class="seg-toggle">
       <button class="seg-btn active" id="ts-mine" onclick="setScope('mine')">&#128100; My Tasks</button>
@@ -257,55 +249,45 @@ button:hover{opacity:0.87;}
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
     <select id="q-staff" onchange="render()"><option value="">All Staff</option></select>
     <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
-    <select id="q-asset" onchange="render()"><option value="">All Assets</option></select>
   </div>
 
   <div id="task-body"></div>
 </div>
 
-<!-- Edit Modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
-    <h3 id="m-title">Edit Checklist Task</h3>
-
+    <h3>Edit Task</h3>
     <a class="modal-sm8-link" id="m-sm8-link" href="#" target="_blank" rel="noopener" style="display:none">
       &#128279; Open Job in ServiceM8
     </a>
-
     <div class="frow">
-      <label>Task Name *</label>
-      <input type="text" id="m-name" placeholder="Name&hellip;"/>
+      <label>Task Name</label>
+      <div class="readonly-val" id="m-name"></div>
     </div>
-    <div class="frow">
-      <label>Notes</label>
-      <textarea id="m-notes" placeholder="Optional notes&hellip;"></textarea>
-    </div>
-    <div class="frow">
-      <label>Assigned Staff</label>
-      <select id="m-staff"><option value="">— Unassigned —</option></select>
-    </div>
-    <div class="frow">
-      <label>Due Date</label>
-      <input type="date" id="m-due"/>
+    <div class="frow" id="m-section-row" style="display:none">
+      <label>Section</label>
+      <div class="readonly-val" id="m-section"></div>
     </div>
     <div class="frow" id="m-job-row" style="display:none">
       <label>Linked Job</label>
       <div class="readonly-val" id="m-job-display"></div>
     </div>
     <div class="frow">
-      <label>Link to Asset <span style="color:var(--muted);font-weight:400">(optional)</span></label>
-      <div class="asset-wrap">
-        <input type="text" id="m-asset-q" placeholder="&#128269; Search asset&hellip;" oninput="assetSearch()" autocomplete="off"/>
-        <div class="asset-dd" id="m-asset-dd"></div>
-      </div>
-      <div id="m-asset-linked" style="display:none"></div>
+      <label>Assigned To</label>
+      <div class="readonly-val" id="m-staff-display"></div>
     </div>
-
-    <div class="save-msg" id="m-save-msg"></div>
+    <div class="frow" id="m-reminder-row" style="display:none">
+      <label>Reminder</label>
+      <div class="readonly-val" id="m-reminder"></div>
+    </div>
+    <div class="frow">
+      <label>Raw ServiceM8 Data</label>
+      <textarea id="m-raw" style="font-family:monospace;font-size:0.72rem;min-height:120px;" readonly></textarea>
+    </div>
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" id="m-save-btn" onclick="saveRecord()">Save to ServiceM8</button>
+      <button class="btn-ghost" onclick="closeModal()">Close</button>
+      <button class="btn-primary" id="m-complete-btn" onclick="completeFromModal()">&#10003; Mark Complete</button>
     </div>
   </div>
 </div>
@@ -315,6 +297,7 @@ button:hover{opacity:0.87;}
 <script>
 // ── State ──────────────────────────────────────────────
 var tasksData       = [];
+var rawDebugData    = [];
 var staffList       = [];
 var staffMap        = {};
 var jobMap          = {};
@@ -325,18 +308,16 @@ var tScope          = 'mine';
 var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
-var editLinkedAsset = null;
+var debugVisible    = false;
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   try { assetList = JSON.parse(localStorage.getItem('sm8_assets')  || '[]'); } catch(e){ assetList = []; }
   try { clientMap = JSON.parse(localStorage.getItem('sm8_clients') || '{}'); } catch(e){ clientMap = {}; }
-
   var id = readCookies();
   currentUser     = id.name || '';
   currentUserUuid = id.uuid || '';
   if (currentUser) document.getElementById('user-badge').textContent = '\uD83D\uDC64 ' + currentUser;
-
   checkSession();
 });
 
@@ -344,8 +325,7 @@ function readCookies() {
   var r = { name:'', uuid:'' };
   document.cookie.split(';').forEach(function(c) {
     var p = c.trim().split('=');
-    var k = p[0];
-    var v = decodeURIComponent(p.slice(1).join('='));
+    var k = p[0]; var v = decodeURIComponent(p.slice(1).join('='));
     if (k === 'sm8_user_name') r.name = v;
     if (k === 'sm8_user_uuid') r.uuid = v;
   });
@@ -358,11 +338,7 @@ function checkSession() {
       if (r.status === 401) { showAuth(); return null; }
       return r.json();
     })
-    .then(function(d) {
-      if (!d) return;
-      showMain();
-      loadTasks(false);
-    })
+    .then(function(d) { if (d) { showMain(); loadTasks(false); } })
     .catch(function() { showAuth(); });
 }
 
@@ -375,7 +351,7 @@ function showMain() {
   document.getElementById('main-page').style.display = 'block';
 }
 
-// ── Proxy helpers ──────────────────────────────────────
+// ── Proxy ──────────────────────────────────────────────
 function sm8Get(path) {
   return fetch('/api/proxy?path=' + encodeURIComponent(path), {
     credentials: 'include',
@@ -406,31 +382,32 @@ function sm8Put(path, payload) {
 function loadTasks(force) {
   if (tasksLoaded && !force) return;
   tasksLoaded = false;
-  setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading checklist tasks&hellip;</p></div>');
+  setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
   Promise.all([
     sm8Get('/staff.json'),
     sm8Get('/job.json'),
-    sm8Get('/jobchecklistitem.json')
+    sm8Get('/jobchecklist.json')
   ]).then(function(res) {
-    var rawStaff = Array.isArray(res[0]) ? res[0] : [];
-    var rawJobs  = Array.isArray(res[1]) ? res[1] : [];
-    var rawItems = Array.isArray(res[2]) ? res[2] : [];
+    var rawStaff  = Array.isArray(res[0]) ? res[0] : [];
+    var rawJobs   = Array.isArray(res[1]) ? res[1] : [];
+    var rawItems  = Array.isArray(res[2]) ? res[2] : [];
 
-    // Staff
+    // Store raw for debug
+    rawDebugData = rawItems;
+    updateDebugPanel();
+
+    // Staff map
     staffList = rawStaff
       .filter(function(s) { return String(s.active) === '1'; })
       .map(function(s) {
-        return {
-          uuid: s.uuid,
-          name: ((s.first || '') + ' ' + (s.last || '')).trim() || s.email || s.uuid
-        };
+        return { uuid: s.uuid, name: ((s.first||'') + ' ' + (s.last||'')).trim() || s.email || s.uuid };
       });
     staffMap = {};
     staffList.forEach(function(s) { staffMap[s.uuid] = s.name; });
 
-    // Jobs
+    // Job map
     jobMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
@@ -443,36 +420,48 @@ function loadTasks(force) {
         };
       });
 
-    // Checklist items — only incomplete ones
+    // Normalise checklist items — only incomplete ones
     tasksData = rawItems
       .filter(function(i) {
-        // keep active, not completed
         if (String(i.active) === '0') return false;
-        if (String(i.is_completed) === '1') return false;
+        // completed_timestamp being set means it's done
+        if (i.completed_timestamp && String(i.completed_timestamp).trim() !== '') return false;
+        if (i.completed_by_staff_uuid && String(i.completed_by_staff_uuid).trim() !== '') return false;
         return true;
       })
       .map(function(i) {
         var job        = jobMap[i.job_uuid] || {};
         var clientUuid = job.clientUuid || '';
-        var assetUuid  = i.asset_uuid   || '';
-        var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
-        var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
         var clientName = clientUuid ? (clientMap[clientUuid] || '') : '';
-        var staffUuid  = i.assigned_to_staff_uuid || i.staff_uuid || '';
+
+        // assigned_to_staff_uuids is a single UUID string per the API docs
+        var staffUuid  = i.assigned_to_staff_uuids || '';
+        // strip any whitespace
+        staffUuid = String(staffUuid).trim();
+
+        // reminder date — reminder_data holds the date when reminder_type is date-based
+        var dueDate = '';
+        if (i.reminder_type && i.reminder_data) {
+          // if reminder_data looks like a date, use it
+          if (/^\d{4}-\d{2}-\d{2}/.test(String(i.reminder_data))) {
+            dueDate = String(i.reminder_data).substring(0, 10);
+          }
+        }
+
         return {
           _id:        i.uuid,
           _raw:       i,
-          name:       i.name || i.task || i.description || 'Checklist Item',
-          notes:      i.notes || '',
+          name:       i.name || 'Unnamed Task',
+          section:    i.section_name || '',
           staffUuid:  staffUuid,
           staffName:  staffMap[staffUuid] || 'Unassigned',
-          dueDate:    i.due_date || i.reminder_date || '',
+          dueDate:    dueDate,
+          reminderType: i.reminder_type || '',
+          reminderData: i.reminder_data || '',
           jobUuid:    i.job_uuid    || '',
           jobNumber:  job.number    || '',
           jobDesc:    job.desc      || '',
           jobUuidSm8: job.uuid      || '',
-          assetUuid:  assetUuid,
-          assetName:  assetName,
           clientName: clientName,
           clientUuid: clientUuid
         };
@@ -480,7 +469,7 @@ function loadTasks(force) {
 
     tasksLoaded = true;
     setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
-               ' \u2014 ' + tasksData.length + ' incomplete tasks');
+               ' \u2014 ' + rawItems.length + ' total, ' + tasksData.length + ' incomplete');
     populateFilters();
     render();
 
@@ -493,9 +482,30 @@ function loadTasks(force) {
   });
 }
 
+// ── Debug panel ────────────────────────────────────────
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  document.getElementById('debug-panel').classList.toggle('show', debugVisible);
+  updateDebugPanel();
+}
+
+function updateDebugPanel() {
+  if (!debugVisible) return;
+  var panel = document.getElementById('debug-panel');
+  if (!rawDebugData.length) {
+    panel.textContent = 'No data loaded yet.';
+    return;
+  }
+  panel.textContent =
+    'Total records from ServiceM8: ' + rawDebugData.length + '\n\n' +
+    'First record (raw fields):\n' +
+    JSON.stringify(rawDebugData[0], null, 2) + '\n\n' +
+    'Second record (if exists):\n' +
+    JSON.stringify(rawDebugData[1] || 'n/a', null, 2);
+}
+
 // ── Filters ────────────────────────────────────────────
 function populateFilters() {
-  // Staff
   var ss = document.getElementById('q-staff');
   var sv = ss.value;
   ss.innerHTML = '<option value="">All Staff</option>';
@@ -506,7 +516,6 @@ function populateFilters() {
     ss.appendChild(o);
   });
 
-  // Clients
   var cs = document.getElementById('q-client');
   var cv = cs.value;
   var seenC = {};
@@ -517,28 +526,6 @@ function populateFilters() {
     o.value = u; o.textContent = seenC[u];
     if (u === cv) o.selected = true;
     cs.appendChild(o);
-  });
-
-  // Assets
-  var as = document.getElementById('q-asset');
-  var av = as.value;
-  var seenA = {};
-  tasksData.forEach(function(t) { if (t.assetUuid && t.assetName) seenA[t.assetUuid] = t.assetName; });
-  as.innerHTML = '<option value="">All Assets</option>';
-  Object.keys(seenA).sort(function(a,b){ return seenA[a].localeCompare(seenA[b]); }).forEach(function(u) {
-    var o = document.createElement('option');
-    o.value = u; o.textContent = seenA[u];
-    if (u === av) o.selected = true;
-    as.appendChild(o);
-  });
-
-  // Modal staff
-  var ms = document.getElementById('m-staff');
-  ms.innerHTML = '<option value="">— Unassigned —</option>';
-  staffList.forEach(function(s) {
-    var o = document.createElement('option');
-    o.value = s.uuid; o.textContent = s.name;
-    ms.appendChild(o);
   });
 }
 
@@ -553,7 +540,6 @@ function getFiltered() {
   var q       = (document.getElementById('q-search').value  || '').toLowerCase();
   var staffF  = document.getElementById('q-staff').value;
   var clientF = document.getElementById('q-client').value;
-  var assetF  = document.getElementById('q-asset').value;
 
   return tasksData.filter(function(t) {
     if (tScope === 'mine') {
@@ -563,9 +549,8 @@ function getFiltered() {
     }
     if (staffF  && t.staffUuid  !== staffF)  return false;
     if (clientF && t.clientUuid !== clientF) return false;
-    if (assetF  && t.assetUuid  !== assetF)  return false;
     if (q) {
-      var hay = [t.name, t.notes, t.staffName, t.assetName, t.jobNumber, t.clientName].join(' ').toLowerCase();
+      var hay = [t.name, t.section, t.staffName, t.jobNumber, t.clientName].join(' ').toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
     return true;
@@ -575,10 +560,8 @@ function getFiltered() {
 // ── Render ─────────────────────────────────────────────
 function render() {
   if (!tasksLoaded) return;
-
   var filtered = getFiltered();
 
-  // Stats use full scope, not search-filtered
   var scope = tScope === 'all' ? tasksData : tasksData.filter(function(t) {
     return (currentUserUuid && t.staffUuid === currentUserUuid) ||
            (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
@@ -587,11 +570,12 @@ function render() {
 
   if (!filtered.length) {
     setBody('<div class="empty-wrap"><div class="empty-icon">&#10003;</div>' +
-            '<p>' + (tScope === 'mine' ? 'No incomplete tasks assigned to you.' : 'No tasks match the current filters.') + '</p></div>');
+            '<p>' + (tScope === 'mine'
+              ? 'No incomplete tasks assigned to you. Try switching to All Staff.'
+              : 'No tasks match the current filters.') + '</p></div>');
     return;
   }
 
-  // Sort by due date ascending, no date goes last
   filtered.sort(function(a, b) {
     var da = a.dueDate || 'zzzz';
     var db = b.dueDate || 'zzzz';
@@ -608,21 +592,21 @@ function renderStats(scope) {
   var total      = scope.length;
   var unassigned = scope.filter(function(t) { return !t.staffUuid; }).length;
   var overdue    = scope.filter(function(t) {
-    return t.dueDate && daysUntil(t.dueDate.substring(0,10)) < 0;
+    return t.dueDate && daysUntil(t.dueDate) < 0;
   }).length;
   var dueToday   = scope.filter(function(t) {
-    return t.dueDate && daysUntil(t.dueDate.substring(0,10)) === 0;
+    return t.dueDate && daysUntil(t.dueDate) === 0;
   }).length;
   var dueSoon    = scope.filter(function(t) {
-    var d = t.dueDate ? daysUntil(t.dueDate.substring(0,10)) : null;
+    var d = t.dueDate ? daysUntil(t.dueDate) : null;
     return d !== null && d > 0 && d <= 7;
   }).length;
 
   document.getElementById('stats-bar').innerHTML =
-    stat(total,      'Tasks',      'var(--text)')   +
-    stat(unassigned, 'Unassigned', 'var(--muted)')  +
-    stat(overdue,    'Overdue',    'var(--red)')     +
-    stat(dueToday,   'Due Today',  'var(--amber)')   +
+    stat(total,      'Tasks',      'var(--text)')  +
+    stat(unassigned, 'Unassigned', 'var(--muted)') +
+    stat(overdue,    'Overdue',    'var(--red)')    +
+    stat(dueToday,   'Due Today',  'var(--amber)')  +
     stat(dueSoon,    'Due Soon',   'var(--accent)');
 }
 
@@ -633,13 +617,9 @@ function stat(v, l, c) {
 
 // ── Task card ──────────────────────────────────────────
 function taskCard(t) {
-  var d         = t.dueDate ? daysUntil(t.dueDate.substring(0,10)) : null;
+  var d         = t.dueDate ? daysUntil(t.dueDate) : null;
   var isOverdue = d !== null && d < 0;
   var colorCls  = isOverdue ? 'c-overdue' : 'c-active';
-
-  var assetChip = t.assetUuid
-    ? '<span class="asset-chip">&#128279; ' + esc(t.assetName) + '</span>'
-    : '';
 
   var sm8Btn = t.jobUuidSm8
     ? '<a class="open-sm8-btn" href="https://go.servicem8.com/job_card.html#edit,uuid=' +
@@ -647,7 +627,7 @@ function taskCard(t) {
     : '';
 
   var dateDisplay = t.dueDate
-    ? '<span>&#128336; Due ' + fmtDate(t.dueDate.substring(0,10)) + '</span>'
+    ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>'
     : '';
 
   return '<div class="task-card ' + colorCls + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
@@ -656,16 +636,15 @@ function taskCard(t) {
     + '<div class="title-row">'
     + '<span class="task-title">' + esc(t.name) + '</span>'
     + '<span class="badge task">Task</span>'
-    + (isOverdue ? '<span class="badge overdue">Overdue</span>' : '')
+    + (t.section ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
+    + (isOverdue  ? '<span class="badge overdue">Overdue</span>' : '')
     + '</div>'
     + '<div class="meta-row">'
     + '<span>&#128100; ' + esc(t.staffName) + '</span>'
     + (t.clientName ? '<span>&#128205; ' + esc(t.clientName) + '</span>' : '')
     + (t.jobNumber  ? '<span>&#128188; Job #' + esc(t.jobNumber) + (t.jobDesc ? ' &mdash; ' + esc(t.jobDesc.substring(0,40)) : '') + '</span>' : '')
     + dateDisplay
-    + assetChip
     + '</div>'
-    + (t.notes ? '<div class="task-desc">' + esc(t.notes.substring(0,160)) + (t.notes.length > 160 ? '&hellip;' : '') + '</div>' : '')
     + '</div>'
     + '<div class="task-right">' + duePill(t) + sm8Btn + '</div>'
     + '</div>';
@@ -673,12 +652,12 @@ function taskCard(t) {
 
 function duePill(t) {
   if (!t.dueDate) return '<span class="due-pill none">No date</span>';
-  var d = daysUntil(t.dueDate.substring(0,10));
+  var d = daysUntil(t.dueDate);
   if (d === null) return '';
   if (d < 0)   return '<span class="due-pill overdue">&#9888; ' + Math.abs(d) + 'd overdue</span>';
   if (d === 0) return '<span class="due-pill today">Due today</span>';
   if (d <= 7)  return '<span class="due-pill soon">' + d + 'd left</span>';
-  return '<span class="due-pill ok">' + fmtDate(t.dueDate.substring(0,10)) + '</span>';
+  return '<span class="due-pill ok">' + fmtDate(t.dueDate) + '</span>';
 }
 
 // ── Quick complete ─────────────────────────────────────
@@ -687,44 +666,62 @@ function quickToggle(id, checked) {
   var t = tasksData.find(function(x) { return x._id === id; });
   if (!t) return;
   if (!confirm('Mark "' + t.name + '" as completed in ServiceM8?')) { render(); return; }
+  markComplete(t);
+}
+
+function markComplete(t) {
+  var now = new Date();
+  var ts  = now.getFullYear() + '-' +
+            pad(now.getMonth()+1) + '-' +
+            pad(now.getDate()) + ' ' +
+            pad(now.getHours()) + ':' +
+            pad(now.getMinutes()) + ':' +
+            pad(now.getSeconds());
 
   var payload = Object.assign({}, t._raw, {
-    is_completed:         '1',
-    completed_staff_uuid: currentUserUuid || t.staffUuid || ''
+    completed_timestamp:    ts,
+    completed_by_staff_uuid: currentUserUuid || t.staffUuid || ''
   });
-  sm8Put('/jobchecklistitem/' + t._id + '.json', payload).then(function(r) {
+
+  sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
     if (r.status === 200 || r.status === 201 || r.status === 204) {
-      tasksData = tasksData.filter(function(x) { return x._id !== id; });
+      tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
       populateFilters();
+      closeModal();
       render();
       toast('Task marked as completed.');
     } else {
-      toast('Save failed: HTTP ' + r.status, true);
+      r.text().then(function(txt) { toast('Save failed: HTTP ' + r.status + ' ' + txt.substring(0,80), true); });
       render();
     }
   }).catch(function(e) { toast('Save failed: ' + e.message, true); render(); });
 }
 
-// ── Edit modal ─────────────────────────────────────────
+// ── Edit modal (read-only + raw view) ─────────────────
 function openEdit(id) {
   var t = tasksData.find(function(x) { return x._id === id; });
   if (!t) return;
-  editRecord      = t;
-  editLinkedAsset = t.assetUuid ? { uuid:t.assetUuid, name:t.assetName, clientName:t.clientName } : null;
+  editRecord = t;
 
   var sm8Link = document.getElementById('m-sm8-link');
   if (t.jobUuidSm8) {
-    sm8Link.href      = 'https://go.servicem8.com/job_card.html#edit,uuid=' + t.jobUuidSm8;
+    sm8Link.href = 'https://go.servicem8.com/job_card.html#edit,uuid=' + t.jobUuidSm8;
     sm8Link.innerHTML = '&#128279; Open Job #' + esc(t.jobNumber) + ' in ServiceM8';
     sm8Link.style.display = 'inline-flex';
   } else {
     sm8Link.style.display = 'none';
   }
 
-  document.getElementById('m-name').value  = t.name      || '';
-  document.getElementById('m-notes').value = t.notes     || '';
-  document.getElementById('m-staff').value = t.staffUuid || '';
-  document.getElementById('m-due').value   = t.dueDate   ? t.dueDate.substring(0,10) : '';
+  document.getElementById('m-name').textContent         = t.name;
+  document.getElementById('m-staff-display').textContent = t.staffName;
+
+  var secRow = document.getElementById('m-section-row');
+  if (t.section) {
+    secRow.style.display = '';
+    document.getElementById('m-section').textContent = t.section;
+  } else {
+    secRow.style.display = 'none';
+  }
 
   var jobRow = document.getElementById('m-job-row');
   if (t.jobNumber) {
@@ -735,149 +732,61 @@ function openEdit(id) {
     jobRow.style.display = 'none';
   }
 
-  document.getElementById('m-asset-q').value = '';
-  document.getElementById('m-asset-dd').style.display = 'none';
-  document.getElementById('m-save-msg').textContent = '';
-  document.getElementById('m-save-msg').className   = 'save-msg';
-  renderLinkedAsset();
+  var remRow = document.getElementById('m-reminder-row');
+  if (t.reminderType) {
+    remRow.style.display = '';
+    document.getElementById('m-reminder').textContent =
+      t.reminderType + (t.reminderData ? ': ' + t.reminderData : '');
+  } else {
+    remRow.style.display = 'none';
+  }
+
+  // Raw data for debugging field names
+  document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
+
   openModal();
 }
 
-// ── Save ───────────────────────────────────────────────
-function saveRecord() {
+function completeFromModal() {
   if (!editRecord) return;
-  var name = document.getElementById('m-name').value.trim();
-  if (!name) { toast('Please enter a task name.', true); return; }
-
-  var staffUuid = document.getElementById('m-staff').value;
-  var notes     = document.getElementById('m-notes').value.trim();
-  var dueDate   = document.getElementById('m-due').value || '';
-  var assetUuid = editLinkedAsset ? editLinkedAsset.uuid : '';
-
-  var saveBtn = document.getElementById('m-save-btn');
-  var msgEl   = document.getElementById('m-save-msg');
-  saveBtn.disabled    = true;
-  saveBtn.textContent = 'Saving\u2026';
-  msgEl.className     = 'save-msg saving';
-  msgEl.textContent   = 'Saving\u2026';
-
-  var payload = Object.assign({}, editRecord._raw, {
-    name:                   name,
-    notes:                  notes,
-    assigned_to_staff_uuid: staffUuid,
-    staff_uuid:             staffUuid,
-    due_date:               dueDate,
-    asset_uuid:             assetUuid || ''
-  });
-
-  sm8Put('/jobchecklistitem/' + editRecord._id + '.json', payload).then(function(r) {
-    return r.text().then(function(txt) {
-      saveBtn.disabled    = false;
-      saveBtn.textContent = 'Save to ServiceM8';
-      if (r.status === 200 || r.status === 201 || r.status === 204) {
-        editRecord.name       = name;
-        editRecord.notes      = notes;
-        editRecord.staffUuid  = staffUuid;
-        editRecord.staffName  = staffMap[staffUuid] || 'Unassigned';
-        editRecord.dueDate    = dueDate;
-        editRecord._raw       = payload;
-        editRecord.assetUuid  = assetUuid;
-        editRecord.assetName  = editLinkedAsset ? editLinkedAsset.name       : '';
-        editRecord.clientName = editLinkedAsset ? editLinkedAsset.clientName : '';
-        msgEl.className   = 'save-msg saved';
-        msgEl.textContent = '\u2713 Saved';
-        populateFilters();
-        setTimeout(function() { closeModal(); render(); }, 500);
-        toast('Task saved.');
-      } else {
-        msgEl.className   = 'save-msg error';
-        msgEl.textContent = 'Error: HTTP ' + r.status;
-        toast('Save failed: ' + txt.substring(0,120), true);
-      }
-    });
-  }).catch(function(e) {
-    saveBtn.disabled    = false;
-    saveBtn.textContent = 'Save to ServiceM8';
-    msgEl.className   = 'save-msg error';
-    msgEl.textContent = 'Error: ' + e.message;
-    toast('Save failed: ' + e.message, true);
-  });
-}
-
-// ── Asset search ───────────────────────────────────────
-function assetSearch() {
-  var q  = (document.getElementById('m-asset-q').value || '').toLowerCase().trim();
-  var dd = document.getElementById('m-asset-dd');
-  if (!q) { dd.style.display = 'none'; return; }
-  var hits = assetList.filter(function(a) {
-    return String(a.name || '').toLowerCase().indexOf(q) !== -1;
-  }).slice(0, 10);
-  if (!hits.length) { dd.style.display = 'none'; return; }
-  dd.innerHTML = hits.map(function(a) {
-    var client = clientMap[a.company_uuid] || '';
-    return '<div class="asset-opt" onclick="selectAsset(\'' + esc(a.uuid) + '\',\'' +
-           esc(a.name || '') + '\',\'' + esc(client) + '\')">' +
-           '<div class="asset-opt-name">' + esc(a.name || 'Unnamed') + '</div>' +
-           '<div class="asset-opt-client">&#128205; ' + esc(client) + '</div></div>';
-  }).join('');
-  dd.style.display = 'block';
-}
-
-function selectAsset(uuid, name, clientName) {
-  editLinkedAsset = { uuid:uuid, name:name, clientName:clientName };
-  document.getElementById('m-asset-q').value = '';
-  document.getElementById('m-asset-dd').style.display = 'none';
-  renderLinkedAsset();
-}
-function removeAsset() { editLinkedAsset = null; renderLinkedAsset(); }
-
-function renderLinkedAsset() {
-  var wrap = document.getElementById('m-asset-linked');
-  if (!editLinkedAsset) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
-  wrap.style.display = 'block';
-  wrap.innerHTML = '<div class="linked-asset">'
-    + '<div><div class="linked-asset-name">&#128279; ' + esc(editLinkedAsset.name) + '</div>'
-    + '<div class="linked-asset-client">&#128205; ' + esc(editLinkedAsset.clientName) + '</div></div>'
-    + '<button class="linked-asset-rm" onclick="removeAsset()">&#10005;</button>'
-    + '</div>';
+  if (!confirm('Mark "' + editRecord.name + '" as completed in ServiceM8?')) return;
+  markComplete(editRecord);
 }
 
 // ── Modal ──────────────────────────────────────────────
 function openModal() {
   document.getElementById('modal').classList.add('open');
-  setTimeout(function() { document.getElementById('m-name').focus(); }, 80);
 }
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
-  document.getElementById('m-asset-dd').style.display = 'none';
-  editRecord = null; editLinkedAsset = null;
+  editRecord = null;
 }
 function onOverlayClick(e) {
   if (e.target === document.getElementById('modal')) closeModal();
 }
 
 // ── Date helpers ───────────────────────────────────────
-function parseDate(str) {
-  if (!str) return null;
-  var m = String(str).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-  var d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-}
 function daysUntil(str) {
-  var d = parseDate(str); if (!d) return null;
+  if (!str) return null;
+  var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  var d   = new Date(+m[1], +m[2]-1, +m[3]);
   var now = new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
   return Math.round((d - now) / 86400000);
 }
 function fmtDate(str) {
-  var d = parseDate(str); if (!d) return str || '\u2014';
+  if (!str) return '\u2014';
+  var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return str;
+  var d = new Date(+m[1], +m[2]-1, +m[3]);
   return d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
 }
+function pad(n) { return n < 10 ? '0' + n : String(n); }
 
 // ── Misc ───────────────────────────────────────────────
 function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-                        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function setBody(html)    { document.getElementById('task-body').innerHTML = html; }
 function setSyncMsg(html) { document.getElementById('sync-detail').innerHTML = html; }
