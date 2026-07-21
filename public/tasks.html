@@ -390,15 +390,14 @@ function loadTasks(force) {
     sm8Get('/job.json'),
     sm8Get('/jobchecklist.json')
   ]).then(function(res) {
-    var rawStaff  = Array.isArray(res[0]) ? res[0] : [];
-    var rawJobs   = Array.isArray(res[1]) ? res[1] : [];
-    var rawItems  = Array.isArray(res[2]) ? res[2] : [];
+    var rawStaff = Array.isArray(res[0]) ? res[0] : [];
+    var rawJobs  = Array.isArray(res[1]) ? res[1] : [];
+    var rawItems = Array.isArray(res[2]) ? res[2] : [];
 
-    // Store raw for debug
     rawDebugData = rawItems;
     updateDebugPanel();
 
-    // Staff map
+    // Staff
     staffList = rawStaff
       .filter(function(s) { return String(s.active) === '1'; })
       .map(function(s) {
@@ -407,7 +406,7 @@ function loadTasks(force) {
     staffMap = {};
     staffList.forEach(function(s) { staffMap[s.uuid] = s.name; });
 
-    // Job map
+    // Jobs
     jobMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
@@ -420,13 +419,23 @@ function loadTasks(force) {
         };
       });
 
-    // Normalise checklist items — only incomplete ones
+    // Normalise — key rules from raw data:
+    // active=1 means the item EXISTS and is incomplete
+    // active=0 means deleted/inactive — skip
+    // completed_timestamp = "0000-00-00 00:00:00" means NOT completed
+    // completed_timestamp = a real date means completed — skip
+    // item_type = "Todo" are the actual task items (vs "Asset", "Checklist" etc)
+    // assigned_to_staff_uuids is an ARRAY (or false if unassigned)
+
     tasksData = rawItems
       .filter(function(i) {
-        if (String(i.active) === '0') return false;
-        // completed_timestamp being set means it's done
-        if (i.completed_timestamp && String(i.completed_timestamp).trim() !== '') return false;
-        if (i.completed_by_staff_uuid && String(i.completed_by_staff_uuid).trim() !== '') return false;
+        // Must be active
+        if (String(i.active) !== '1') return false;
+        // Must not be completed (real date = completed)
+        var ts = String(i.completed_timestamp || '').trim();
+        if (ts !== '' && ts !== '0000-00-00 00:00:00' && ts !== '0000-00-00') return false;
+        // Only show Todo type items (actual tasks, not asset/checklist section headers)
+        if (i.item_type && String(i.item_type).toLowerCase() !== 'todo') return false;
         return true;
       })
       .map(function(i) {
@@ -434,42 +443,52 @@ function loadTasks(force) {
         var clientUuid = job.clientUuid || '';
         var clientName = clientUuid ? (clientMap[clientUuid] || '') : '';
 
-        // assigned_to_staff_uuids is a single UUID string per the API docs
-        var staffUuid  = i.assigned_to_staff_uuids || '';
-        // strip any whitespace
-        staffUuid = String(staffUuid).trim();
+        // assigned_to_staff_uuids is an array or false
+        var staffUuid = '';
+        if (Array.isArray(i.assigned_to_staff_uuids) && i.assigned_to_staff_uuids.length) {
+          staffUuid = i.assigned_to_staff_uuids[0];
+        }
 
-        // reminder date — reminder_data holds the date when reminder_type is date-based
+        // due date from reminder_data if it looks like a date
         var dueDate = '';
-        if (i.reminder_type && i.reminder_data) {
-          // if reminder_data looks like a date, use it
-          if (/^\d{4}-\d{2}-\d{2}/.test(String(i.reminder_data))) {
-            dueDate = String(i.reminder_data).substring(0, 10);
-          }
+        if (i.reminder_data && !Array.isArray(i.reminder_data)) {
+          var rd = String(i.reminder_data).trim();
+          if (/^\d{4}-\d{2}-\d{2}/.test(rd)) dueDate = rd.substring(0, 10);
         }
 
         return {
-          _id:        i.uuid,
-          _raw:       i,
-          name:       i.name || 'Unnamed Task',
-          section:    i.section_name || '',
-          staffUuid:  staffUuid,
-          staffName:  staffMap[staffUuid] || 'Unassigned',
-          dueDate:    dueDate,
+          _id:          i.uuid,
+          _raw:         i,
+          name:         i.name || 'Unnamed Task',
+          section:      i.section_name || '',
+          itemType:     i.item_type || '',
+          staffUuid:    staffUuid,
+          staffName:    staffMap[staffUuid] || 'Unassigned',
+          dueDate:      dueDate,
           reminderType: i.reminder_type || '',
-          reminderData: i.reminder_data || '',
-          jobUuid:    i.job_uuid    || '',
-          jobNumber:  job.number    || '',
-          jobDesc:    job.desc      || '',
-          jobUuidSm8: job.uuid      || '',
-          clientName: clientName,
-          clientUuid: clientUuid
+          reminderData: Array.isArray(i.reminder_data) ? '' : String(i.reminder_data || ''),
+          jobUuid:      i.job_uuid    || '',
+          jobNumber:    job.number    || '',
+          jobDesc:      job.desc      || '',
+          jobUuidSm8:   job.uuid      || '',
+          clientName:   clientName,
+          clientUuid:   clientUuid
         };
       });
 
     tasksLoaded = true;
-    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
-               ' \u2014 ' + rawItems.length + ' total, ' + tasksData.length + ' incomplete');
+
+    var todoCount = rawItems.filter(function(i) {
+      return String(i.active) === '1' && i.item_type && String(i.item_type).toLowerCase() === 'todo';
+    }).length;
+
+    setSyncMsg(
+      'Last synced: ' + new Date().toLocaleTimeString() +
+      ' \u2014 ' + rawItems.length + ' total records, ' +
+      todoCount + ' active todos, ' +
+      tasksData.length + ' incomplete tasks shown'
+    );
+
     populateFilters();
     render();
 
@@ -482,7 +501,7 @@ function loadTasks(force) {
   });
 }
 
-// ── Debug panel ────────────────────────────────────────
+// ── Debug ──────────────────────────────────────────────
 function toggleDebug() {
   debugVisible = !debugVisible;
   document.getElementById('debug-panel').classList.toggle('show', debugVisible);
@@ -492,16 +511,31 @@ function toggleDebug() {
 function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
-  if (!rawDebugData.length) {
-    panel.textContent = 'No data loaded yet.';
-    return;
-  }
+  if (!rawDebugData.length) { panel.textContent = 'No data yet.'; return; }
+
+  // Show type breakdown
+  var typeCounts = {};
+  rawDebugData.forEach(function(i) {
+    var t = i.item_type || '(none)';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+
+  // Show active/inactive breakdown
+  var activeCount    = rawDebugData.filter(function(i){ return String(i.active) === '1'; }).length;
+  var inactiveCount  = rawDebugData.filter(function(i){ return String(i.active) !== '1'; }).length;
+  var completedCount = rawDebugData.filter(function(i){
+    var ts = String(i.completed_timestamp || '').trim();
+    return ts !== '' && ts !== '0000-00-00 00:00:00' && ts !== '0000-00-00';
+  }).length;
+
   panel.textContent =
-    'Total records from ServiceM8: ' + rawDebugData.length + '\n\n' +
-    'First record (raw fields):\n' +
-    JSON.stringify(rawDebugData[0], null, 2) + '\n\n' +
-    'Second record (if exists):\n' +
-    JSON.stringify(rawDebugData[1] || 'n/a', null, 2);
+    'Total records: ' + rawDebugData.length + '\n' +
+    'active=1: ' + activeCount + '  |  active=0: ' + inactiveCount + '\n' +
+    'completed (real timestamp): ' + completedCount + '\n\n' +
+    'item_type breakdown:\n' +
+    Object.keys(typeCounts).map(function(k){ return '  ' + k + ': ' + typeCounts[k]; }).join('\n') + '\n\n' +
+    'First Todo record:\n' +
+    JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase() === 'todo'; }) || 'none', null, 2);
 }
 
 // ── Filters ────────────────────────────────────────────
@@ -571,15 +605,13 @@ function render() {
   if (!filtered.length) {
     setBody('<div class="empty-wrap"><div class="empty-icon">&#10003;</div>' +
             '<p>' + (tScope === 'mine'
-              ? 'No incomplete tasks assigned to you. Try switching to All Staff.'
+              ? 'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
               : 'No tasks match the current filters.') + '</p></div>');
     return;
   }
 
   filtered.sort(function(a, b) {
-    var da = a.dueDate || 'zzzz';
-    var db = b.dueDate || 'zzzz';
-    return da.localeCompare(db);
+    return (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz');
   });
 
   var html = '<div class="task-list">';
@@ -591,12 +623,8 @@ function render() {
 function renderStats(scope) {
   var total      = scope.length;
   var unassigned = scope.filter(function(t) { return !t.staffUuid; }).length;
-  var overdue    = scope.filter(function(t) {
-    return t.dueDate && daysUntil(t.dueDate) < 0;
-  }).length;
-  var dueToday   = scope.filter(function(t) {
-    return t.dueDate && daysUntil(t.dueDate) === 0;
-  }).length;
+  var overdue    = scope.filter(function(t) { return t.dueDate && daysUntil(t.dueDate) < 0; }).length;
+  var dueToday   = scope.filter(function(t) { return t.dueDate && daysUntil(t.dueDate) === 0; }).length;
   var dueSoon    = scope.filter(function(t) {
     var d = t.dueDate ? daysUntil(t.dueDate) : null;
     return d !== null && d > 0 && d <= 7;
@@ -671,18 +699,12 @@ function quickToggle(id, checked) {
 
 function markComplete(t) {
   var now = new Date();
-  var ts  = now.getFullYear() + '-' +
-            pad(now.getMonth()+1) + '-' +
-            pad(now.getDate()) + ' ' +
-            pad(now.getHours()) + ':' +
-            pad(now.getMinutes()) + ':' +
-            pad(now.getSeconds());
-
+  var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
   var payload = Object.assign({}, t._raw, {
-    completed_timestamp:    ts,
+    completed_timestamp:     ts,
     completed_by_staff_uuid: currentUserUuid || t.staffUuid || ''
   });
-
   sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
     if (r.status === 200 || r.status === 201 || r.status === 204) {
       tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
@@ -691,13 +713,15 @@ function markComplete(t) {
       render();
       toast('Task marked as completed.');
     } else {
-      r.text().then(function(txt) { toast('Save failed: HTTP ' + r.status + ' ' + txt.substring(0,80), true); });
+      r.text().then(function(txt) {
+        toast('Save failed: HTTP ' + r.status + ' ' + txt.substring(0,80), true);
+      });
       render();
     }
   }).catch(function(e) { toast('Save failed: ' + e.message, true); render(); });
 }
 
-// ── Edit modal (read-only + raw view) ─────────────────
+// ── Edit modal ─────────────────────────────────────────
 function openEdit(id) {
   var t = tasksData.find(function(x) { return x._id === id; });
   if (!t) return;
@@ -712,7 +736,7 @@ function openEdit(id) {
     sm8Link.style.display = 'none';
   }
 
-  document.getElementById('m-name').textContent         = t.name;
+  document.getElementById('m-name').textContent          = t.name;
   document.getElementById('m-staff-display').textContent = t.staffName;
 
   var secRow = document.getElementById('m-section-row');
@@ -741,9 +765,7 @@ function openEdit(id) {
     remRow.style.display = 'none';
   }
 
-  // Raw data for debugging field names
   document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
-
   openModal();
 }
 
@@ -753,10 +775,7 @@ function completeFromModal() {
   markComplete(editRecord);
 }
 
-// ── Modal ──────────────────────────────────────────────
-function openModal() {
-  document.getElementById('modal').classList.add('open');
-}
+function openModal() { document.getElementById('modal').classList.add('open'); }
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
   editRecord = null;
@@ -770,7 +789,7 @@ function daysUntil(str) {
   if (!str) return null;
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return null;
-  var d   = new Date(+m[1], +m[2]-1, +m[3]);
+  var d = new Date(+m[1], +m[2]-1, +m[3]);
   var now = new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
   return Math.round((d - now) / 86400000);
 }
@@ -783,7 +802,6 @@ function fmtDate(str) {
 }
 function pad(n) { return n < 10 ? '0' + n : String(n); }
 
-// ── Misc ───────────────────────────────────────────────
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
