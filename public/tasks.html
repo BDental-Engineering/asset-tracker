@@ -583,10 +583,9 @@ function loadTasks(force) {
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks from ServiceM8&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
-  // Step 1: load staff and active jobs first
   Promise.all([
     sm8Get('/staff.json'),
-    sm8Get('/job.json?%24filter=active%20eq%201')
+    sm8Get('/job.json?%24filter=active%20eq%201%20and%20status%20ne%20%27Complete%27%20and%20status%20ne%20%27Cancelled%27')
   ]).then(function(results) {
     var rawStaff = results[0];
     var rawJobs  = results[1];
@@ -605,7 +604,7 @@ function loadTasks(force) {
 
     // ── Jobs ──
     jobMap = {};
-    rawJobs
+    (Array.isArray(rawJobs) ? rawJobs : [])
       .filter(function(j) { return String(j.active) === '1'; })
       .forEach(function(j) {
         jobMap[j.uuid] = {
@@ -617,6 +616,7 @@ function loadTasks(force) {
       });
 
     var jobUuids = Object.keys(jobMap);
+
     if (!jobUuids.length) {
       tasksData   = [];
       tasksLoaded = true;
@@ -626,35 +626,23 @@ function loadTasks(force) {
       return;
     }
 
-    // Step 2: fetch activities + checklist items filtered by job UUIDs in batches
-    // ServiceM8 supports \$filter=job_uuid eq 'uuid' — we fetch per job in parallel (capped)
-    var BATCH = 20; // fetch up to 20 jobs at a time
-    var batches = [];
-    for (var i = 0; i < jobUuids.length; i += BATCH) {
-      batches.push(jobUuids.slice(i, i + BATCH));
-    }
-
-    // Build filter string for a batch of job UUIDs
-    function makeFilter(uuids) {
-      return uuids.map(function(u) { return "job_uuid eq '" + u + "'"; }).join(' or ');
-    }
-
-    // Fetch all batches for a given endpoint
-    function fetchBatched(endpoint) {
-      return Promise.all(batches.map(function(batch) {
-        var filter = encodeURIComponent(makeFilter(batch));
+    // Fetch one job at a time — ServiceM8 does not support OR across job_uuids
+    function fetchPerJob(endpoint) {
+      var uuidsToFetch = jobUuids.slice(0, 50); // cap at 50 jobs
+      return Promise.all(uuidsToFetch.map(function(uuid) {
+        var filter = encodeURIComponent("job_uuid eq '" + uuid + "'");
         return sm8Get('/' + endpoint + '.json?%24filter=' + filter)
-          .catch(function() { return []; }); // skip failed batches
-      })).then(function(batchResults) {
-        return batchResults.reduce(function(acc, arr) {
+          .catch(function() { return []; });
+      })).then(function(results) {
+        return results.reduce(function(acc, arr) {
           return acc.concat(Array.isArray(arr) ? arr : []);
         }, []);
       });
     }
 
     return Promise.all([
-      fetchBatched('jobactivity'),
-      fetchBatched('jobchecklistitem')
+      fetchPerJob('jobactivity'),
+      fetchPerJob('jobchecklistitem')
     ]).then(function(results) {
       var rawActivities = results[0];
       var rawChecklist  = results[1];
@@ -669,14 +657,13 @@ function loadTasks(force) {
           var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
           var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
           var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
-          var status     = normaliseStatus(a.status);
           return {
             _id:            a.uuid,
             _source:        'job_activity',
             _raw:           a,
             name:           a.activity_was || a.name || ('Activity — Job #' + (job.number || '?')),
             notes:          a.notes        || '',
-            status:         status,
+            status:         normaliseStatus(a.status),
             staffUuid:      a.staff_uuid   || '',
             staffName:      staffMap[a.staff_uuid] || 'Unassigned',
             scheduledStart: a.start_date   || '',
