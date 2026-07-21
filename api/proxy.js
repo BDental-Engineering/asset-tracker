@@ -33,6 +33,31 @@ function refreshToken(refreshTok) {
   });
 }
 
+// Safely encode a path+querystring for use in https.request
+// Splits on '?' then encodes each query value individually
+function encodeSm8Path(rawPath) {
+  const qIdx = rawPath.indexOf('?');
+  if (qIdx === -1) return rawPath;
+
+  const pathPart  = rawPath.substring(0, qIdx);
+  const queryPart = rawPath.substring(qIdx + 1);
+
+  // Parse query string manually and re-encode each value
+  const encoded = queryPart.split('&').map(function(pair) {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx === -1) return encodeURIComponent(pair);
+    const key = pair.substring(0, eqIdx);
+    const val = pair.substring(eqIdx + 1);
+    // Decode first (in case already partially encoded), then re-encode cleanly
+    let decodedVal;
+    try { decodedVal = decodeURIComponent(val); }
+    catch(e) { decodedVal = val; }
+    return key + '=' + encodeURIComponent(decodedVal);
+  }).join('&');
+
+  return pathPart + '?' + encoded;
+}
+
 module.exports = async function(req, res) {
   const origin = req.headers.origin || 'https://asset-tracker-flax-zeta.vercel.app';
   res.setHeader('Access-Control-Allow-Origin', origin);
@@ -70,8 +95,10 @@ module.exports = async function(req, res) {
 
   let sm8Path = req.query.path || '';
   if (!sm8Path) { res.status(400).json({ error: 'No path provided' }); return; }
-
   if (!sm8Path.startsWith('/')) sm8Path = '/' + sm8Path;
+
+  // Re-encode the path so spaces and special chars don't crash https.request
+  const safePath = encodeSm8Path(sm8Path);
 
   const method = req.headers['x-http-method-override'] || req.method;
 
@@ -81,7 +108,7 @@ module.exports = async function(req, res) {
 
     const options = {
       hostname: 'api.servicem8.com',
-      path:     '/api_1.0' + sm8Path,
+      path:     '/api_1.0' + safePath,
       method:   method,
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
