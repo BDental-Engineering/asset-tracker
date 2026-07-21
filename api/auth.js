@@ -18,7 +18,7 @@ module.exports = function(req, res) {
     response_type: 'code',
     client_id:     process.env.SM8_CLIENT_ID,
     redirect_uri:  process.env.SM8_REDIRECT_URI,
-    scope:         'manage_assets read_customers manage_staff read_staff read_job_contacts',
+    scope:         'manage_assets read_customers manage_staff read_staff read_job_contacts read_jobs manage_jobs read_job_activity manage_job_activity read_job_checklist manage_job_checklist',
     state:         statePayload
   });
 
