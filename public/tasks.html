@@ -583,16 +583,13 @@ function loadTasks(force) {
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks from ServiceM8&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
+  // Step 1: load staff and active jobs first
   Promise.all([
     sm8Get('/staff.json'),
-    sm8Get('/jobactivity.json'),
-    sm8Get('/jobchecklistitem.json'),
-    sm8Get('/job.json')
+    sm8Get('/job.json?%24filter=active%20eq%201')
   ]).then(function(results) {
-    var rawStaff      = results[0];
-    var rawActivities = results[1];
-    var rawChecklist  = results[2];
-    var rawJobs       = results[3];
+    var rawStaff = results[0];
+    var rawJobs  = results[1];
 
     // ── Staff ──
     staffList = rawStaff
@@ -619,82 +616,126 @@ function loadTasks(force) {
         };
       });
 
-    // ── Normalise job activities ──
-    var activities = rawActivities
-      .filter(function(a) { return String(a.active) === '1'; })
-      .map(function(a) {
-        var job        = jobMap[a.job_uuid] || {};
-        var clientUuid = job.clientUuid || '';
-        var assetUuid  = a.asset_uuid   || '';
-        var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
-        var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
-        var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
-        var status     = normaliseStatus(a.status);
-        return {
-          _id:            a.uuid,
-          _source:        'job_activity',
-          _raw:           a,
-          name:           a.activity_was || a.name || ('Activity — Job #' + (job.number || '?')),
-          notes:          a.notes        || '',
-          status:         status,
-          staffUuid:      a.staff_uuid   || '',
-          staffName:      staffMap[a.staff_uuid] || 'Unassigned',
-          scheduledStart: a.start_date   || '',
-          dueDate:        '',
-          jobUuid:        a.job_uuid     || '',
-          jobNumber:      job.number     || '',
-          jobDesc:        job.desc       || '',
-          jobSm8Uuid:     job.uuid       || '',
-          assetUuid:      assetUuid,
-          assetName:      assetName,
-          clientName:     clientName,
-          clientUuid:     clientUuid
-        };
+    var jobUuids = Object.keys(jobMap);
+    if (!jobUuids.length) {
+      tasksData   = [];
+      tasksLoaded = true;
+      setSyncMsg('No active jobs found.');
+      populateFilters();
+      render();
+      return;
+    }
+
+    // Step 2: fetch activities + checklist items filtered by job UUIDs in batches
+    // ServiceM8 supports \$filter=job_uuid eq 'uuid' — we fetch per job in parallel (capped)
+    var BATCH = 20; // fetch up to 20 jobs at a time
+    var batches = [];
+    for (var i = 0; i < jobUuids.length; i += BATCH) {
+      batches.push(jobUuids.slice(i, i + BATCH));
+    }
+
+    // Build filter string for a batch of job UUIDs
+    function makeFilter(uuids) {
+      return uuids.map(function(u) { return "job_uuid eq '" + u + "'"; }).join(' or ');
+    }
+
+    // Fetch all batches for a given endpoint
+    function fetchBatched(endpoint) {
+      return Promise.all(batches.map(function(batch) {
+        var filter = encodeURIComponent(makeFilter(batch));
+        return sm8Get('/' + endpoint + '.json?%24filter=' + filter)
+          .catch(function() { return []; }); // skip failed batches
+      })).then(function(batchResults) {
+        return batchResults.reduce(function(acc, arr) {
+          return acc.concat(Array.isArray(arr) ? arr : []);
+        }, []);
       });
+    }
 
-    // ── Normalise checklist items ──
-    var checklist = rawChecklist
-      .filter(function(c) { return String(c.active) === '1'; })
-      .map(function(c) {
-        var job        = jobMap[c.job_uuid] || {};
-        var clientUuid = job.clientUuid || '';
-        var assetUuid  = c.asset_uuid || c.asset_uuid || '';
-        var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
-        var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
-        var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
-        var status     = (c.is_completed === '1' || c.is_completed === 1)
-                         ? 'completed' : normaliseStatus(c.status);
-        return {
-          _id:            c.uuid,
-          _source:        'checklist',
-          _raw:           c,
-          name:           c.name || c.task || 'Checklist Item',
-          notes:          c.notes || c.description || '',
-          status:         status,
-          staffUuid:      c.staff_uuid || c.assigned_to_staff_uuid || '',
-          staffName:      staffMap[c.staff_uuid || c.assigned_to_staff_uuid || ''] || 'Unassigned',
-          scheduledStart: '',
-          dueDate:        c.due_date || c.reminder_date || '',
-          jobUuid:        c.job_uuid || '',
-          jobNumber:      job.number || '',
-          jobDesc:        job.desc   || '',
-          jobSm8Uuid:     job.uuid   || '',
-          assetUuid:      assetUuid,
-          assetName:      assetName,
-          clientName:     clientName,
-          clientUuid:     clientUuid
-        };
-      });
+    return Promise.all([
+      fetchBatched('jobactivity'),
+      fetchBatched('jobchecklistitem')
+    ]).then(function(results) {
+      var rawActivities = results[0];
+      var rawChecklist  = results[1];
 
-    tasksData   = activities.concat(checklist);
-    tasksLoaded = true;
+      // ── Normalise job activities ──
+      var activities = rawActivities
+        .filter(function(a) { return String(a.active) === '1'; })
+        .map(function(a) {
+          var job        = jobMap[a.job_uuid] || {};
+          var clientUuid = job.clientUuid || '';
+          var assetUuid  = a.asset_uuid   || '';
+          var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
+          var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
+          var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
+          var status     = normaliseStatus(a.status);
+          return {
+            _id:            a.uuid,
+            _source:        'job_activity',
+            _raw:           a,
+            name:           a.activity_was || a.name || ('Activity — Job #' + (job.number || '?')),
+            notes:          a.notes        || '',
+            status:         status,
+            staffUuid:      a.staff_uuid   || '',
+            staffName:      staffMap[a.staff_uuid] || 'Unassigned',
+            scheduledStart: a.start_date   || '',
+            dueDate:        '',
+            jobUuid:        a.job_uuid     || '',
+            jobNumber:      job.number     || '',
+            jobDesc:        job.desc       || '',
+            jobSm8Uuid:     job.uuid       || '',
+            assetUuid:      assetUuid,
+            assetName:      assetName,
+            clientName:     clientName,
+            clientUuid:     clientUuid
+          };
+        });
 
-    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
-               ' &mdash; ' + activities.length + ' job activities, ' +
-               checklist.length + ' checklist tasks');
+      // ── Normalise checklist items ──
+      var checklist = rawChecklist
+        .filter(function(c) { return String(c.active) === '1'; })
+        .map(function(c) {
+          var job        = jobMap[c.job_uuid] || {};
+          var clientUuid = job.clientUuid || '';
+          var assetUuid  = c.asset_uuid   || '';
+          var assetRec   = assetList.find(function(x) { return x.uuid === assetUuid; }) || null;
+          var assetName  = assetRec ? (assetRec.name || 'Unnamed Asset') : '';
+          var clientName = clientUuid ? (clientMap[clientUuid] || 'Unknown Client') : '';
+          var status     = (c.is_completed === '1' || c.is_completed === 1)
+                           ? 'completed' : normaliseStatus(c.status);
+          return {
+            _id:            c.uuid,
+            _source:        'checklist',
+            _raw:           c,
+            name:           c.name || c.task || 'Checklist Item',
+            notes:          c.notes || c.description || '',
+            status:         status,
+            staffUuid:      c.staff_uuid || c.assigned_to_staff_uuid || '',
+            staffName:      staffMap[c.staff_uuid || c.assigned_to_staff_uuid || ''] || 'Unassigned',
+            scheduledStart: '',
+            dueDate:        c.due_date || c.reminder_date || '',
+            jobUuid:        c.job_uuid || '',
+            jobNumber:      job.number || '',
+            jobDesc:        job.desc   || '',
+            jobSm8Uuid:     job.uuid   || '',
+            assetUuid:      assetUuid,
+            assetName:      assetName,
+            clientName:     clientName,
+            clientUuid:     clientUuid
+          };
+        });
 
-    populateFilters();
-    render();
+      tasksData   = activities.concat(checklist);
+      tasksLoaded = true;
+
+      setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
+                 ' &mdash; ' + activities.length + ' job activities, ' +
+                 checklist.length + ' checklist tasks');
+
+      populateFilters();
+      render();
+    });
 
   }).catch(function(e) {
     if (e.message === 'SESSION_EXPIRED') { showAuth(); return; }
