@@ -1,14 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/proxy.js",     "use": "@vercel/node" },
-    { "src": "api/auth.js",      "use": "@vercel/node" },
-    { "src": "api/callback.js",  "use": "@vercel/node" },
-    { "src": "api/logout.js",    "use": "@vercel/node" },
-    { "src": "api/token.js",     "use": "@vercel/node" },
-    { "src": "api/makemodel.js", "use": "@vercel/node" },
-    { "src": "api/history.js",   "use": "@vercel/node" },
-    { "src": "public/index.html", "use": "@vercel/static" }
+    { "src": "api/proxy.js",      "use": "@vercel/node" },
+    { "src": "api/auth.js",       "use": "@vercel/node" },
+    { "src": "api/callback.js",   "use": "@vercel/node" },
+    { "src": "api/logout.js",     "use": "@vercel/node" },
+    { "src": "api/token.js",      "use": "@vercel/node" },
+    { "src": "api/makemodel.js",  "use": "@vercel/node" },
+    { "src": "api/history.js",    "use": "@vercel/node" },
+    { "src": "public/index.html", "use": "@vercel/static" },
+    { "src": "public/tasks.html", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/auth",      "dest": "/api/auth.js" },
@@ -17,6 +18,7 @@
     { "src": "/api/makemodel", "dest": "/api/makemodel.js" },
     { "src": "/api/history",   "dest": "/api/history.js" },
     { "src": "/api/(.*)",      "dest": "/api/proxy.js" },
+    { "src": "/tasks.html",    "dest": "/public/tasks.html" },
     { "src": "/(.*)",          "dest": "/public/index.html" }
   ]
 }
