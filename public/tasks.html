@@ -326,10 +326,31 @@ button:hover{opacity:0.87;}
     <a class="modal-sm8-link" id="m-sm8-link" href="#" target="_blank" rel="noopener" style="display:none">
       &#128279; Open Job in ServiceM8
     </a>
+
+    <!-- Task name — editable -->
     <div class="frow">
       <label>Task Name</label>
-      <div class="readonly-val" id="m-name"></div>
+      <input type="text" id="m-name" style="
+        width:100%;background:var(--surface2);border:1px solid var(--border);
+        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
+        outline:none;font-family:inherit;
+      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
     </div>
+
+    <!-- Due date — editable -->
+    <div class="frow">
+      <label>Due Date</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="m-due-date" oninput="updateDuePreview()" style="
+          flex:1;background:var(--surface2);border:1px solid var(--border);
+          border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
+          outline:none;font-family:inherit;color-scheme:dark;
+        " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        <button class="btn-ghost btn-sm" onclick="clearDueDate()" title="Clear due date">&#10005; Clear</button>
+      </div>
+      <div id="m-due-preview" style="margin-top:5px;font-size:0.75rem;color:var(--muted);"></div>
+    </div>
+
     <div class="frow" id="m-status-row" style="display:none">
       <label>Job Status</label>
       <div class="readonly-val" id="m-status"></div>
@@ -358,8 +379,12 @@ button:hover{opacity:0.87;}
       <label>Raw ServiceM8 Data</label>
       <textarea id="m-raw" style="font-family:monospace;font-size:0.72rem;min-height:120px;" readonly></textarea>
     </div>
+
+    <div id="m-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
+
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">Close</button>
+      <button class="btn-ghost" id="m-save-btn" onclick="saveTaskEdits()">&#128190; Save Changes</button>
       <button class="btn-primary" onclick="completeFromModal()">&#10003; Mark Complete</button>
     </div>
   </div>
@@ -1148,18 +1173,16 @@ function openEdit(id) {
     sm8Link.style.display = 'inline-flex';
   } else { sm8Link.style.display='none'; }
 
-  document.getElementById('m-name').textContent = t.name;
-
-  document.getElementById('m-staff-display').innerHTML =
-    '<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
-    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'
-    +esc(t.staffName)+'</span>';
+  // Editable fields
+  document.getElementById('m-name').value = t.name;
+  document.getElementById('m-due-date').value = t.dueDate || '';
+  updateDuePreview();
 
   var statusRow = document.getElementById('m-status-row');
   if (t.jobStatus) {
-    statusRow.style.display = '';
+    statusRow.style.display='';
     document.getElementById('m-status').innerHTML = statusBadge(t.jobStatus);
-  } else { statusRow.style.display = 'none'; }
+  } else { statusRow.style.display='none'; }
 
   var catRow = document.getElementById('m-category-row');
   if (t.category) { catRow.style.display=''; document.getElementById('m-category').textContent=t.category; }
@@ -1175,6 +1198,11 @@ function openEdit(id) {
     document.getElementById('m-job-display').textContent = 'Job #'+t.jobNumber+(t.jobDesc?' \u2014 '+t.jobDesc:'');
   } else { jobRow.style.display='none'; }
 
+  document.getElementById('m-staff-display').innerHTML =
+    '<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
+    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'
+    +esc(t.staffName)+'</span>';
+
   var remRow = document.getElementById('m-reminder-row');
   if (t.reminderType) {
     remRow.style.display='';
@@ -1182,7 +1210,125 @@ function openEdit(id) {
   } else { remRow.style.display='none'; }
 
   document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
+
+  // Reset save message
+  setSaveMsg('', '');
   openModal();
+}
+
+function updateDuePreview() {
+  var val = document.getElementById('m-due-date').value;
+  var el  = document.getElementById('m-due-preview');
+  if (!val) { el.textContent = 'No due date set'; return; }
+  var d = daysUntil(val);
+  if (d === null) { el.textContent = ''; return; }
+  if (d < 0)  el.textContent = Math.abs(d) + ' day' + (Math.abs(d)===1?'':'s') + ' overdue';
+  else if (d === 0) el.textContent = 'Due today';
+  else el.textContent = 'Due in ' + d + ' day' + (d===1?'':'s');
+}
+
+function clearDueDate() {
+  document.getElementById('m-due-date').value = '';
+  updateDuePreview();
+}
+
+function setSaveMsg(msg, type) {
+  var el = document.getElementById('m-save-msg');
+  el.textContent = msg;
+  el.style.color = type === 'error' ? 'var(--red)'
+                 : type === 'ok'    ? 'var(--green)'
+                 : type === 'saving'? 'var(--amber)'
+                 : 'transparent';
+}
+
+function saveTaskEdits() {
+  if (!editRecord) return;
+
+  var newName    = document.getElementById('m-name').value.trim();
+  var newDueDate = document.getElementById('m-due-date').value; // 'YYYY-MM-DD' or ''
+
+  if (!newName) { setSaveMsg('Task name cannot be empty.', 'error'); return; }
+
+  setSaveMsg('Saving\u2026', 'saving');
+  document.getElementById('m-save-btn').disabled = true;
+
+  var t   = editRecord;
+  var raw = t._raw;
+
+  // Build updated reminder_data
+  var reminderType = raw.reminder_type || '';
+  var reminderData = raw.reminder_data;
+
+  if (newDueDate) {
+    // Set or update to ABSOLUTE_DATETIME
+    reminderType = 'ABSOLUTE_DATETIME';
+    // Preserve existing time if it was already an absolute datetime, else default to 08:00:00
+    var existingTime = '08:00:00';
+    if (raw.reminder_data && typeof raw.reminder_data === 'object' && raw.reminder_data.absoluteDateTime) {
+      var timePart = String(raw.reminder_data.absoluteDateTime).substring(11);
+      if (timePart) existingTime = timePart;
+    }
+    reminderData = { absoluteDateTime: newDueDate + ' ' + existingTime };
+  } else {
+    // Clearing the due date — remove reminder entirely
+    reminderType = '';
+    reminderData = null;
+  }
+
+  var payload = {
+    uuid:                          t._id,
+    job_uuid:                      raw.job_uuid                      || '',
+    name:                          newName,
+    section_name:                  raw.section_name                  || '',
+    item_type:                     raw.item_type                     || 'Todo',
+    sort_order:                    raw.sort_order                    || 0,
+    completed_timestamp:           raw.completed_timestamp           || '',
+    completed_by_staff_uuid:       raw.completed_by_staff_uuid       || '',
+    completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
+    reminder_type:                 reminderType,
+    reminder_data:                 reminderData,
+    regarding_object:              raw.regarding_object              || '',
+    regarding_object_uuid:         raw.regarding_object_uuid         || '',
+    fulfilled_by_object_name:      raw.fulfilled_by_object_name      || '',
+    fulfilled_by_object_uuid:      raw.fulfilled_by_object_uuid      || '',
+    assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
+    is_locked:                     raw.is_locked                     || '0'
+  };
+
+  sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
+    document.getElementById('m-save-btn').disabled = false;
+    if (r.status === 200 || r.status === 201 || r.status === 204) {
+      // Update local data so card re-renders correctly without a full reload
+      t.name         = newName;
+      t.dueDate      = newDueDate;
+      t.reminderType = reminderType;
+      t.reminderData = newDueDate ? (newDueDate + ' ' + (reminderData ? reminderData.absoluteDateTime.substring(11) : '08:00:00')) : '';
+      if (reminderData) {
+        t._raw.reminder_data = reminderData;
+        t._raw.reminder_type = reminderType;
+      } else {
+        t._raw.reminder_data = null;
+        t._raw.reminder_type = '';
+      }
+      t._raw.name = newName;
+
+      // Update raw textarea
+      document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
+
+      setSaveMsg('Saved successfully.', 'ok');
+      render();
+      toast('Task updated.');
+    } else {
+      r.text().then(function(txt) {
+        setSaveMsg('Save failed: ' + txt.substring(0, 80), 'error');
+        toast('Save failed: HTTP ' + r.status, true);
+      });
+    }
+  }).catch(function(e) {
+    document.getElementById('m-save-btn').disabled = false;
+    setSaveMsg('Save failed: ' + e.message, 'error');
+    toast('Save failed: ' + e.message, true);
+  });
 }
 
 function completeFromModal() {
