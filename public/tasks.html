@@ -49,6 +49,7 @@ button:hover{opacity:0.87;}
 .toolbar input{min-width:180px;}
 .toolbar input:focus,.toolbar select:focus{border-color:var(--accent);}
 .toolbar-label{font-size:0.75rem;color:var(--muted);font-weight:600;white-space:nowrap;}
+.toolbar-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .seg-toggle{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .seg-btn{
   background:transparent;color:var(--muted);border:none;border-radius:7px;
@@ -56,7 +57,6 @@ button:hover{opacity:0.87;}
   transition:background 0.15s,color 0.15s;cursor:pointer;
 }
 .seg-btn.active{background:var(--accent);color:#fff;}
-.toolbar-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .sync-bar{
   display:flex;align-items:center;gap:10px;margin-bottom:16px;
   font-size:0.8rem;color:var(--muted);padding:8px 12px;
@@ -113,14 +113,12 @@ button:hover{opacity:0.87;}
   font-weight:600;text-decoration:none;white-space:nowrap;
 }
 .open-sm8-btn:hover{background:rgba(79,110,247,0.22);}
-/* Staff chip */
 .staff-chip{
   display:inline-flex;align-items:center;gap:5px;
-  border:1px solid;border-radius:20px;
-  padding:2px 9px;font-size:0.74rem;font-weight:600;
+  border:1px solid;border-radius:20px;padding:2px 9px;
+  font-size:0.74rem;font-weight:600;
 }
 .staff-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-/* Group headers */
 .staff-group{margin-bottom:24px;}
 .staff-group-hdr{
   display:flex;align-items:center;gap:10px;
@@ -137,7 +135,6 @@ button:hover{opacity:0.87;}
   background:var(--surface2);border:1px solid var(--border);
   border-radius:10px;padding:1px 9px;font-size:0.72rem;color:var(--muted);
 }
-/* Bulk bar */
 .bulk-bar{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   background:var(--surface);border:1px solid var(--accent);
@@ -149,15 +146,13 @@ button:hover{opacity:0.87;}
   color:var(--text);user-select:none;
 }
 .bulk-select-all input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
-/* Debug panel */
 .debug-panel{
   background:var(--surface2);border:1px solid var(--border);border-radius:10px;
   padding:14px;margin-bottom:20px;font-size:0.72rem;color:var(--muted);
   font-family:monospace;white-space:pre-wrap;word-break:break-all;
-  max-height:260px;overflow-y:auto;display:none;
+  max-height:400px;overflow-y:auto;display:none;
 }
 .debug-panel.show{display:block;}
-/* Modal */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);
   z-index:200;align-items:center;justify-content:center;padding:16px;
@@ -190,11 +185,10 @@ button:hover{opacity:0.87;}
 }
 .frow textarea:focus{border-color:var(--accent);}
 .frow .readonly-val{
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
   padding:9px 12px;font-size:0.85rem;color:var(--muted);
 }
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
-/* Toast */
 #toast{
   position:fixed;bottom:24px;right:24px;
   background:var(--surface);border:1px solid var(--border);
@@ -203,7 +197,6 @@ button:hover{opacity:0.87;}
   transition:all 0.3s;max-width:320px;pointer-events:none;
 }
 #toast.show{transform:translateY(0);opacity:1;}
-/* Auth */
 #auth-screen{
   display:none;flex-direction:column;align-items:center;justify-content:center;
   min-height:calc(100vh - 70px);padding:32px;
@@ -273,7 +266,6 @@ button:hover{opacity:0.87;}
   <div class="debug-panel" id="debug-panel">Loading&hellip;</div>
 
   <div class="toolbar">
-    <!-- Scope -->
     <div class="toolbar-group">
       <span class="toolbar-label">View</span>
       <div class="seg-toggle">
@@ -281,7 +273,6 @@ button:hover{opacity:0.87;}
         <button class="seg-btn"        id="ts-all"  onclick="setScope('all')">&#128101; All Staff</button>
       </div>
     </div>
-    <!-- Sort -->
     <div class="toolbar-group">
       <span class="toolbar-label">Sort by</span>
       <div class="seg-toggle">
@@ -291,14 +282,12 @@ button:hover{opacity:0.87;}
         <button class="seg-btn"        id="sort-category" onclick="setSort('category')">&#127991; Category</button>
       </div>
     </div>
-    <!-- Search & filters -->
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
     <select id="q-staff"    onchange="render()"><option value="">All Staff</option></select>
     <select id="q-client"   onchange="render()"><option value="">All Clients</option></select>
     <select id="q-category" onchange="render()"><option value="">All Categories</option></select>
   </div>
 
-  <!-- Bulk bar -->
   <div id="bulk-bar" style="display:none">
     <div class="bulk-bar">
       <label class="bulk-select-all">
@@ -314,7 +303,6 @@ button:hover{opacity:0.87;}
   <div id="task-body"></div>
 </div>
 
-<!-- Modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
@@ -363,6 +351,8 @@ button:hover{opacity:0.87;}
 // ── State ──────────────────────────────────────────────
 var tasksData       = [];
 var rawDebugData    = [];
+var rawCategoryData = [];
+var rawCatNameMap   = {};
 var staffList       = [];
 var staffMap        = {};
 var staffColorMap   = {};
@@ -378,7 +368,6 @@ var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
 var debugVisible    = false;
-var rawActivityData = [];
 
 var STAFF_COLORS = [
   '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
@@ -388,8 +377,8 @@ var STAFF_COLORS = [
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
-  try { assetList = JSON.parse(localStorage.getItem('sm8_assets')  || '[]'); } catch(e){ assetList = []; }
-  try { clientMap = JSON.parse(localStorage.getItem('sm8_clients') || '{}'); } catch(e){ clientMap = {}; }
+  try { assetList = JSON.parse(localStorage.getItem('sm8_assets')  || '[]'); } catch(e){ assetList=[]; }
+  try { clientMap = JSON.parse(localStorage.getItem('sm8_clients') || '{}'); } catch(e){ clientMap={}; }
   var id = readCookies();
   currentUser     = id.name || '';
   currentUserUuid = id.uuid || '';
@@ -467,15 +456,15 @@ function loadTasks(force) {
     sm8Get('/staff.json'),
     sm8Get('/job.json'),
     sm8Get('/jobchecklist.json'),
-    sm8Get('/jobactivity.json')
+    sm8Get('/category.json')
   ]).then(function(res) {
     var rawStaff      = Array.isArray(res[0]) ? res[0] : [];
     var rawJobs       = Array.isArray(res[1]) ? res[1] : [];
     var rawItems      = Array.isArray(res[2]) ? res[2] : [];
-    var rawActivities = Array.isArray(res[3]) ? res[3] : [];
-    rawActivityData = rawActivities; // store for debug
-    rawDebugData = rawItems;
-    updateDebugPanel();
+    var rawCategories = Array.isArray(res[3]) ? res[3] : [];
+
+    rawDebugData    = rawItems;
+    rawCategoryData = rawCategories;
 
     // Staff
     staffList = rawStaff
@@ -490,12 +479,13 @@ function loadTasks(force) {
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
 
-    // Jobs
+    // Jobs — store _raw for debug inspection
     jobMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
       .forEach(function(j) {
         jobMap[j.uuid] = {
+          _raw:       j,
           uuid:       j.uuid,
           number:     j.generated_job_id || '',
           desc:       j.job_description  || '',
@@ -503,13 +493,23 @@ function loadTasks(force) {
         };
       });
 
-    // Categories from job activities — first activity per job wins
+    // Categories: uuid -> name
+    rawCatNameMap = {};
+    rawCategories
+      .filter(function(c) { return String(c.active) === '1'; })
+      .forEach(function(c) { rawCatNameMap[c.uuid] = c.name; });
+
+    // Category map: job_uuid -> category name
+    // Tries both common field names; debug will reveal the correct one
     categoryMap = {};
-    rawActivities.forEach(function(a) {
-      if (a.job_uuid && a.category && !categoryMap[a.job_uuid]) {
-        categoryMap[a.job_uuid] = a.category;
-      }
-    });
+    rawJobs
+      .filter(function(j) { return String(j.active) === '1'; })
+      .forEach(function(j) {
+        var catUuid = j.job_category_uuid || j.category_uuid || j.job_category || '';
+        if (catUuid && rawCatNameMap[catUuid]) {
+          categoryMap[j.uuid] = rawCatNameMap[catUuid];
+        }
+      });
 
     // Checklist items
     tasksData = rawItems
@@ -529,7 +529,7 @@ function loadTasks(force) {
           staffUuid = i.assigned_to_staff_uuids[0];
         }
 
-        // Due date from absoluteDateTime
+        // Due date
         var dueDate = '';
         if (i.reminder_type === 'ABSOLUTE_DATETIME' &&
             i.reminder_data && typeof i.reminder_data === 'object' &&
@@ -537,19 +537,17 @@ function loadTasks(force) {
           dueDate = String(i.reminder_data.absoluteDateTime).substring(0, 10);
         }
 
-        // Human-readable reminder string
+        // Reminder display string
         var reminderData = '';
         if (i.reminder_data) {
           if (typeof i.reminder_data === 'object') {
-            if (i.reminder_data.absoluteDateTime)       reminderData = i.reminder_data.absoluteDateTime;
-            else if (i.reminder_data.relativeDateTime)  reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
-            else                                         reminderData = JSON.stringify(i.reminder_data);
+            if (i.reminder_data.absoluteDateTime)      reminderData = i.reminder_data.absoluteDateTime;
+            else if (i.reminder_data.relativeDateTime) reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
+            else                                        reminderData = JSON.stringify(i.reminder_data);
           } else {
             reminderData = String(i.reminder_data);
           }
         }
-
-        var category = categoryMap[i.job_uuid] || '';
 
         return {
           _id:          i.uuid,
@@ -569,7 +567,7 @@ function loadTasks(force) {
           jobUuidSm8:   job.uuid     || '',
           clientName:   clientName,
           clientUuid:   clientUuid,
-          category:     category
+          category:     categoryMap[i.job_uuid] || ''
         };
       });
 
@@ -586,6 +584,7 @@ function loadTasks(force) {
       tasksData.length + ' incomplete tasks shown'
     );
 
+    updateDebugPanel();
     populateFilters();
     render();
 
@@ -604,13 +603,13 @@ function toggleDebug() {
   document.getElementById('debug-panel').classList.toggle('show', debugVisible);
   updateDebugPanel();
 }
+
 function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
-  if (!rawDebugData.length) { panel.textContent = 'No data yet.'; return; }
 
   var typeCounts = {};
-  rawDebugData.forEach(function(i) { var t = i.item_type||'(none)'; typeCounts[t]=(typeCounts[t]||0)+1; });
+  rawDebugData.forEach(function(i){ var t=i.item_type||'(none)'; typeCounts[t]=(typeCounts[t]||0)+1; });
   var activeCount    = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
   var inactiveCount  = rawDebugData.filter(function(i){ return String(i.active)!=='1'; }).length;
   var completedCount = rawDebugData.filter(function(i){
@@ -618,43 +617,65 @@ function updateDebugPanel() {
     return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
   }).length;
 
-  // Category map debug
-  var categoryKeys   = Object.keys(categoryMap);
-  var tasksWithCat   = tasksData.filter(function(t){ return !!t.category; }).length;
-  var tasksWithoutCat= tasksData.filter(function(t){ return !t.category; }).length;
+  // Category debug
+  var categoryKeys    = Object.keys(categoryMap);
+  var tasksWithCat    = tasksData.filter(function(t){ return !!t.category; }).length;
+  var tasksWithoutCat = tasksData.filter(function(t){ return !t.category; }).length;
 
-  // Sample: first task that has a job_uuid, show what categoryMap returns for it
+  // Sample task -> job lookup
   var sampleTask = tasksData.find(function(t){ return !!t.jobUuid; });
-  var sampleLookup = sampleTask
-    ? 'Sample task job_uuid: ' + sampleTask.jobUuid + '\n  categoryMap result: ' + (categoryMap[sampleTask.jobUuid] || '(not found)')
-    : 'No tasks with job_uuid found';
-
-  // Raw activity sample
-  var actSample = rawActivityData && rawActivityData.length
-    ? 'Total activity records: ' + rawActivityData.length + '\n' +
-      'First record:\n' + JSON.stringify(rawActivityData[0], null, 2) + '\n\n' +
-      'Second record:\n' + JSON.stringify(rawActivityData[1] || 'n/a', null, 2)
-    : 'rawActivityData is empty or not loaded';
+  var sampleLookup = 'No tasks with job_uuid found';
+  var sampleJobRaw = 'n/a';
+  if (sampleTask) {
+    sampleLookup = 'Sample task job_uuid: ' + sampleTask.jobUuid +
+                   '\n  categoryMap result: ' + (categoryMap[sampleTask.jobUuid] || '(not found)');
+    var jobEntry = jobMap[sampleTask.jobUuid];
+    if (jobEntry && jobEntry._raw) {
+      // Show only the fields that might relate to category
+      var raw = jobEntry._raw;
+      var catFields = {};
+      Object.keys(raw).forEach(function(k){
+        if (k.toLowerCase().indexOf('cat') !== -1 || k.toLowerCase().indexOf('type') !== -1) {
+          catFields[k] = raw[k];
+        }
+      });
+      sampleJobRaw = 'Category-related fields on job:\n' +
+        JSON.stringify(catFields, null, 2) +
+        '\n\nFull job raw:\n' +
+        JSON.stringify(raw, null, 2);
+    }
+  }
 
   panel.textContent =
-    '── CHECKLIST ──────────────────────────\n'+
+    '── CHECKLIST ──────────────────────────\n' +
     'Total: '+rawDebugData.length+'  active=1: '+activeCount+'  active=0: '+inactiveCount+'\n'+
     'completed (real ts): '+completedCount+'\n\n'+
     'item_type breakdown:\n'+
     Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n')+'\n\n'+
-    '── CATEGORIES ─────────────────────────\n'+
-    'categoryMap entries: ' + categoryKeys.length + '\n'+
+
+    '── CATEGORY ENDPOINT ──────────────────\n'+
+    'Total /category.json records: ' + rawCategoryData.length + '\n'+
+    'Active categories in rawCatNameMap: ' + Object.keys(rawCatNameMap).length + '\n'+
+    'First category record:\n'+
+    JSON.stringify(rawCategoryData[0] || 'none', null, 2)+'\n\n'+
+
+    '── CATEGORY MAP ───────────────────────\n'+
+    'categoryMap entries (job_uuid -> name): ' + categoryKeys.length + '\n'+
     'Tasks with category: ' + tasksWithCat + '\n'+
     'Tasks without category: ' + tasksWithoutCat + '\n\n'+
     sampleLookup + '\n\n'+
     'categoryMap sample (first 5):\n'+
     categoryKeys.slice(0,5).map(function(k){ return '  '+k+' -> '+categoryMap[k]; }).join('\n')+'\n\n'+
-    '── JOB ACTIVITY RAW ───────────────────\n'+
-    actSample + '\n\n'+
-    '── FIRST TODO ─────────────────────────\n'+
-    JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase()==='todo'; })||'none',null,2);
-}
 
+    '── SAMPLE JOB RAW ─────────────────────\n'+
+    sampleJobRaw + '\n\n'+
+
+    '── FIRST TODO ─────────────────────────\n'+
+    JSON.stringify(
+      rawDebugData.find(function(i){ return String(i.item_type).toLowerCase()==='todo'; }) || 'none',
+      null, 2
+    );
+}
 
 // ── Filters ────────────────────────────────────────────
 function populateFilters() {
@@ -796,8 +817,8 @@ function toggleSelectAll(checked) {
 
 function clearSelection() {
   selectedIds = {};
-  document.querySelectorAll('.task-card').forEach(function(c) { c.classList.remove('selected'); });
-  document.querySelectorAll('.bulk-cb').forEach(function(cb) { cb.checked = false; });
+  document.querySelectorAll('.task-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.querySelectorAll('.bulk-cb').forEach(function(cb){ cb.checked = false; });
   var sa = document.getElementById('bulk-select-all');
   if (sa) sa.checked = false;
   updateBulkBar();
@@ -809,7 +830,7 @@ function updateBulkBar() {
   var label = document.getElementById('bulk-count');
   if (!bar) return;
   bar.style.display = count > 0 ? 'block' : 'none';
-  if (label) label.textContent = count + ' task' + (count === 1 ? '' : 's') + ' selected';
+  if (label) label.textContent = count + ' task' + (count===1?'':'s') + ' selected';
   var filtered = getFiltered();
   var sa = document.getElementById('bulk-select-all');
   if (sa) {
@@ -821,44 +842,45 @@ function updateBulkBar() {
 function bulkComplete() {
   var ids = Object.keys(selectedIds);
   if (!ids.length) return;
-  if (!confirm('Mark ' + ids.length + ' task' + (ids.length === 1 ? '' : 's') + ' as completed in ServiceM8?')) return;
+  if (!confirm('Mark ' + ids.length + ' task' + (ids.length===1?'':'s') + ' as completed in ServiceM8?')) return;
 
   var now = new Date();
-  var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
-            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  var ts  = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+
+            ' '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
 
-  var toComplete = ids.map(function(id) {
-    return tasksData.find(function(t) { return t._id === id; });
+  var toComplete = ids.map(function(id){
+    return tasksData.find(function(t){ return t._id===id; });
   }).filter(Boolean);
 
-  var label = document.getElementById('bulk-count');
-  var done = 0; var failed = 0;
+  var label  = document.getElementById('bulk-count');
+  var done   = 0;
+  var failed = 0;
 
   function updateProgress() {
-    if (label) label.textContent = 'Completing ' + (done+failed) + ' / ' + toComplete.length + '\u2026';
+    if (label) label.textContent = 'Completing '+(done+failed)+' / '+toComplete.length+'\u2026';
   }
 
   var promises = toComplete.map(function(t) {
-    return sm8Put('/jobchecklist/' + t._id + '.json', buildPayload(t, ts)).then(function(r) {
-      if (r.status === 200 || r.status === 201 || r.status === 204) {
+    return sm8Put('/jobchecklist/'+t._id+'.json', buildPayload(t, ts)).then(function(r) {
+      if (r.status===200||r.status===201||r.status===204) {
         done++;
-        tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
+        tasksData = tasksData.filter(function(x){ return x._id!==t._id; });
       } else { failed++; }
       updateProgress();
-    }).catch(function() { failed++; updateProgress(); });
+    }).catch(function(){ failed++; updateProgress(); });
   });
 
   Promise.all(promises).then(function() {
     selectedIds = {};
     populateFilters();
     render();
-    toast(failed === 0
-      ? done + ' task' + (done===1?'':'s') + ' marked as completed.'
-      : done + ' completed, ' + failed + ' failed.', failed > 0);
+    toast(failed===0
+      ? done+' task'+(done===1?'':'s')+' marked as completed.'
+      : done+' completed, '+failed+' failed.', failed>0);
   });
 }
 
-// ── Complete payload builder ───────────────────────────
+// ── Payload builder ────────────────────────────────────
 function buildPayload(t, ts) {
   var raw = t._raw;
   return {
@@ -896,7 +918,7 @@ function render() {
   if (!filtered.length) {
     updateBulkBar();
     setBody('<div class="empty-wrap"><div class="empty-icon">&#10003;</div>' +
-            '<p>' + (tScope === 'mine'
+            '<p>' + (tScope==='mine'
               ? 'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
               : 'No tasks match the current filters.') + '</p></div>');
     return;
@@ -910,7 +932,7 @@ function render() {
     renderGroupedByCategory(sorted);
   } else {
     var html = '<div class="task-list">';
-    sorted.forEach(function(t) { html += taskCard(t); });
+    sorted.forEach(function(t){ html += taskCard(t); });
     html += '</div>';
     setBody(html);
   }
@@ -932,11 +954,11 @@ function renderGroupedByStaff(sorted) {
   groups.forEach(function(g) {
     html += '<div class="staff-group">'
       + '<div class="staff-group-hdr">'
-      + '<span class="staff-avatar" style="background:' + esc(g.staffColor) + '">' + esc(initials(g.staffName)) + '</span>'
-      + '<span class="staff-group-name">' + esc(g.staffName) + '</span>'
-      + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
+      + '<span class="staff-avatar" style="background:'+esc(g.staffColor)+'">'+esc(initials(g.staffName))+'</span>'
+      + '<span class="staff-group-name">'+esc(g.staffName)+'</span>'
+      + '<span class="staff-group-ct">'+g.tasks.length+'</span>'
       + '</div><div class="task-list">';
-    g.tasks.forEach(function(t) { html += taskCard(t); });
+    g.tasks.forEach(function(t){ html += taskCard(t); });
     html += '</div></div>';
   });
   setBody(html);
@@ -957,10 +979,10 @@ function renderGroupedByCategory(sorted) {
     html += '<div class="staff-group">'
       + '<div class="staff-group-hdr">'
       + '<span class="category-icon">&#127991;</span>'
-      + '<span class="staff-group-name">' + esc(g.category) + '</span>'
-      + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
+      + '<span class="staff-group-name">'+esc(g.category)+'</span>'
+      + '<span class="staff-group-ct">'+g.tasks.length+'</span>'
       + '</div><div class="task-list">';
-    g.tasks.forEach(function(t) { html += taskCard(t); });
+    g.tasks.forEach(function(t){ html += taskCard(t); });
     html += '</div></div>';
   });
   setBody(html);
@@ -968,10 +990,10 @@ function renderGroupedByCategory(sorted) {
 
 function renderStats(scope) {
   var total      = scope.length;
-  var unassigned = scope.filter(function(t) { return !t.staffUuid; }).length;
-  var overdue    = scope.filter(function(t) { return t.dueDate && daysUntil(t.dueDate) < 0; }).length;
-  var dueToday   = scope.filter(function(t) { return t.dueDate && daysUntil(t.dueDate) === 0; }).length;
-  var dueSoon    = scope.filter(function(t) {
+  var unassigned = scope.filter(function(t){ return !t.staffUuid; }).length;
+  var overdue    = scope.filter(function(t){ return t.dueDate && daysUntil(t.dueDate) < 0; }).length;
+  var dueToday   = scope.filter(function(t){ return t.dueDate && daysUntil(t.dueDate) === 0; }).length;
+  var dueSoon    = scope.filter(function(t){
     var d = t.dueDate ? daysUntil(t.dueDate) : null;
     return d !== null && d > 0 && d <= 7;
   }).length;
@@ -984,8 +1006,8 @@ function renderStats(scope) {
 }
 
 function stat(v, l, c) {
-  return '<div class="stat-card"><div class="stat-val" style="color:' + c + '">' + v +
-         '</div><div class="stat-lbl">' + l + '</div></div>';
+  return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+
+         '</div><div class="stat-lbl">'+l+'</div></div>';
 }
 
 // ── Task card ──────────────────────────────────────────
@@ -996,34 +1018,34 @@ function taskCard(t) {
   var isSelected = !!selectedIds[t._id];
 
   var sm8Btn = t.jobUuidSm8
-    ? '<a class="open-sm8-btn" href="https://go.servicem8.com/job_card.html#edit,uuid=' +
-      esc(t.jobUuidSm8) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>'
+    ? '<a class="open-sm8-btn" href="https://go.servicem8.com/job_card.html#edit,uuid='+esc(t.jobUuidSm8)+
+      '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>'
     : '';
 
-  var dateDisplay = t.dueDate ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>' : '';
+  var dateDisplay = t.dueDate ? '<span>&#128336; Due '+fmtDate(t.dueDate)+'</span>' : '';
 
-  var staffChip = '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
-    + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
-    + esc(t.staffName) + '</span>';
+  var staffChip = '<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
+    + '<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'
+    + esc(t.staffName)+'</span>';
 
-  return '<div class="task-card ' + colorCls + (isSelected?' selected':'') + '" data-id="' + esc(t._id) + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
-    + '<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\'' + esc(t._id) + '\',this.checked,event)"' + (isSelected?' checked':'') + '/>'
+  return '<div class="task-card '+colorCls+(isSelected?' selected':'')+'" data-id="'+esc(t._id)+'" onclick="openEdit(\''+esc(t._id)+'\')">'
+    + '<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\''+esc(t._id)+'\',this.checked,event)"'+(isSelected?' checked':'')+'/>'
     + '<div class="task-body">'
     + '<div class="title-row">'
-    + '<span class="task-title">' + esc(t.name) + '</span>'
+    + '<span class="task-title">'+esc(t.name)+'</span>'
     + '<span class="badge task">Task</span>'
-    + (t.section  ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
+    + (t.section  ? '<span class="badge section">'+esc(t.section)+'</span>' : '')
     + (isOverdue  ? '<span class="badge overdue">Overdue</span>' : '')
     + '</div>'
     + '<div class="meta-row">'
     + staffChip
-    + (t.category   ? '<span>&#127991; ' + esc(t.category)   + '</span>' : '')
-    + (t.clientName ? '<span>&#128205; ' + esc(t.clientName) + '</span>' : '')
-    + (t.jobNumber  ? '<span>&#128188; Job #' + esc(t.jobNumber) + (t.jobDesc?' &mdash; '+esc(t.jobDesc.substring(0,40)):'') + '</span>' : '')
+    + (t.category   ? '<span>&#127991; '+esc(t.category)+'</span>'   : '')
+    + (t.clientName ? '<span>&#128205; '+esc(t.clientName)+'</span>' : '')
+    + (t.jobNumber  ? '<span>&#128188; Job #'+esc(t.jobNumber)+(t.jobDesc?' &mdash; '+esc(t.jobDesc.substring(0,40)):'')+' </span>' : '')
     + dateDisplay
     + '</div>'
     + '</div>'
-    + '<div class="task-right">' + duePill(t) + sm8Btn + '</div>'
+    + '<div class="task-right">'+duePill(t)+sm8Btn+'</div>'
     + '</div>';
 }
 
@@ -1031,52 +1053,52 @@ function duePill(t) {
   if (!t.dueDate) return '<span class="due-pill none">No date</span>';
   var d = daysUntil(t.dueDate);
   if (d === null) return '';
-  if (d < 0)   return '<span class="due-pill overdue">&#9888; ' + Math.abs(d) + 'd overdue</span>';
+  if (d < 0)   return '<span class="due-pill overdue">&#9888; '+Math.abs(d)+'d overdue</span>';
   if (d === 0) return '<span class="due-pill today">Due today</span>';
-  if (d <= 7)  return '<span class="due-pill soon">' + d + 'd left</span>';
-  return '<span class="due-pill ok">' + fmtDate(t.dueDate) + '</span>';
+  if (d <= 7)  return '<span class="due-pill soon">'+d+'d left</span>';
+  return '<span class="due-pill ok">'+fmtDate(t.dueDate)+'</span>';
 }
 
 // ── Mark complete ──────────────────────────────────────
 function markComplete(t) {
   var now = new Date();
-  var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
-            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-  sm8Put('/jobchecklist/' + t._id + '.json', buildPayload(t, ts)).then(function(r) {
-    if (r.status === 200 || r.status === 201 || r.status === 204) {
-      tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
+  var ts  = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+
+            ' '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  sm8Put('/jobchecklist/'+t._id+'.json', buildPayload(t, ts)).then(function(r) {
+    if (r.status===200||r.status===201||r.status===204) {
+      tasksData = tasksData.filter(function(x){ return x._id!==t._id; });
       delete selectedIds[t._id];
       populateFilters();
       closeModal();
       render();
       toast('Task marked as completed.');
     } else {
-      r.text().then(function(txt) {
-        toast('Save failed: HTTP ' + r.status + ' \u2014 ' + txt.substring(0,120), true);
+      r.text().then(function(txt){
+        toast('Save failed: HTTP '+r.status+' \u2014 '+txt.substring(0,120), true);
       });
     }
-  }).catch(function(e) { toast('Save failed: ' + e.message, true); });
+  }).catch(function(e){ toast('Save failed: '+e.message, true); });
 }
 
 // ── Edit modal ─────────────────────────────────────────
 function openEdit(id) {
-  var t = tasksData.find(function(x) { return x._id === id; });
+  var t = tasksData.find(function(x){ return x._id===id; });
   if (!t) return;
   editRecord = t;
 
   var sm8Link = document.getElementById('m-sm8-link');
   if (t.jobUuidSm8) {
-    sm8Link.href = 'https://go.servicem8.com/job_card.html#edit,uuid=' + t.jobUuidSm8;
-    sm8Link.innerHTML = '&#128279; Open Job #' + esc(t.jobNumber) + ' in ServiceM8';
+    sm8Link.href = 'https://go.servicem8.com/job_card.html#edit,uuid='+t.jobUuidSm8;
+    sm8Link.innerHTML = '&#128279; Open Job #'+esc(t.jobNumber)+' in ServiceM8';
     sm8Link.style.display = 'inline-flex';
-  } else { sm8Link.style.display = 'none'; }
+  } else { sm8Link.style.display='none'; }
 
   document.getElementById('m-name').textContent = t.name;
 
   document.getElementById('m-staff-display').innerHTML =
-    '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
-    + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
-    + esc(t.staffName) + '</span>';
+    '<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
+    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'
+    +esc(t.staffName)+'</span>';
 
   var catRow = document.getElementById('m-category-row');
   if (t.category) { catRow.style.display=''; document.getElementById('m-category').textContent=t.category; }
@@ -1104,33 +1126,28 @@ function openEdit(id) {
 
 function completeFromModal() {
   if (!editRecord) return;
-  if (!confirm('Mark "' + editRecord.name + '" as completed in ServiceM8?')) return;
+  if (!confirm('Mark "'+editRecord.name+'" as completed in ServiceM8?')) return;
   markComplete(editRecord);
 }
 
-function openModal() { document.getElementById('modal').classList.add('open'); }
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  editRecord = null;
-}
-function onOverlayClick(e) {
-  if (e.target === document.getElementById('modal')) closeModal();
-}
+function openModal()  { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); editRecord=null; }
+function onOverlayClick(e) { if (e.target===document.getElementById('modal')) closeModal(); }
 
 // ── Helpers ────────────────────────────────────────────
 function initials(name) {
-  if (!name || name === 'Unassigned') return '?';
+  if (!name || name==='Unassigned') return '?';
   var parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
-  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  if (parts.length===1) return parts[0].substring(0,2).toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
 }
 function daysUntil(str) {
   if (!str) return null;
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return null;
-  var d = new Date(+m[1], +m[2]-1, +m[3]);
+  var d = new Date(+m[1],+m[2]-1,+m[3]);
   var now = new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
-  return Math.round((d - now) / 86400000);
+  return Math.round((d-now)/86400000);
 }
 function fmtDate(str) {
   if (!str) return '\u2014';
@@ -1138,13 +1155,13 @@ function fmtDate(str) {
   if (!m) return str;
   return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
 }
-function pad(n) { return n < 10 ? '0'+n : String(n); }
+function pad(n) { return n<10?'0'+n:String(n); }
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-function setBody(html)    { document.getElementById('task-body').innerHTML = html; }
-function setSyncMsg(html) { document.getElementById('sync-detail').innerHTML = html; }
+function setBody(html)    { document.getElementById('task-body').innerHTML=html; }
+function setSyncMsg(html) { document.getElementById('sync-detail').innerHTML=html; }
 
 var toastTimer = null;
 function toast(msg, isError) {
@@ -1154,7 +1171,7 @@ function toast(msg, isError) {
   el.style.color       = isError ? 'var(--red)' : 'var(--text)';
   el.classList.add('show');
   if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 3500);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
 }
 </script>
 </body>
