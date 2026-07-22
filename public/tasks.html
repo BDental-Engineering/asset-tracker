@@ -490,7 +490,7 @@ function readCookies() {
 
 // ── Flagged IDs persistence ────────────────────────────
 function loadFlaggedIds() {
-  return fetch('/data/flaggedtasks.json', { cache: 'no-store' })
+  return fetch('/api/flaggedtasks', { cache: 'no-store', credentials: 'include' })
     .then(function(r) {
       if (!r.ok) return {};
       return r.json();
@@ -502,15 +502,16 @@ function loadFlaggedIds() {
 }
 
 function saveFlaggedIds() {
-  return fetch('/data/flaggedtasks.json', {
+  return fetch('/api/flaggedtasks', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(flaggedIds, null, 2)
+    body: JSON.stringify(flaggedIds)
   }).catch(function(e) {
-    console.warn('Could not save flaggedtasks.json:', e);
+    console.warn('[flaggedtasks] save failed:', e);
   });
 }
+
 
 function toggleFlag(id, event) {
   if (event) event.stopPropagation();
