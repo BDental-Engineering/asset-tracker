@@ -5,6 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tasks — Asset Tracker</title>
 <style>
+  /* Bulk action bar */
+.bulk-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--accent);
+  border-radius:10px;padding:10px 16px;margin-bottom:12px;
+}
+.bulk-select-all{
+  display:flex;align-items:center;gap:8px;
+  font-size:0.82rem;font-weight:600;cursor:pointer;
+  color:var(--text);user-select:none;
+}
+.bulk-select-all input{
+  width:16px;height:16px;accent-color:var(--accent);cursor:pointer;
+}
+/* Task card selected state */
+.task-card.selected{
+  border-color:var(--accent);
+  background:rgba(79,110,247,0.07);
+}
+
 /* Staff colour chip */
 .staff-chip{
   display:inline-flex;align-items:center;gap:5px;
@@ -288,6 +308,19 @@ button:hover{opacity:0.87;}
     <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
   </div>
   </div>
+    
+  <!-- Bulk action bar — shown when items are selected -->
+    <div id="bulk-bar" style="display:none">
+      <div class="bulk-bar">
+        <label class="bulk-select-all">
+          <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAll(this.checked)"/>
+          <span id="bulk-count">0 selected</span>
+        </label>
+        <div style="flex:1"></div>
+      <button class="btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
+     <button class="btn-primary btn-sm" onclick="bulkComplete()">&#10003; Mark Selected Complete</button>
+  </div>
+</div>
 
   <div id="task-body"></div>
 </div>
@@ -344,13 +377,13 @@ var assetList       = [];
 var clientMap       = {};
 var tasksLoaded     = false;
 var tScope          = 'mine';
-var sortMode        = 'due';   // 'due' | 'staff' | 'job'
+var sortMode        = 'due';
+var selectedIds     = {};   // uuid -> true
 var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
 var debugVisible    = false;
 
-// Palette — distinct colours for staff avatars
 var STAFF_COLORS = [
   '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
   '#06b6d4','#f97316','#ec4899','#84cc16','#14b8a6',
@@ -429,6 +462,8 @@ function sm8Put(path, payload) {
 function loadTasks(force) {
   if (tasksLoaded && !force) return;
   tasksLoaded = false;
+  selectedIds = {};
+  updateBulkBar();
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
@@ -444,7 +479,6 @@ function loadTasks(force) {
     rawDebugData = rawItems;
     updateDebugPanel();
 
-    // Staff — assign a colour to each
     staffList = rawStaff
       .filter(function(s) { return String(s.active) === '1'; })
       .map(function(s) {
@@ -457,7 +491,6 @@ function loadTasks(force) {
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
 
-    // Jobs
     jobMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
@@ -470,7 +503,6 @@ function loadTasks(force) {
         };
       });
 
-    // Checklist items
     tasksData = rawItems
       .filter(function(i) {
         if (String(i.active) !== '1') return false;
@@ -487,13 +519,26 @@ function loadTasks(force) {
         if (Array.isArray(i.assigned_to_staff_uuids) && i.assigned_to_staff_uuids.length) {
           staffUuid = i.assigned_to_staff_uuids[0];
         }
-        // due date — reminder_data is an object with absoluteDateTime
+
+        // Due date from absoluteDateTime
         var dueDate = '';
         if (i.reminder_type === 'ABSOLUTE_DATETIME' &&
-          i.reminder_data && typeof i.reminder_data === 'object' &&
-          i.reminder_data.absoluteDateTime) {
-        dueDate = String(i.reminder_data.absoluteDateTime).substring(0, 10);
-      }
+            i.reminder_data && typeof i.reminder_data === 'object' &&
+            i.reminder_data.absoluteDateTime) {
+          dueDate = String(i.reminder_data.absoluteDateTime).substring(0, 10);
+        }
+
+        // Human-readable reminder string
+        var reminderData = '';
+        if (i.reminder_data) {
+          if (typeof i.reminder_data === 'object') {
+            if (i.reminder_data.absoluteDateTime) reminderData = i.reminder_data.absoluteDateTime;
+            else if (i.reminder_data.relativeDateTime) reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
+            else reminderData = JSON.stringify(i.reminder_data);
+          } else {
+            reminderData = String(i.reminder_data);
+          }
+        }
 
         return {
           _id:          i.uuid,
@@ -506,16 +551,7 @@ function loadTasks(force) {
           staffColor:   staffColorMap[staffUuid] || '#8892b0',
           dueDate:      dueDate,
           reminderType: i.reminder_type || '',
-          reminderData: (function() {
-            if (!i.reminder_data) return '';
-            if (typeof i.reminder_data === 'object') {
-              if (i.reminder_data.absoluteDateTime) return i.reminder_data.absoluteDateTime;
-              if (i.reminder_data.relativeDateTime) return JSON.stringify(i.reminder_data.relativeDateTime);
-              return JSON.stringify(i.reminder_data);
-            }
-            return String(i.reminder_data);
-          })(),
-
+          reminderData: reminderData,
           jobUuid:      i.job_uuid    || '',
           jobNumber:    job.number    || '',
           jobDesc:      job.desc      || '',
@@ -556,26 +592,25 @@ function toggleDebug() {
   document.getElementById('debug-panel').classList.toggle('show', debugVisible);
   updateDebugPanel();
 }
-
 function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
   if (!rawDebugData.length) { panel.textContent = 'No data yet.'; return; }
   var typeCounts = {};
-  rawDebugData.forEach(function(i) { var t = i.item_type || '(none)'; typeCounts[t] = (typeCounts[t]||0)+1; });
-  var activeCount   = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
-  var inactiveCount = rawDebugData.filter(function(i){ return String(i.active)!=='1'; }).length;
-  var completedCount= rawDebugData.filter(function(i){
-    var ts = String(i.completed_timestamp||'').trim();
-    return ts!=='' && ts!=='0000-00-00 00:00:00' && ts!=='0000-00-00';
+  rawDebugData.forEach(function(i) { var t = i.item_type||'(none)'; typeCounts[t]=(typeCounts[t]||0)+1; });
+  var activeCount    = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
+  var inactiveCount  = rawDebugData.filter(function(i){ return String(i.active)!=='1'; }).length;
+  var completedCount = rawDebugData.filter(function(i){
+    var ts=String(i.completed_timestamp||'').trim();
+    return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
   }).length;
   panel.textContent =
-    'Total: ' + rawDebugData.length + '  active=1: ' + activeCount + '  active=0: ' + inactiveCount + '\n' +
-    'completed (real ts): ' + completedCount + '\n\n' +
-    'item_type breakdown:\n' +
-    Object.keys(typeCounts).map(function(k){ return '  ' + k + ': ' + typeCounts[k]; }).join('\n') + '\n\n' +
-    'First Todo:\n' +
-    JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase()==='todo'; })||'none', null, 2);
+    'Total: '+rawDebugData.length+'  active=1: '+activeCount+'  active=0: '+inactiveCount+'\n'+
+    'completed (real ts): '+completedCount+'\n\n'+
+    'item_type breakdown:\n'+
+    Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n')+'\n\n'+
+    'First Todo:\n'+
+    JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase()==='todo'; })||'none',null,2);
 }
 
 // ── Filters ────────────────────────────────────────────
@@ -605,16 +640,18 @@ function populateFilters() {
 
 function setScope(s) {
   tScope = s;
-  document.getElementById('ts-mine').className = 'seg-btn' + (s==='mine' ? ' active' : '');
-  document.getElementById('ts-all').className  = 'seg-btn' + (s==='all'  ? ' active' : '');
+  document.getElementById('ts-mine').className = 'seg-btn'+(s==='mine'?' active':'');
+  document.getElementById('ts-all').className  = 'seg-btn'+(s==='all' ?' active':'');
+  selectedIds = {};
+  updateBulkBar();
   render();
 }
 
 function setSort(s) {
   sortMode = s;
-  document.getElementById('sort-due').className   = 'seg-btn' + (s==='due'   ? ' active' : '');
-  document.getElementById('sort-staff').className = 'seg-btn' + (s==='staff' ? ' active' : '');
-  document.getElementById('sort-job').className   = 'seg-btn' + (s==='job'   ? ' active' : '');
+  document.getElementById('sort-due').className   = 'seg-btn'+(s==='due'  ?' active':'');
+  document.getElementById('sort-staff').className = 'seg-btn'+(s==='staff'?' active':'');
+  document.getElementById('sort-job').className   = 'seg-btn'+(s==='job'  ?' active':'');
   render();
 }
 
@@ -622,7 +659,6 @@ function getFiltered() {
   var q       = (document.getElementById('q-search').value || '').toLowerCase();
   var staffF  = document.getElementById('q-staff').value;
   var clientF = document.getElementById('q-client').value;
-
   return tasksData.filter(function(t) {
     if (tScope === 'mine') {
       var isMe = (currentUserUuid && t.staffUuid === currentUserUuid) ||
@@ -643,14 +679,10 @@ function sortTasks(arr) {
   var copy = arr.slice();
   if (sortMode === 'due') {
     copy.sort(function(a, b) {
-      // Tasks with a due date come first, sorted ascending
-      // Tasks without a due date go to the bottom
-      var da = a.dueDate || '';
-      var db = b.dueDate || '';
+      var da = a.dueDate || ''; var db = b.dueDate || '';
       if (da && !db) return -1;
       if (!da && db) return  1;
       if (da && db)  return da.localeCompare(db);
-      // both no date — sort by staff name then task name
       return a.staffName.localeCompare(b.staffName) || a.name.localeCompare(b.name);
     });
   } else if (sortMode === 'staff') {
@@ -668,6 +700,130 @@ function sortTasks(arr) {
   return copy;
 }
 
+// ── Bulk selection ─────────────────────────────────────
+function toggleSelect(id, checked, event) {
+  if (event) event.stopPropagation();
+  if (checked) {
+    selectedIds[id] = true;
+  } else {
+    delete selectedIds[id];
+  }
+  // Update card highlight without full re-render
+  var card = document.querySelector('.task-card[data-id="' + id + '"]');
+  if (card) card.classList.toggle('selected', !!checked);
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  var filtered = getFiltered();
+  filtered.forEach(function(t) {
+    if (checked) selectedIds[t._id] = true;
+    else delete selectedIds[t._id];
+  });
+  // Update all card highlights
+  document.querySelectorAll('.task-card[data-id]').forEach(function(card) {
+    card.classList.toggle('selected', !!selectedIds[card.dataset.id]);
+    var cb = card.querySelector('.bulk-cb');
+    if (cb) cb.checked = !!selectedIds[card.dataset.id];
+  });
+  updateBulkBar();
+}
+
+function clearSelection() {
+  selectedIds = {};
+  document.querySelectorAll('.task-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.querySelectorAll('.bulk-cb').forEach(function(cb) { cb.checked = false; });
+  var sa = document.getElementById('bulk-select-all');
+  if (sa) sa.checked = false;
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  var count = Object.keys(selectedIds).length;
+  var bar   = document.getElementById('bulk-bar');
+  var label = document.getElementById('bulk-count');
+  if (!bar) return;
+  bar.style.display = count > 0 ? 'block' : 'none';
+  if (label) label.textContent = count + ' task' + (count === 1 ? '' : 's') + ' selected';
+
+  // Sync the select-all checkbox state
+  var filtered = getFiltered();
+  var sa = document.getElementById('bulk-select-all');
+  if (sa) {
+    sa.indeterminate = count > 0 && count < filtered.length;
+    sa.checked = count > 0 && count === filtered.length;
+  }
+}
+
+function bulkComplete() {
+  var ids   = Object.keys(selectedIds);
+  if (!ids.length) return;
+  if (!confirm('Mark ' + ids.length + ' task' + (ids.length === 1 ? '' : 's') + ' as completed in ServiceM8?')) return;
+
+  var now = new Date();
+  var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+  var toComplete = ids.map(function(id) {
+    return tasksData.find(function(t) { return t._id === id; });
+  }).filter(Boolean);
+
+  // Show progress in bulk bar
+  var label = document.getElementById('bulk-count');
+  var done  = 0;
+  var failed = 0;
+
+  function updateProgress() {
+    if (label) label.textContent = 'Completing ' + (done + failed) + ' / ' + toComplete.length + '\u2026';
+  }
+
+  var promises = toComplete.map(function(t) {
+    var raw = t._raw;
+    var payload = {
+      uuid:                          t._id,
+      job_uuid:                      raw.job_uuid                      || '',
+      name:                          raw.name                          || '',
+      section_name:                  raw.section_name                  || '',
+      item_type:                     raw.item_type                     || 'Todo',
+      sort_order:                    raw.sort_order                    || 0,
+      completed_timestamp:           ts,
+      completed_by_staff_uuid:       currentUserUuid || t.staffUuid    || '',
+      completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
+      reminder_type:                 raw.reminder_type                 || '',
+      reminder_data:                 raw.reminder_data && !Array.isArray(raw.reminder_data) ? raw.reminder_data : null,
+      regarding_object:              raw.regarding_object              || '',
+      regarding_object_uuid:         raw.regarding_object_uuid         || '',
+      fulfilled_by_object_name:      raw.fulfilled_by_object_name      || '',
+      fulfilled_by_object_uuid:      raw.fulfilled_by_object_uuid      || '',
+      assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
+      is_locked:                     raw.is_locked                     || '0'
+    };
+    return sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
+      if (r.status === 200 || r.status === 201 || r.status === 204) {
+        done++;
+        tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
+      } else {
+        failed++;
+      }
+      updateProgress();
+    }).catch(function() {
+      failed++;
+      updateProgress();
+    });
+  });
+
+  Promise.all(promises).then(function() {
+    selectedIds = {};
+    populateFilters();
+    render();
+    if (failed === 0) {
+      toast(done + ' task' + (done === 1 ? '' : 's') + ' marked as completed.');
+    } else {
+      toast(done + ' completed, ' + failed + ' failed.', failed > 0);
+    }
+  });
+}
+
 // ── Render ─────────────────────────────────────────────
 function render() {
   if (!tasksLoaded) return;
@@ -680,6 +836,7 @@ function render() {
   renderStats(scope);
 
   if (!filtered.length) {
+    updateBulkBar();
     setBody('<div class="empty-wrap"><div class="empty-icon">&#10003;</div>' +
             '<p>' + (tScope === 'mine'
               ? 'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
@@ -689,7 +846,6 @@ function render() {
 
   var sorted = sortTasks(filtered);
 
-  // When sorting by staff, group by staff member
   if (sortMode === 'staff' && tScope === 'all') {
     renderGroupedByStaff(sorted);
   } else {
@@ -698,30 +854,28 @@ function render() {
     html += '</div>';
     setBody(html);
   }
+
+  updateBulkBar();
 }
 
 function renderGroupedByStaff(sorted) {
-  var groups = [];
-  var groupMap = {};
+  var groups = []; var groupMap = {};
   sorted.forEach(function(t) {
     var key = t.staffUuid || '__unassigned__';
     if (!groupMap[key]) {
-      groupMap[key] = { staffName: t.staffName, staffColor: t.staffColor, tasks: [] };
+      groupMap[key] = { staffName:t.staffName, staffColor:t.staffColor, tasks:[] };
       groups.push(groupMap[key]);
     }
     groupMap[key].tasks.push(t);
   });
-
   var html = '';
   groups.forEach(function(g) {
     html += '<div class="staff-group">'
       + '<div class="staff-group-hdr">'
-      + '<span class="staff-avatar" style="background:' + esc(g.staffColor) + '">'
-      + esc(initials(g.staffName)) + '</span>'
+      + '<span class="staff-avatar" style="background:' + esc(g.staffColor) + '">' + esc(initials(g.staffName)) + '</span>'
       + '<span class="staff-group-name">' + esc(g.staffName) + '</span>'
       + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
-      + '</div>'
-      + '<div class="task-list">';
+      + '</div><div class="task-list">';
     g.tasks.forEach(function(t) { html += taskCard(t); });
     html += '</div></div>';
   });
@@ -755,6 +909,7 @@ function taskCard(t) {
   var d         = t.dueDate ? daysUntil(t.dueDate) : null;
   var isOverdue = d !== null && d < 0;
   var colorCls  = isOverdue ? 'c-overdue' : 'c-active';
+  var isSelected = !!selectedIds[t._id];
 
   var sm8Btn = t.jobUuidSm8
     ? '<a class="open-sm8-btn" href="https://go.servicem8.com/job_card.html#edit,uuid=' +
@@ -765,20 +920,18 @@ function taskCard(t) {
     ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>'
     : '';
 
-  // Staff avatar chip — coloured per person
   var staffChip = '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
     + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
-    + esc(t.staffName)
-    + '</span>';
+    + esc(t.staffName) + '</span>';
 
-  return '<div class="task-card ' + colorCls + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
-    + '<input type="checkbox" class="task-cb" onclick="event.stopPropagation()" onchange="quickToggle(\'' + esc(t._id) + '\',this.checked)"/>'
+  return '<div class="task-card ' + colorCls + (isSelected ? ' selected' : '') + '" data-id="' + esc(t._id) + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
+    + '<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\'' + esc(t._id) + '\',this.checked,event)" ' + (isSelected ? 'checked' : '') + '/>'
     + '<div class="task-body">'
     + '<div class="title-row">'
     + '<span class="task-title">' + esc(t.name) + '</span>'
     + '<span class="badge task">Task</span>'
-    + (t.section   ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
-    + (isOverdue   ? '<span class="badge overdue">Overdue</span>' : '')
+    + (t.section  ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
+    + (isOverdue  ? '<span class="badge overdue">Overdue</span>' : '')
     + '</div>'
     + '<div class="meta-row">'
     + staffChip
@@ -801,13 +954,10 @@ function duePill(t) {
   return '<span class="due-pill ok">' + fmtDate(t.dueDate) + '</span>';
 }
 
-// ── Quick complete ─────────────────────────────────────
+// ── Single complete ────────────────────────────────────
 function quickToggle(id, checked) {
-  if (!checked) return;
-  var t = tasksData.find(function(x) { return x._id === id; });
-  if (!t) return;
-  if (!confirm('Mark "' + t.name + '" as completed in ServiceM8?')) { render(); return; }
-  markComplete(t);
+  // checkbox is now bulk-select, not quick-complete
+  toggleSelect(id, checked, null);
 }
 
 function markComplete(t) {
@@ -837,6 +987,7 @@ function markComplete(t) {
   sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
     if (r.status === 200 || r.status === 201 || r.status === 204) {
       tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
+      delete selectedIds[t._id];
       populateFilters();
       closeModal();
       render();
@@ -845,9 +996,8 @@ function markComplete(t) {
       r.text().then(function(txt) {
         toast('Save failed: HTTP ' + r.status + ' \u2014 ' + txt.substring(0,120), true);
       });
-      render();
     }
-  }).catch(function(e) { toast('Save failed: ' + e.message, true); render(); });
+  }).catch(function(e) { toast('Save failed: ' + e.message, true); });
 }
 
 // ── Edit modal ─────────────────────────────────────────
@@ -861,37 +1011,29 @@ function openEdit(id) {
     sm8Link.href = 'https://go.servicem8.com/job_card.html#edit,uuid=' + t.jobUuidSm8;
     sm8Link.innerHTML = '&#128279; Open Job #' + esc(t.jobNumber) + ' in ServiceM8';
     sm8Link.style.display = 'inline-flex';
-  } else {
-    sm8Link.style.display = 'none';
-  }
+  } else { sm8Link.style.display = 'none'; }
 
   document.getElementById('m-name').textContent = t.name;
-
-  // Coloured staff badge in modal
-  var staffBadgeEl = document.getElementById('m-staff-display');
-  staffBadgeEl.innerHTML = '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
+  document.getElementById('m-staff-display').innerHTML =
+    '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
     + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
     + esc(t.staffName) + '</span>';
 
   var secRow = document.getElementById('m-section-row');
-  if (t.section) {
-    secRow.style.display = '';
-    document.getElementById('m-section').textContent = t.section;
-  } else { secRow.style.display = 'none'; }
+  if (t.section) { secRow.style.display=''; document.getElementById('m-section').textContent=t.section; }
+  else { secRow.style.display='none'; }
 
   var jobRow = document.getElementById('m-job-row');
   if (t.jobNumber) {
-    jobRow.style.display = '';
-    document.getElementById('m-job-display').textContent =
-      'Job #' + t.jobNumber + (t.jobDesc ? ' \u2014 ' + t.jobDesc : '');
-  } else { jobRow.style.display = 'none'; }
+    jobRow.style.display='';
+    document.getElementById('m-job-display').textContent = 'Job #'+t.jobNumber+(t.jobDesc?' \u2014 '+t.jobDesc:'');
+  } else { jobRow.style.display='none'; }
 
   var remRow = document.getElementById('m-reminder-row');
   if (t.reminderType) {
-    remRow.style.display = '';
-    document.getElementById('m-reminder').textContent =
-      t.reminderType + (t.reminderData ? ': ' + t.reminderData : '');
-  } else { remRow.style.display = 'none'; }
+    remRow.style.display='';
+    document.getElementById('m-reminder').textContent = t.reminderType+(t.reminderData?': '+t.reminderData:'');
+  } else { remRow.style.display='none'; }
 
   document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
   openModal();
@@ -919,7 +1061,6 @@ function initials(name) {
   if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
   return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
 }
-
 function daysUntil(str) {
   if (!str) return null;
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -932,9 +1073,9 @@ function fmtDate(str) {
   if (!str) return '\u2014';
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return str;
-  return new Date(+m[1], +m[2]-1, +m[3]).toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
+  return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
 }
-function pad(n) { return n < 10 ? '0' + n : String(n); }
+function pad(n) { return n < 10 ? '0'+n : String(n); }
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
