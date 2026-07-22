@@ -5,7 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tasks — Asset Tracker</title>
 <style>
-:root{
+/* Staff colour chip */
+.staff-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid;border-radius:20px;
+  padding:2px 9px;font-size:0.74rem;font-weight:600;
+}
+.staff-chip-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+}
+
+/* Staff group header (sort by staff view) */
+.staff-group{ margin-bottom:24px; }
+.staff-group-hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0 10px;
+  border-bottom:2px solid var(--border);
+  margin-bottom:10px;
+}
+.staff-avatar{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.72rem;font-weight:800;color:#fff;flex-shrink:0;
+}
+.staff-group-name{
+  font-weight:700;font-size:0.95rem;flex:1;
+}
+.staff-group-ct{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:1px 9px;font-size:0.72rem;color:var(--muted);
+}
+
+  :root{
   --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
   --accent:#4f6ef7;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
   --text:#e2e8f0;--muted:#8892b0;--radius:14px;
@@ -49,6 +80,11 @@ button:hover{opacity:0.87;}
 .toolbar input{min-width:180px;}
 .toolbar input:focus,.toolbar select:focus{border-color:var(--accent);}
 .seg-toggle{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;}
+<div class="seg-toggle">
+  <button class="seg-btn active" id="sort-due"   onclick="setSort('due')">&#128336; Due Date</button>
+  <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
+  <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
+</div>
 .seg-btn{
   background:transparent;color:var(--muted);border:none;border-radius:7px;
   padding:5px 13px;font-size:0.8rem;font-weight:600;
@@ -300,15 +336,24 @@ var tasksData       = [];
 var rawDebugData    = [];
 var staffList       = [];
 var staffMap        = {};
+var staffColorMap   = {};
 var jobMap          = {};
 var assetList       = [];
 var clientMap       = {};
 var tasksLoaded     = false;
 var tScope          = 'mine';
+var sortMode        = 'due';   // 'due' | 'staff' | 'job'
 var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
 var debugVisible    = false;
+
+// Palette — distinct colours for staff avatars
+var STAFF_COLORS = [
+  '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
+  '#06b6d4','#f97316','#ec4899','#84cc16','#14b8a6',
+  '#8b5cf6','#fb923c','#e879f9','#34d399','#60a5fa'
+];
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
@@ -397,14 +442,18 @@ function loadTasks(force) {
     rawDebugData = rawItems;
     updateDebugPanel();
 
-    // Staff
+    // Staff — assign a colour to each
     staffList = rawStaff
       .filter(function(s) { return String(s.active) === '1'; })
       .map(function(s) {
         return { uuid: s.uuid, name: ((s.first||'') + ' ' + (s.last||'')).trim() || s.email || s.uuid };
       });
     staffMap = {};
-    staffList.forEach(function(s) { staffMap[s.uuid] = s.name; });
+    staffColorMap = {};
+    staffList.forEach(function(s, idx) {
+      staffMap[s.uuid]      = s.name;
+      staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
+    });
 
     // Jobs
     jobMap = {};
@@ -419,22 +468,12 @@ function loadTasks(force) {
         };
       });
 
-    // Normalise — key rules from raw data:
-    // active=1 means the item EXISTS and is incomplete
-    // active=0 means deleted/inactive — skip
-    // completed_timestamp = "0000-00-00 00:00:00" means NOT completed
-    // completed_timestamp = a real date means completed — skip
-    // item_type = "Todo" are the actual task items (vs "Asset", "Checklist" etc)
-    // assigned_to_staff_uuids is an ARRAY (or false if unassigned)
-
+    // Checklist items
     tasksData = rawItems
       .filter(function(i) {
-        // Must be active
         if (String(i.active) !== '1') return false;
-        // Must not be completed (real date = completed)
         var ts = String(i.completed_timestamp || '').trim();
         if (ts !== '' && ts !== '0000-00-00 00:00:00' && ts !== '0000-00-00') return false;
-        // Only show Todo type items (actual tasks, not asset/checklist section headers)
         if (i.item_type && String(i.item_type).toLowerCase() !== 'todo') return false;
         return true;
       })
@@ -442,20 +481,15 @@ function loadTasks(force) {
         var job        = jobMap[i.job_uuid] || {};
         var clientUuid = job.clientUuid || '';
         var clientName = clientUuid ? (clientMap[clientUuid] || '') : '';
-
-        // assigned_to_staff_uuids is an array or false
-        var staffUuid = '';
+        var staffUuid  = '';
         if (Array.isArray(i.assigned_to_staff_uuids) && i.assigned_to_staff_uuids.length) {
           staffUuid = i.assigned_to_staff_uuids[0];
         }
-
-        // due date from reminder_data if it looks like a date
         var dueDate = '';
         if (i.reminder_data && !Array.isArray(i.reminder_data)) {
           var rd = String(i.reminder_data).trim();
           if (/^\d{4}-\d{2}-\d{2}/.test(rd)) dueDate = rd.substring(0, 10);
         }
-
         return {
           _id:          i.uuid,
           _raw:         i,
@@ -464,6 +498,7 @@ function loadTasks(force) {
           itemType:     i.item_type || '',
           staffUuid:    staffUuid,
           staffName:    staffMap[staffUuid] || 'Unassigned',
+          staffColor:   staffColorMap[staffUuid] || '#8892b0',
           dueDate:      dueDate,
           reminderType: i.reminder_type || '',
           reminderData: Array.isArray(i.reminder_data) ? '' : String(i.reminder_data || ''),
@@ -512,30 +547,21 @@ function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
   if (!rawDebugData.length) { panel.textContent = 'No data yet.'; return; }
-
-  // Show type breakdown
   var typeCounts = {};
-  rawDebugData.forEach(function(i) {
-    var t = i.item_type || '(none)';
-    typeCounts[t] = (typeCounts[t] || 0) + 1;
-  });
-
-  // Show active/inactive breakdown
-  var activeCount    = rawDebugData.filter(function(i){ return String(i.active) === '1'; }).length;
-  var inactiveCount  = rawDebugData.filter(function(i){ return String(i.active) !== '1'; }).length;
-  var completedCount = rawDebugData.filter(function(i){
-    var ts = String(i.completed_timestamp || '').trim();
-    return ts !== '' && ts !== '0000-00-00 00:00:00' && ts !== '0000-00-00';
+  rawDebugData.forEach(function(i) { var t = i.item_type || '(none)'; typeCounts[t] = (typeCounts[t]||0)+1; });
+  var activeCount   = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
+  var inactiveCount = rawDebugData.filter(function(i){ return String(i.active)!=='1'; }).length;
+  var completedCount= rawDebugData.filter(function(i){
+    var ts = String(i.completed_timestamp||'').trim();
+    return ts!=='' && ts!=='0000-00-00 00:00:00' && ts!=='0000-00-00';
   }).length;
-
   panel.textContent =
-    'Total records: ' + rawDebugData.length + '\n' +
-    'active=1: ' + activeCount + '  |  active=0: ' + inactiveCount + '\n' +
-    'completed (real timestamp): ' + completedCount + '\n\n' +
+    'Total: ' + rawDebugData.length + '  active=1: ' + activeCount + '  active=0: ' + inactiveCount + '\n' +
+    'completed (real ts): ' + completedCount + '\n\n' +
     'item_type breakdown:\n' +
     Object.keys(typeCounts).map(function(k){ return '  ' + k + ': ' + typeCounts[k]; }).join('\n') + '\n\n' +
-    'First Todo record:\n' +
-    JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase() === 'todo'; }) || 'none', null, 2);
+    'First Todo:\n' +
+    JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase()==='todo'; })||'none', null, 2);
 }
 
 // ── Filters ────────────────────────────────────────────
@@ -565,13 +591,21 @@ function populateFilters() {
 
 function setScope(s) {
   tScope = s;
-  document.getElementById('ts-mine').className = 'seg-btn' + (s === 'mine' ? ' active' : '');
-  document.getElementById('ts-all').className  = 'seg-btn' + (s === 'all'  ? ' active' : '');
+  document.getElementById('ts-mine').className = 'seg-btn' + (s==='mine' ? ' active' : '');
+  document.getElementById('ts-all').className  = 'seg-btn' + (s==='all'  ? ' active' : '');
+  render();
+}
+
+function setSort(s) {
+  sortMode = s;
+  document.getElementById('sort-due').className   = 'seg-btn' + (s==='due'   ? ' active' : '');
+  document.getElementById('sort-staff').className = 'seg-btn' + (s==='staff' ? ' active' : '');
+  document.getElementById('sort-job').className   = 'seg-btn' + (s==='job'   ? ' active' : '');
   render();
 }
 
 function getFiltered() {
-  var q       = (document.getElementById('q-search').value  || '').toLowerCase();
+  var q       = (document.getElementById('q-search').value || '').toLowerCase();
   var staffF  = document.getElementById('q-staff').value;
   var clientF = document.getElementById('q-client').value;
 
@@ -589,6 +623,35 @@ function getFiltered() {
     }
     return true;
   });
+}
+
+function sortTasks(arr) {
+  var copy = arr.slice();
+  if (sortMode === 'due') {
+    copy.sort(function(a, b) {
+      // Tasks with a due date come first, sorted ascending
+      // Tasks without a due date go to the bottom
+      var da = a.dueDate || '';
+      var db = b.dueDate || '';
+      if (da && !db) return -1;
+      if (!da && db) return  1;
+      if (da && db)  return da.localeCompare(db);
+      // both no date — sort by staff name then task name
+      return a.staffName.localeCompare(b.staffName) || a.name.localeCompare(b.name);
+    });
+  } else if (sortMode === 'staff') {
+    copy.sort(function(a, b) {
+      var sa = a.staffName === 'Unassigned' ? 'zzz' : a.staffName;
+      var sb = b.staffName === 'Unassigned' ? 'zzz' : b.staffName;
+      return sa.localeCompare(sb) || (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
+    });
+  } else if (sortMode === 'job') {
+    copy.sort(function(a, b) {
+      return (a.jobNumber||'').localeCompare(b.jobNumber||'') ||
+             (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
+    });
+  }
+  return copy;
 }
 
 // ── Render ─────────────────────────────────────────────
@@ -610,13 +673,44 @@ function render() {
     return;
   }
 
-  filtered.sort(function(a, b) {
-    return (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz');
+  var sorted = sortTasks(filtered);
+
+  // When sorting by staff, group by staff member
+  if (sortMode === 'staff' && tScope === 'all') {
+    renderGroupedByStaff(sorted);
+  } else {
+    var html = '<div class="task-list">';
+    sorted.forEach(function(t) { html += taskCard(t); });
+    html += '</div>';
+    setBody(html);
+  }
+}
+
+function renderGroupedByStaff(sorted) {
+  var groups = [];
+  var groupMap = {};
+  sorted.forEach(function(t) {
+    var key = t.staffUuid || '__unassigned__';
+    if (!groupMap[key]) {
+      groupMap[key] = { staffName: t.staffName, staffColor: t.staffColor, tasks: [] };
+      groups.push(groupMap[key]);
+    }
+    groupMap[key].tasks.push(t);
   });
 
-  var html = '<div class="task-list">';
-  filtered.forEach(function(t) { html += taskCard(t); });
-  html += '</div>';
+  var html = '';
+  groups.forEach(function(g) {
+    html += '<div class="staff-group">'
+      + '<div class="staff-group-hdr">'
+      + '<span class="staff-avatar" style="background:' + esc(g.staffColor) + '">'
+      + esc(initials(g.staffName)) + '</span>'
+      + '<span class="staff-group-name">' + esc(g.staffName) + '</span>'
+      + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
+      + '</div>'
+      + '<div class="task-list">';
+    g.tasks.forEach(function(t) { html += taskCard(t); });
+    html += '</div></div>';
+  });
   setBody(html);
 }
 
@@ -629,7 +723,6 @@ function renderStats(scope) {
     var d = t.dueDate ? daysUntil(t.dueDate) : null;
     return d !== null && d > 0 && d <= 7;
   }).length;
-
   document.getElementById('stats-bar').innerHTML =
     stat(total,      'Tasks',      'var(--text)')  +
     stat(unassigned, 'Unassigned', 'var(--muted)') +
@@ -658,17 +751,23 @@ function taskCard(t) {
     ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>'
     : '';
 
+  // Staff avatar chip — coloured per person
+  var staffChip = '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
+    + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
+    + esc(t.staffName)
+    + '</span>';
+
   return '<div class="task-card ' + colorCls + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
     + '<input type="checkbox" class="task-cb" onclick="event.stopPropagation()" onchange="quickToggle(\'' + esc(t._id) + '\',this.checked)"/>'
     + '<div class="task-body">'
     + '<div class="title-row">'
     + '<span class="task-title">' + esc(t.name) + '</span>'
     + '<span class="badge task">Task</span>'
-    + (t.section ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
-    + (isOverdue  ? '<span class="badge overdue">Overdue</span>' : '')
+    + (t.section   ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
+    + (isOverdue   ? '<span class="badge overdue">Overdue</span>' : '')
     + '</div>'
     + '<div class="meta-row">'
-    + '<span>&#128100; ' + esc(t.staffName) + '</span>'
+    + staffChip
     + (t.clientName ? '<span>&#128205; ' + esc(t.clientName) + '</span>' : '')
     + (t.jobNumber  ? '<span>&#128188; Job #' + esc(t.jobNumber) + (t.jobDesc ? ' &mdash; ' + esc(t.jobDesc.substring(0,40)) : '') + '</span>' : '')
     + dateDisplay
@@ -701,10 +800,7 @@ function markComplete(t) {
   var now = new Date();
   var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
             ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-
   var raw = t._raw;
-
-  // Build payload using ONLY the writable fields from the API spec
   var payload = {
     uuid:                          t._id,
     job_uuid:                      raw.job_uuid                      || '',
@@ -713,20 +809,17 @@ function markComplete(t) {
     item_type:                     raw.item_type                     || 'Todo',
     sort_order:                    raw.sort_order                    || 0,
     completed_timestamp:           ts,
-    completed_by_staff_uuid:       currentUserUuid || t.staffUuid   || '',
+    completed_by_staff_uuid:       currentUserUuid || t.staffUuid    || '',
     completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
     reminder_type:                 raw.reminder_type                 || '',
-    reminder_data:                 raw.reminder_data && !Array.isArray(raw.reminder_data)
-                                     ? raw.reminder_data : null,
+    reminder_data:                 raw.reminder_data && !Array.isArray(raw.reminder_data) ? raw.reminder_data : null,
     regarding_object:              raw.regarding_object              || '',
     regarding_object_uuid:         raw.regarding_object_uuid         || '',
     fulfilled_by_object_name:      raw.fulfilled_by_object_name      || '',
     fulfilled_by_object_uuid:      raw.fulfilled_by_object_uuid      || '',
-    assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids)
-                                     ? raw.assigned_to_staff_uuids : [],
+    assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
     is_locked:                     raw.is_locked                     || '0'
   };
-
   sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
     if (r.status === 200 || r.status === 201 || r.status === 204) {
       tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
@@ -736,15 +829,11 @@ function markComplete(t) {
       toast('Task marked as completed.');
     } else {
       r.text().then(function(txt) {
-        toast('Save failed: HTTP ' + r.status + ' — ' + txt.substring(0, 200), true);
-        console.error('SM8 PUT error:', r.status, txt);
+        toast('Save failed: HTTP ' + r.status + ' \u2014 ' + txt.substring(0,120), true);
       });
       render();
     }
-  }).catch(function(e) {
-    toast('Save failed: ' + e.message, true);
-    render();
-  });
+  }).catch(function(e) { toast('Save failed: ' + e.message, true); render(); });
 }
 
 // ── Edit modal ─────────────────────────────────────────
@@ -762,34 +851,33 @@ function openEdit(id) {
     sm8Link.style.display = 'none';
   }
 
-  document.getElementById('m-name').textContent          = t.name;
-  document.getElementById('m-staff-display').textContent = t.staffName;
+  document.getElementById('m-name').textContent = t.name;
+
+  // Coloured staff badge in modal
+  var staffBadgeEl = document.getElementById('m-staff-display');
+  staffBadgeEl.innerHTML = '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
+    + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
+    + esc(t.staffName) + '</span>';
 
   var secRow = document.getElementById('m-section-row');
   if (t.section) {
     secRow.style.display = '';
     document.getElementById('m-section').textContent = t.section;
-  } else {
-    secRow.style.display = 'none';
-  }
+  } else { secRow.style.display = 'none'; }
 
   var jobRow = document.getElementById('m-job-row');
   if (t.jobNumber) {
     jobRow.style.display = '';
     document.getElementById('m-job-display').textContent =
       'Job #' + t.jobNumber + (t.jobDesc ? ' \u2014 ' + t.jobDesc : '');
-  } else {
-    jobRow.style.display = 'none';
-  }
+  } else { jobRow.style.display = 'none'; }
 
   var remRow = document.getElementById('m-reminder-row');
   if (t.reminderType) {
     remRow.style.display = '';
     document.getElementById('m-reminder').textContent =
       t.reminderType + (t.reminderData ? ': ' + t.reminderData : '');
-  } else {
-    remRow.style.display = 'none';
-  }
+  } else { remRow.style.display = 'none'; }
 
   document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
   openModal();
@@ -810,7 +898,14 @@ function onOverlayClick(e) {
   if (e.target === document.getElementById('modal')) closeModal();
 }
 
-// ── Date helpers ───────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────
+function initials(name) {
+  if (!name || name === 'Unassigned') return '?';
+  var parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+
 function daysUntil(str) {
   if (!str) return null;
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -823,11 +918,9 @@ function fmtDate(str) {
   if (!str) return '\u2014';
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return str;
-  var d = new Date(+m[1], +m[2]-1, +m[3]);
-  return d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
+  return new Date(+m[1], +m[2]-1, +m[3]).toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
 }
 function pad(n) { return n < 10 ? '0' + n : String(n); }
-
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
