@@ -5,58 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tasks — Asset Tracker</title>
 <style>
-  /* Bulk action bar */
-.bulk-bar{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  background:var(--surface);border:1px solid var(--accent);
-  border-radius:10px;padding:10px 16px;margin-bottom:12px;
-}
-.bulk-select-all{
-  display:flex;align-items:center;gap:8px;
-  font-size:0.82rem;font-weight:600;cursor:pointer;
-  color:var(--text);user-select:none;
-}
-.bulk-select-all input{
-  width:16px;height:16px;accent-color:var(--accent);cursor:pointer;
-}
-/* Task card selected state */
-.task-card.selected{
-  border-color:var(--accent);
-  background:rgba(79,110,247,0.07);
-}
-
-/* Staff colour chip */
-.staff-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  border:1px solid;border-radius:20px;
-  padding:2px 9px;font-size:0.74rem;font-weight:600;
-}
-.staff-chip-dot{
-  width:7px;height:7px;border-radius:50%;flex-shrink:0;
-}
-
-/* Staff group header (sort by staff view) */
-.staff-group{ margin-bottom:24px; }
-.staff-group-hdr{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 0 10px;
-  border-bottom:2px solid var(--border);
-  margin-bottom:10px;
-}
-.staff-avatar{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.72rem;font-weight:800;color:#fff;flex-shrink:0;
-}
-.staff-group-name{
-  font-weight:700;font-size:0.95rem;flex:1;
-}
-.staff-group-ct{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:10px;padding:1px 9px;font-size:0.72rem;color:var(--muted);
-}
-
-  :root{
+:root{
   --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
   --accent:#4f6ef7;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
   --text:#e2e8f0;--muted:#8892b0;--radius:14px;
@@ -99,6 +48,7 @@ button:hover{opacity:0.87;}
 }
 .toolbar input{min-width:180px;}
 .toolbar input:focus,.toolbar select:focus{border-color:var(--accent);}
+.toolbar-label{font-size:0.75rem;color:var(--muted);font-weight:600;white-space:nowrap;}
 .seg-toggle{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .seg-btn{
   background:transparent;color:var(--muted);border:none;border-radius:7px;
@@ -106,6 +56,7 @@ button:hover{opacity:0.87;}
   transition:background 0.15s,color 0.15s;cursor:pointer;
 }
 .seg-btn.active{background:var(--accent);color:#fff;}
+.toolbar-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .sync-bar{
   display:flex;align-items:center;gap:10px;margin-bottom:16px;
   font-size:0.8rem;color:var(--muted);padding:8px 12px;
@@ -138,6 +89,7 @@ button:hover{opacity:0.87;}
 .task-card.c-active::before{background:var(--accent);}
 .task-card.c-overdue::before{background:var(--red);}
 .task-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.25);}
+.task-card.selected{border-color:var(--accent);background:rgba(79,110,247,0.07);}
 .task-cb{width:17px;height:17px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:3px;}
 .task-body{flex:1;min-width:0;}
 .title-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px;}
@@ -147,12 +99,6 @@ button:hover{opacity:0.87;}
 .badge.task{background:rgba(79,110,247,0.12);color:var(--accent);}
 .badge.section{background:rgba(124,58,237,0.12);color:#a78bfa;}
 .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-size:0.75rem;color:var(--muted);margin-bottom:5px;align-items:center;}
-.asset-chip{
-  display:inline-flex;align-items:center;gap:4px;
-  background:rgba(79,110,247,0.08);border:1px solid rgba(79,110,247,0.25);
-  border-radius:6px;padding:2px 8px;font-size:0.72rem;color:var(--accent);font-weight:600;
-}
-.task-desc{font-size:0.78rem;color:var(--muted);line-height:1.5;margin-top:4px;}
 .task-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;}
 .due-pill{font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;}
 .due-pill.overdue{background:rgba(239,68,68,0.15);color:var(--red);}
@@ -167,7 +113,43 @@ button:hover{opacity:0.87;}
   font-weight:600;text-decoration:none;white-space:nowrap;
 }
 .open-sm8-btn:hover{background:rgba(79,110,247,0.22);}
-/* debug panel */
+/* Staff chip */
+.staff-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid;border-radius:20px;
+  padding:2px 9px;font-size:0.74rem;font-weight:600;
+}
+.staff-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+/* Group headers */
+.staff-group{margin-bottom:24px;}
+.staff-group-hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:2px solid var(--border);margin-bottom:10px;
+}
+.staff-avatar{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.72rem;font-weight:800;color:#fff;flex-shrink:0;
+}
+.category-icon{font-size:1.2rem;line-height:1;flex-shrink:0;}
+.staff-group-name{font-weight:700;font-size:0.95rem;flex:1;}
+.staff-group-ct{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:1px 9px;font-size:0.72rem;color:var(--muted);
+}
+/* Bulk bar */
+.bulk-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--accent);
+  border-radius:10px;padding:10px 16px;margin-bottom:12px;
+}
+.bulk-select-all{
+  display:flex;align-items:center;gap:8px;
+  font-size:0.82rem;font-weight:600;cursor:pointer;
+  color:var(--text);user-select:none;
+}
+.bulk-select-all input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+/* Debug panel */
 .debug-panel{
   background:var(--surface2);border:1px solid var(--border);border-radius:10px;
   padding:14px;margin-bottom:20px;font-size:0.72rem;color:var(--muted);
@@ -175,6 +157,7 @@ button:hover{opacity:0.87;}
   max-height:260px;overflow-y:auto;display:none;
 }
 .debug-panel.show{display:block;}
+/* Modal */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);
   z-index:200;align-items:center;justify-content:center;padding:16px;
@@ -200,22 +183,18 @@ button:hover{opacity:0.87;}
 .modal-sm8-link:hover{background:rgba(79,110,247,0.2);}
 .frow{margin-bottom:14px;}
 .frow label{display:block;font-size:0.72rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;}
-.frow input[type=text],.frow input[type=date],.frow textarea,.frow select{
+.frow textarea{
   width:100%;background:var(--surface2);border:1px solid var(--border);
   border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-  outline:none;font-family:inherit;
+  outline:none;font-family:inherit;resize:vertical;min-height:70px;
 }
-.frow input:focus,.frow textarea:focus,.frow select:focus{border-color:var(--accent);}
-.frow textarea{resize:vertical;min-height:70px;}
+.frow textarea:focus{border-color:var(--accent);}
 .frow .readonly-val{
   background:var(--surface);border:1px solid var(--border);border-radius:8px;
   padding:9px 12px;font-size:0.85rem;color:var(--muted);
 }
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
-.save-msg{font-size:0.78rem;font-weight:600;padding:4px 0;}
-.save-msg.saving{color:var(--amber);}
-.save-msg.saved{color:var(--green);}
-.save-msg.error{color:var(--red);}
+/* Toast */
 #toast{
   position:fixed;bottom:24px;right:24px;
   background:var(--surface);border:1px solid var(--border);
@@ -224,6 +203,7 @@ button:hover{opacity:0.87;}
   transition:all 0.3s;max-width:320px;pointer-events:none;
 }
 #toast.show{transform:translateY(0);opacity:1;}
+/* Auth */
 #auth-screen{
   display:none;flex-direction:column;align-items:center;justify-content:center;
   min-height:calc(100vh - 70px);padding:32px;
@@ -271,6 +251,7 @@ button:hover{opacity:0.87;}
 </div>
 
 <div class="page" id="main-page" style="display:none">
+
   <div class="page-header">
     <div class="page-header-left">
       <h1>&#10003; Tasks</h1>
@@ -289,52 +270,65 @@ button:hover{opacity:0.87;}
     <a class="sm8-link" href="https://go.servicem8.com" target="_blank" rel="noopener">&#128279; Open ServiceM8</a>
   </div>
 
-  <!-- Debug panel — shows raw first record from ServiceM8 -->
   <div class="debug-panel" id="debug-panel">Loading&hellip;</div>
 
   <div class="toolbar">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span style="font-size:0.75rem;color:var(--muted);font-weight:600;white-space:nowrap;">Sort by</span>
-    <div class="seg-toggle">
-      <button class="seg-btn active" id="ts-mine" onclick="setScope('mine')">&#128100; My Tasks</button>
-      <button class="seg-btn" id="ts-all" onclick="setScope('all')">&#128101; All Staff</button>
+    <!-- Scope -->
+    <div class="toolbar-group">
+      <span class="toolbar-label">View</span>
       <div class="seg-toggle">
-        <button class="seg-btn active" id="sort-due"   onclick="setSort('due')">&#128336; Due Date</button>
-        <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
-        <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
+        <button class="seg-btn active" id="ts-mine" onclick="setScope('mine')">&#128100; My Tasks</button>
+        <button class="seg-btn"        id="ts-all"  onclick="setScope('all')">&#128101; All Staff</button>
       </div>
+    </div>
+    <!-- Sort -->
+    <div class="toolbar-group">
+      <span class="toolbar-label">Sort by</span>
+      <div class="seg-toggle">
+        <button class="seg-btn active" id="sort-due"      onclick="setSort('due')">&#128336; Due Date</button>
+        <button class="seg-btn"        id="sort-staff"    onclick="setSort('staff')">&#128100; Staff</button>
+        <button class="seg-btn"        id="sort-job"      onclick="setSort('job')">&#128188; Job</button>
+        <button class="seg-btn"        id="sort-category" onclick="setSort('category')">&#127991; Category</button>
+      </div>
+    </div>
+    <!-- Search & filters -->
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
-    <select id="q-staff" onchange="render()"><option value="">All Staff</option></select>
-    <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
+    <select id="q-staff"    onchange="render()"><option value="">All Staff</option></select>
+    <select id="q-client"   onchange="render()"><option value="">All Clients</option></select>
+    <select id="q-category" onchange="render()"><option value="">All Categories</option></select>
   </div>
-  </div>
-    
-  <!-- Bulk action bar — shown when items are selected -->
-    <div id="bulk-bar" style="display:none">
-      <div class="bulk-bar">
-        <label class="bulk-select-all">
-          <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAll(this.checked)"/>
-          <span id="bulk-count">0 selected</span>
-        </label>
-        <div style="flex:1"></div>
+
+  <!-- Bulk bar -->
+  <div id="bulk-bar" style="display:none">
+    <div class="bulk-bar">
+      <label class="bulk-select-all">
+        <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAll(this.checked)"/>
+        <span id="bulk-count">0 selected</span>
+      </label>
+      <div style="flex:1"></div>
       <button class="btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
-     <button class="btn-primary btn-sm" onclick="bulkComplete()">&#10003; Mark Selected Complete</button>
+      <button class="btn-primary btn-sm" onclick="bulkComplete()">&#10003; Mark Selected Complete</button>
+    </div>
   </div>
-</div>
 
   <div id="task-body"></div>
 </div>
 
+<!-- Modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
-    <h3>Edit Task</h3>
+    <h3>Task Detail</h3>
     <a class="modal-sm8-link" id="m-sm8-link" href="#" target="_blank" rel="noopener" style="display:none">
       &#128279; Open Job in ServiceM8
     </a>
     <div class="frow">
       <label>Task Name</label>
       <div class="readonly-val" id="m-name"></div>
+    </div>
+    <div class="frow" id="m-category-row" style="display:none">
+      <label>Category</label>
+      <div class="readonly-val" id="m-category"></div>
     </div>
     <div class="frow" id="m-section-row" style="display:none">
       <label>Section</label>
@@ -349,7 +343,7 @@ button:hover{opacity:0.87;}
       <div class="readonly-val" id="m-staff-display"></div>
     </div>
     <div class="frow" id="m-reminder-row" style="display:none">
-      <label>Reminder</label>
+      <label>Due / Reminder</label>
       <div class="readonly-val" id="m-reminder"></div>
     </div>
     <div class="frow">
@@ -358,7 +352,7 @@ button:hover{opacity:0.87;}
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal()">Close</button>
-      <button class="btn-primary" id="m-complete-btn" onclick="completeFromModal()">&#10003; Mark Complete</button>
+      <button class="btn-primary" onclick="completeFromModal()">&#10003; Mark Complete</button>
     </div>
   </div>
 </div>
@@ -373,12 +367,13 @@ var staffList       = [];
 var staffMap        = {};
 var staffColorMap   = {};
 var jobMap          = {};
+var categoryMap     = {};
 var assetList       = [];
 var clientMap       = {};
 var tasksLoaded     = false;
 var tScope          = 'mine';
 var sortMode        = 'due';
-var selectedIds     = {};   // uuid -> true
+var selectedIds     = {};
 var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
@@ -470,15 +465,18 @@ function loadTasks(force) {
   Promise.all([
     sm8Get('/staff.json'),
     sm8Get('/job.json'),
-    sm8Get('/jobchecklist.json')
+    sm8Get('/jobchecklist.json'),
+    sm8Get('/jobactivity.json')
   ]).then(function(res) {
-    var rawStaff = Array.isArray(res[0]) ? res[0] : [];
-    var rawJobs  = Array.isArray(res[1]) ? res[1] : [];
-    var rawItems = Array.isArray(res[2]) ? res[2] : [];
+    var rawStaff      = Array.isArray(res[0]) ? res[0] : [];
+    var rawJobs       = Array.isArray(res[1]) ? res[1] : [];
+    var rawItems      = Array.isArray(res[2]) ? res[2] : [];
+    var rawActivities = Array.isArray(res[3]) ? res[3] : [];
 
     rawDebugData = rawItems;
     updateDebugPanel();
 
+    // Staff
     staffList = rawStaff
       .filter(function(s) { return String(s.active) === '1'; })
       .map(function(s) {
@@ -491,6 +489,7 @@ function loadTasks(force) {
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
 
+    // Jobs
     jobMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
@@ -503,6 +502,15 @@ function loadTasks(force) {
         };
       });
 
+    // Categories from job activities — first activity per job wins
+    categoryMap = {};
+    rawActivities.forEach(function(a) {
+      if (a.job_uuid && a.category && !categoryMap[a.job_uuid]) {
+        categoryMap[a.job_uuid] = a.category;
+      }
+    });
+
+    // Checklist items
     tasksData = rawItems
       .filter(function(i) {
         if (String(i.active) !== '1') return false;
@@ -532,13 +540,15 @@ function loadTasks(force) {
         var reminderData = '';
         if (i.reminder_data) {
           if (typeof i.reminder_data === 'object') {
-            if (i.reminder_data.absoluteDateTime) reminderData = i.reminder_data.absoluteDateTime;
-            else if (i.reminder_data.relativeDateTime) reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
-            else reminderData = JSON.stringify(i.reminder_data);
+            if (i.reminder_data.absoluteDateTime)       reminderData = i.reminder_data.absoluteDateTime;
+            else if (i.reminder_data.relativeDateTime)  reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
+            else                                         reminderData = JSON.stringify(i.reminder_data);
           } else {
             reminderData = String(i.reminder_data);
           }
         }
+
+        var category = categoryMap[i.job_uuid] || '';
 
         return {
           _id:          i.uuid,
@@ -552,12 +562,13 @@ function loadTasks(force) {
           dueDate:      dueDate,
           reminderType: i.reminder_type || '',
           reminderData: reminderData,
-          jobUuid:      i.job_uuid    || '',
-          jobNumber:    job.number    || '',
-          jobDesc:      job.desc      || '',
-          jobUuidSm8:   job.uuid      || '',
+          jobUuid:      i.job_uuid   || '',
+          jobNumber:    job.number   || '',
+          jobDesc:      job.desc     || '',
+          jobUuidSm8:   job.uuid     || '',
           clientName:   clientName,
-          clientUuid:   clientUuid
+          clientUuid:   clientUuid,
+          category:     category
         };
       });
 
@@ -615,6 +626,7 @@ function updateDebugPanel() {
 
 // ── Filters ────────────────────────────────────────────
 function populateFilters() {
+  // Staff
   var ss = document.getElementById('q-staff');
   var sv = ss.value;
   ss.innerHTML = '<option value="">All Staff</option>';
@@ -625,6 +637,7 @@ function populateFilters() {
     ss.appendChild(o);
   });
 
+  // Clients
   var cs = document.getElementById('q-client');
   var cv = cs.value;
   var seenC = {};
@@ -635,6 +648,19 @@ function populateFilters() {
     o.value = u; o.textContent = seenC[u];
     if (u === cv) o.selected = true;
     cs.appendChild(o);
+  });
+
+  // Categories
+  var qs = document.getElementById('q-category');
+  var qv = qs.value;
+  var seenQ = {};
+  tasksData.forEach(function(t) { if (t.category) seenQ[t.category] = true; });
+  qs.innerHTML = '<option value="">All Categories</option>';
+  Object.keys(seenQ).sort().forEach(function(c) {
+    var o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    if (c === qv) o.selected = true;
+    qs.appendChild(o);
   });
 }
 
@@ -649,26 +675,30 @@ function setScope(s) {
 
 function setSort(s) {
   sortMode = s;
-  document.getElementById('sort-due').className   = 'seg-btn'+(s==='due'  ?' active':'');
-  document.getElementById('sort-staff').className = 'seg-btn'+(s==='staff'?' active':'');
-  document.getElementById('sort-job').className   = 'seg-btn'+(s==='job'  ?' active':'');
+  document.getElementById('sort-due').className      = 'seg-btn'+(s==='due'     ?' active':'');
+  document.getElementById('sort-staff').className    = 'seg-btn'+(s==='staff'   ?' active':'');
+  document.getElementById('sort-job').className      = 'seg-btn'+(s==='job'     ?' active':'');
+  document.getElementById('sort-category').className = 'seg-btn'+(s==='category'?' active':'');
   render();
 }
 
 function getFiltered() {
-  var q       = (document.getElementById('q-search').value || '').toLowerCase();
-  var staffF  = document.getElementById('q-staff').value;
-  var clientF = document.getElementById('q-client').value;
+  var q         = (document.getElementById('q-search').value   || '').toLowerCase();
+  var staffF    = document.getElementById('q-staff').value;
+  var clientF   = document.getElementById('q-client').value;
+  var categoryF = document.getElementById('q-category').value;
+
   return tasksData.filter(function(t) {
     if (tScope === 'mine') {
       var isMe = (currentUserUuid && t.staffUuid === currentUserUuid) ||
                  (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
       if (!isMe) return false;
     }
-    if (staffF  && t.staffUuid  !== staffF)  return false;
-    if (clientF && t.clientUuid !== clientF) return false;
+    if (staffF    && t.staffUuid  !== staffF)    return false;
+    if (clientF   && t.clientUuid !== clientF)   return false;
+    if (categoryF && t.category   !== categoryF) return false;
     if (q) {
-      var hay = [t.name, t.section, t.staffName, t.jobNumber, t.clientName].join(' ').toLowerCase();
+      var hay = [t.name, t.section, t.staffName, t.jobNumber, t.clientName, t.category].join(' ').toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
     return true;
@@ -696,6 +726,14 @@ function sortTasks(arr) {
       return (a.jobNumber||'').localeCompare(b.jobNumber||'') ||
              (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
     });
+  } else if (sortMode === 'category') {
+    copy.sort(function(a, b) {
+      var ca = a.category || 'zzz';
+      var cb = b.category || 'zzz';
+      return ca.localeCompare(cb) ||
+             (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz') ||
+             a.name.localeCompare(b.name);
+    });
   }
   return copy;
 }
@@ -703,12 +741,8 @@ function sortTasks(arr) {
 // ── Bulk selection ─────────────────────────────────────
 function toggleSelect(id, checked, event) {
   if (event) event.stopPropagation();
-  if (checked) {
-    selectedIds[id] = true;
-  } else {
-    delete selectedIds[id];
-  }
-  // Update card highlight without full re-render
+  if (checked) selectedIds[id] = true;
+  else delete selectedIds[id];
   var card = document.querySelector('.task-card[data-id="' + id + '"]');
   if (card) card.classList.toggle('selected', !!checked);
   updateBulkBar();
@@ -720,7 +754,6 @@ function toggleSelectAll(checked) {
     if (checked) selectedIds[t._id] = true;
     else delete selectedIds[t._id];
   });
-  // Update all card highlights
   document.querySelectorAll('.task-card[data-id]').forEach(function(card) {
     card.classList.toggle('selected', !!selectedIds[card.dataset.id]);
     var cb = card.querySelector('.bulk-cb');
@@ -745,8 +778,6 @@ function updateBulkBar() {
   if (!bar) return;
   bar.style.display = count > 0 ? 'block' : 'none';
   if (label) label.textContent = count + ' task' + (count === 1 ? '' : 's') + ' selected';
-
-  // Sync the select-all checkbox state
   var filtered = getFiltered();
   var sa = document.getElementById('bulk-select-all');
   if (sa) {
@@ -756,7 +787,7 @@ function updateBulkBar() {
 }
 
 function bulkComplete() {
-  var ids   = Object.keys(selectedIds);
+  var ids = Object.keys(selectedIds);
   if (!ids.length) return;
   if (!confirm('Mark ' + ids.length + ' task' + (ids.length === 1 ? '' : 's') + ' as completed in ServiceM8?')) return;
 
@@ -768,60 +799,55 @@ function bulkComplete() {
     return tasksData.find(function(t) { return t._id === id; });
   }).filter(Boolean);
 
-  // Show progress in bulk bar
   var label = document.getElementById('bulk-count');
-  var done  = 0;
-  var failed = 0;
+  var done = 0; var failed = 0;
 
   function updateProgress() {
-    if (label) label.textContent = 'Completing ' + (done + failed) + ' / ' + toComplete.length + '\u2026';
+    if (label) label.textContent = 'Completing ' + (done+failed) + ' / ' + toComplete.length + '\u2026';
   }
 
   var promises = toComplete.map(function(t) {
-    var raw = t._raw;
-    var payload = {
-      uuid:                          t._id,
-      job_uuid:                      raw.job_uuid                      || '',
-      name:                          raw.name                          || '',
-      section_name:                  raw.section_name                  || '',
-      item_type:                     raw.item_type                     || 'Todo',
-      sort_order:                    raw.sort_order                    || 0,
-      completed_timestamp:           ts,
-      completed_by_staff_uuid:       currentUserUuid || t.staffUuid    || '',
-      completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
-      reminder_type:                 raw.reminder_type                 || '',
-      reminder_data:                 raw.reminder_data && !Array.isArray(raw.reminder_data) ? raw.reminder_data : null,
-      regarding_object:              raw.regarding_object              || '',
-      regarding_object_uuid:         raw.regarding_object_uuid         || '',
-      fulfilled_by_object_name:      raw.fulfilled_by_object_name      || '',
-      fulfilled_by_object_uuid:      raw.fulfilled_by_object_uuid      || '',
-      assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
-      is_locked:                     raw.is_locked                     || '0'
-    };
-    return sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
+    return sm8Put('/jobchecklist/' + t._id + '.json', buildPayload(t, ts)).then(function(r) {
       if (r.status === 200 || r.status === 201 || r.status === 204) {
         done++;
         tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
-      } else {
-        failed++;
-      }
+      } else { failed++; }
       updateProgress();
-    }).catch(function() {
-      failed++;
-      updateProgress();
-    });
+    }).catch(function() { failed++; updateProgress(); });
   });
 
   Promise.all(promises).then(function() {
     selectedIds = {};
     populateFilters();
     render();
-    if (failed === 0) {
-      toast(done + ' task' + (done === 1 ? '' : 's') + ' marked as completed.');
-    } else {
-      toast(done + ' completed, ' + failed + ' failed.', failed > 0);
-    }
+    toast(failed === 0
+      ? done + ' task' + (done===1?'':'s') + ' marked as completed.'
+      : done + ' completed, ' + failed + ' failed.', failed > 0);
   });
+}
+
+// ── Complete payload builder ───────────────────────────
+function buildPayload(t, ts) {
+  var raw = t._raw;
+  return {
+    uuid:                          t._id,
+    job_uuid:                      raw.job_uuid                      || '',
+    name:                          raw.name                          || '',
+    section_name:                  raw.section_name                  || '',
+    item_type:                     raw.item_type                     || 'Todo',
+    sort_order:                    raw.sort_order                    || 0,
+    completed_timestamp:           ts,
+    completed_by_staff_uuid:       currentUserUuid || t.staffUuid    || '',
+    completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
+    reminder_type:                 raw.reminder_type                 || '',
+    reminder_data:                 (raw.reminder_data && !Array.isArray(raw.reminder_data)) ? raw.reminder_data : null,
+    regarding_object:              raw.regarding_object              || '',
+    regarding_object_uuid:         raw.regarding_object_uuid         || '',
+    fulfilled_by_object_name:      raw.fulfilled_by_object_name      || '',
+    fulfilled_by_object_uuid:      raw.fulfilled_by_object_uuid      || '',
+    assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
+    is_locked:                     raw.is_locked                     || '0'
+  };
 }
 
 // ── Render ─────────────────────────────────────────────
@@ -848,6 +874,8 @@ function render() {
 
   if (sortMode === 'staff' && tScope === 'all') {
     renderGroupedByStaff(sorted);
+  } else if (sortMode === 'category') {
+    renderGroupedByCategory(sorted);
   } else {
     var html = '<div class="task-list">';
     sorted.forEach(function(t) { html += taskCard(t); });
@@ -882,6 +910,30 @@ function renderGroupedByStaff(sorted) {
   setBody(html);
 }
 
+function renderGroupedByCategory(sorted) {
+  var groups = []; var groupMap = {};
+  sorted.forEach(function(t) {
+    var key = t.category || '__none__';
+    if (!groupMap[key]) {
+      groupMap[key] = { category: t.category || 'No Category', tasks:[] };
+      groups.push(groupMap[key]);
+    }
+    groupMap[key].tasks.push(t);
+  });
+  var html = '';
+  groups.forEach(function(g) {
+    html += '<div class="staff-group">'
+      + '<div class="staff-group-hdr">'
+      + '<span class="category-icon">&#127991;</span>'
+      + '<span class="staff-group-name">' + esc(g.category) + '</span>'
+      + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
+      + '</div><div class="task-list">';
+    g.tasks.forEach(function(t) { html += taskCard(t); });
+    html += '</div></div>';
+  });
+  setBody(html);
+}
+
 function renderStats(scope) {
   var total      = scope.length;
   var unassigned = scope.filter(function(t) { return !t.staffUuid; }).length;
@@ -906,9 +958,9 @@ function stat(v, l, c) {
 
 // ── Task card ──────────────────────────────────────────
 function taskCard(t) {
-  var d         = t.dueDate ? daysUntil(t.dueDate) : null;
-  var isOverdue = d !== null && d < 0;
-  var colorCls  = isOverdue ? 'c-overdue' : 'c-active';
+  var d          = t.dueDate ? daysUntil(t.dueDate) : null;
+  var isOverdue  = d !== null && d < 0;
+  var colorCls   = isOverdue ? 'c-overdue' : 'c-active';
   var isSelected = !!selectedIds[t._id];
 
   var sm8Btn = t.jobUuidSm8
@@ -916,16 +968,14 @@ function taskCard(t) {
       esc(t.jobUuidSm8) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>'
     : '';
 
-  var dateDisplay = t.dueDate
-    ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>'
-    : '';
+  var dateDisplay = t.dueDate ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>' : '';
 
   var staffChip = '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
     + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
     + esc(t.staffName) + '</span>';
 
-  return '<div class="task-card ' + colorCls + (isSelected ? ' selected' : '') + '" data-id="' + esc(t._id) + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
-    + '<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\'' + esc(t._id) + '\',this.checked,event)" ' + (isSelected ? 'checked' : '') + '/>'
+  return '<div class="task-card ' + colorCls + (isSelected?' selected':'') + '" data-id="' + esc(t._id) + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
+    + '<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\'' + esc(t._id) + '\',this.checked,event)"' + (isSelected?' checked':'') + '/>'
     + '<div class="task-body">'
     + '<div class="title-row">'
     + '<span class="task-title">' + esc(t.name) + '</span>'
@@ -935,8 +985,9 @@ function taskCard(t) {
     + '</div>'
     + '<div class="meta-row">'
     + staffChip
+    + (t.category   ? '<span>&#127991; ' + esc(t.category)   + '</span>' : '')
     + (t.clientName ? '<span>&#128205; ' + esc(t.clientName) + '</span>' : '')
-    + (t.jobNumber  ? '<span>&#128188; Job #' + esc(t.jobNumber) + (t.jobDesc ? ' &mdash; ' + esc(t.jobDesc.substring(0,40)) : '') + '</span>' : '')
+    + (t.jobNumber  ? '<span>&#128188; Job #' + esc(t.jobNumber) + (t.jobDesc?' &mdash; '+esc(t.jobDesc.substring(0,40)):'') + '</span>' : '')
     + dateDisplay
     + '</div>'
     + '</div>'
@@ -954,37 +1005,12 @@ function duePill(t) {
   return '<span class="due-pill ok">' + fmtDate(t.dueDate) + '</span>';
 }
 
-// ── Single complete ────────────────────────────────────
-function quickToggle(id, checked) {
-  // checkbox is now bulk-select, not quick-complete
-  toggleSelect(id, checked, null);
-}
-
+// ── Mark complete ──────────────────────────────────────
 function markComplete(t) {
   var now = new Date();
   var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
             ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-  var raw = t._raw;
-  var payload = {
-    uuid:                          t._id,
-    job_uuid:                      raw.job_uuid                      || '',
-    name:                          raw.name                          || '',
-    section_name:                  raw.section_name                  || '',
-    item_type:                     raw.item_type                     || 'Todo',
-    sort_order:                    raw.sort_order                    || 0,
-    completed_timestamp:           ts,
-    completed_by_staff_uuid:       currentUserUuid || t.staffUuid    || '',
-    completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
-    reminder_type:                 raw.reminder_type                 || '',
-    reminder_data:                 raw.reminder_data && !Array.isArray(raw.reminder_data) ? raw.reminder_data : null,
-    regarding_object:              raw.regarding_object              || '',
-    regarding_object_uuid:         raw.regarding_object_uuid         || '',
-    fulfilled_by_object_name:      raw.fulfilled_by_object_name      || '',
-    fulfilled_by_object_uuid:      raw.fulfilled_by_object_uuid      || '',
-    assigned_to_staff_uuids:       Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
-    is_locked:                     raw.is_locked                     || '0'
-  };
-  sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
+  sm8Put('/jobchecklist/' + t._id + '.json', buildPayload(t, ts)).then(function(r) {
     if (r.status === 200 || r.status === 201 || r.status === 204) {
       tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
       delete selectedIds[t._id];
@@ -1014,10 +1040,15 @@ function openEdit(id) {
   } else { sm8Link.style.display = 'none'; }
 
   document.getElementById('m-name').textContent = t.name;
+
   document.getElementById('m-staff-display').innerHTML =
     '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
     + '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
     + esc(t.staffName) + '</span>';
+
+  var catRow = document.getElementById('m-category-row');
+  if (t.category) { catRow.style.display=''; document.getElementById('m-category').textContent=t.category; }
+  else { catRow.style.display='none'; }
 
   var secRow = document.getElementById('m-section-row');
   if (t.section) { secRow.style.display=''; document.getElementById('m-section').textContent=t.section; }
