@@ -98,6 +98,10 @@ button:hover{opacity:0.87;}
 .badge.overdue{background:rgba(239,68,68,0.15);color:var(--red);}
 .badge.task{background:rgba(79,110,247,0.12);color:var(--accent);}
 .badge.section{background:rgba(124,58,237,0.12);color:#a78bfa;}
+.badge.status-quote{background:rgba(245,158,11,0.13);color:var(--amber);}
+.badge.status-wo{background:rgba(34,197,94,0.13);color:var(--green);}
+.badge.status-completed{background:rgba(136,146,176,0.13);color:var(--muted);}
+.badge.status-unsuccessful{background:rgba(239,68,68,0.13);color:var(--red);}
 .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-size:0.75rem;color:var(--muted);margin-bottom:5px;align-items:center;}
 .task-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;}
 .due-pill{font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;}
@@ -129,7 +133,7 @@ button:hover{opacity:0.87;}
   display:flex;align-items:center;justify-content:center;
   font-size:0.72rem;font-weight:800;color:#fff;flex-shrink:0;
 }
-.category-icon{font-size:1.2rem;line-height:1;flex-shrink:0;}
+.group-icon{font-size:1.2rem;line-height:1;flex-shrink:0;}
 .staff-group-name{font-weight:700;font-size:0.95rem;flex:1;}
 .staff-group-ct{
   background:var(--surface2);border:1px solid var(--border);
@@ -266,6 +270,7 @@ button:hover{opacity:0.87;}
   <div class="debug-panel" id="debug-panel">Loading&hellip;</div>
 
   <div class="toolbar">
+    <!-- View scope -->
     <div class="toolbar-group">
       <span class="toolbar-label">View</span>
       <div class="seg-toggle">
@@ -273,21 +278,31 @@ button:hover{opacity:0.87;}
         <button class="seg-btn"        id="ts-all"  onclick="setScope('all')">&#128101; All Staff</button>
       </div>
     </div>
+    <!-- Sort -->
     <div class="toolbar-group">
       <span class="toolbar-label">Sort by</span>
       <div class="seg-toggle">
-        <button class="seg-btn active" id="sort-due"      onclick="setSort('due')">&#128336; Due Date</button>
-        <button class="seg-btn"        id="sort-staff"    onclick="setSort('staff')">&#128100; Staff</button>
-        <button class="seg-btn"        id="sort-job"      onclick="setSort('job')">&#128188; Job</button>
-        <button class="seg-btn"        id="sort-category" onclick="setSort('category')">&#127991; Category</button>
+        <button class="seg-btn active" id="sort-due"    onclick="setSort('due')">&#128336; Due Date</button>
+        <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
+        <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
+        <button class="seg-btn"        id="sort-status" onclick="setSort('status')">&#127959; Status</button>
       </div>
     </div>
+    <!-- Filters -->
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
     <select id="q-staff"    onchange="render()"><option value="">All Staff</option></select>
     <select id="q-client"   onchange="render()"><option value="">All Clients</option></select>
     <select id="q-category" onchange="render()"><option value="">All Categories</option></select>
+    <select id="q-status"   onchange="render()">
+      <option value="">All Statuses</option>
+      <option value="Quote">Quote</option>
+      <option value="Work Order">Work Order</option>
+      <option value="Unsuccessful">Unsuccessful</option>
+      <option value="Completed">Completed</option>
+    </select>
   </div>
 
+  <!-- Bulk bar -->
   <div id="bulk-bar" style="display:none">
     <div class="bulk-bar">
       <label class="bulk-select-all">
@@ -303,6 +318,7 @@ button:hover{opacity:0.87;}
   <div id="task-body"></div>
 </div>
 
+<!-- Modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
@@ -313,6 +329,10 @@ button:hover{opacity:0.87;}
     <div class="frow">
       <label>Task Name</label>
       <div class="readonly-val" id="m-name"></div>
+    </div>
+    <div class="frow" id="m-status-row" style="display:none">
+      <label>Job Status</label>
+      <div class="readonly-val" id="m-status"></div>
     </div>
     <div class="frow" id="m-category-row" style="display:none">
       <label>Category</label>
@@ -368,6 +388,9 @@ var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
 var debugVisible    = false;
+
+// Status sort order
+var STATUS_ORDER = { 'Work Order':0, 'Quote':1, 'Unsuccessful':2, 'Completed':3 };
 
 var STAFF_COLORS = [
   '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
@@ -466,7 +489,7 @@ function loadTasks(force) {
     rawDebugData    = rawItems;
     rawCategoryData = rawCategories;
 
-    // Staff
+    // ── Staff
     staffList = rawStaff
       .filter(function(s) { return String(s.active) === '1'; })
       .map(function(s) {
@@ -479,7 +502,7 @@ function loadTasks(force) {
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
 
-    // Jobs — store _raw for debug inspection
+    // ── Jobs — store _raw for debug, include status
     jobMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
@@ -489,29 +512,30 @@ function loadTasks(force) {
           uuid:       j.uuid,
           number:     j.generated_job_id || '',
           desc:       j.job_description  || '',
-          clientUuid: j.company_uuid     || ''
+          clientUuid: j.company_uuid     || '',
+          status:     j.status           || '',
+          catUuid:    j.category_uuid    || ''
         };
       });
 
-    // Categories: uuid -> name
+    // ── Categories: uuid -> name
     rawCatNameMap = {};
     rawCategories
       .filter(function(c) { return String(c.active) === '1'; })
       .forEach(function(c) { rawCatNameMap[c.uuid] = c.name; });
 
-    // Category map: job_uuid -> category name
-    // Tries both common field names; debug will reveal the correct one
+    // ── Category map: job_uuid -> category name
     categoryMap = {};
     rawJobs
       .filter(function(j) { return String(j.active) === '1'; })
       .forEach(function(j) {
-        var catUuid = j.job_category_uuid || j.category_uuid || j.job_category || '';
+        var catUuid = j.category_uuid || j.job_category_uuid || '';
         if (catUuid && rawCatNameMap[catUuid]) {
           categoryMap[j.uuid] = rawCatNameMap[catUuid];
         }
       });
 
-    // Checklist items
+    // ── Checklist items
     tasksData = rawItems
       .filter(function(i) {
         if (String(i.active) !== '1') return false;
@@ -529,7 +553,7 @@ function loadTasks(force) {
           staffUuid = i.assigned_to_staff_uuids[0];
         }
 
-        // Due date
+        // Due date from absoluteDateTime
         var dueDate = '';
         if (i.reminder_type === 'ABSOLUTE_DATETIME' &&
             i.reminder_data && typeof i.reminder_data === 'object' &&
@@ -552,11 +576,11 @@ function loadTasks(force) {
         return {
           _id:          i.uuid,
           _raw:         i,
-          name:         i.name || 'Unnamed Task',
+          name:         i.name         || 'Unnamed Task',
           section:      i.section_name || '',
-          itemType:     i.item_type || '',
+          itemType:     i.item_type    || '',
           staffUuid:    staffUuid,
-          staffName:    staffMap[staffUuid] || 'Unassigned',
+          staffName:    staffMap[staffUuid]      || 'Unassigned',
           staffColor:   staffColorMap[staffUuid] || '#8892b0',
           dueDate:      dueDate,
           reminderType: i.reminder_type || '',
@@ -565,6 +589,7 @@ function loadTasks(force) {
           jobNumber:    job.number   || '',
           jobDesc:      job.desc     || '',
           jobUuidSm8:   job.uuid     || '',
+          jobStatus:    job.status   || '',
           clientName:   clientName,
           clientUuid:   clientUuid,
           category:     categoryMap[i.job_uuid] || ''
@@ -617,29 +642,36 @@ function updateDebugPanel() {
     return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
   }).length;
 
-  // Category debug
   var categoryKeys    = Object.keys(categoryMap);
   var tasksWithCat    = tasksData.filter(function(t){ return !!t.category; }).length;
   var tasksWithoutCat = tasksData.filter(function(t){ return !t.category; }).length;
 
-  // Sample task -> job lookup
+  // Status breakdown
+  var statusCounts = {};
+  tasksData.forEach(function(t){
+    var s = t.jobStatus || '(none)';
+    statusCounts[s] = (statusCounts[s]||0)+1;
+  });
+
   var sampleTask = tasksData.find(function(t){ return !!t.jobUuid; });
   var sampleLookup = 'No tasks with job_uuid found';
   var sampleJobRaw = 'n/a';
   if (sampleTask) {
     sampleLookup = 'Sample task job_uuid: ' + sampleTask.jobUuid +
-                   '\n  categoryMap result: ' + (categoryMap[sampleTask.jobUuid] || '(not found)');
+                   '\n  categoryMap result: ' + (categoryMap[sampleTask.jobUuid] || '(not found)') +
+                   '\n  jobStatus: ' + (sampleTask.jobStatus || '(none)');
     var jobEntry = jobMap[sampleTask.jobUuid];
     if (jobEntry && jobEntry._raw) {
-      // Show only the fields that might relate to category
       var raw = jobEntry._raw;
       var catFields = {};
       Object.keys(raw).forEach(function(k){
-        if (k.toLowerCase().indexOf('cat') !== -1 || k.toLowerCase().indexOf('type') !== -1) {
+        if (k.toLowerCase().indexOf('cat') !== -1 ||
+            k.toLowerCase().indexOf('status') !== -1 ||
+            k.toLowerCase().indexOf('type') !== -1) {
           catFields[k] = raw[k];
         }
       });
-      sampleJobRaw = 'Category-related fields on job:\n' +
+      sampleJobRaw = 'Category/status-related fields:\n' +
         JSON.stringify(catFields, null, 2) +
         '\n\nFull job raw:\n' +
         JSON.stringify(raw, null, 2);
@@ -653,9 +685,12 @@ function updateDebugPanel() {
     'item_type breakdown:\n'+
     Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n')+'\n\n'+
 
+    '── JOB STATUS BREAKDOWN ───────────────\n'+
+    Object.keys(statusCounts).map(function(k){ return '  '+k+': '+statusCounts[k]; }).join('\n')+'\n\n'+
+
     '── CATEGORY ENDPOINT ──────────────────\n'+
     'Total /category.json records: ' + rawCategoryData.length + '\n'+
-    'Active categories in rawCatNameMap: ' + Object.keys(rawCatNameMap).length + '\n'+
+    'Active categories in map: ' + Object.keys(rawCatNameMap).length + '\n'+
     'First category record:\n'+
     JSON.stringify(rawCategoryData[0] || 'none', null, 2)+'\n\n'+
 
@@ -728,10 +763,10 @@ function setScope(s) {
 
 function setSort(s) {
   sortMode = s;
-  document.getElementById('sort-due').className      = 'seg-btn'+(s==='due'     ?' active':'');
-  document.getElementById('sort-staff').className    = 'seg-btn'+(s==='staff'   ?' active':'');
-  document.getElementById('sort-job').className      = 'seg-btn'+(s==='job'     ?' active':'');
-  document.getElementById('sort-category').className = 'seg-btn'+(s==='category'?' active':'');
+  document.getElementById('sort-due').className    = 'seg-btn'+(s==='due'   ?' active':'');
+  document.getElementById('sort-staff').className  = 'seg-btn'+(s==='staff' ?' active':'');
+  document.getElementById('sort-job').className    = 'seg-btn'+(s==='job'   ?' active':'');
+  document.getElementById('sort-status').className = 'seg-btn'+(s==='status'?' active':'');
   render();
 }
 
@@ -740,6 +775,7 @@ function getFiltered() {
   var staffF    = document.getElementById('q-staff').value;
   var clientF   = document.getElementById('q-client').value;
   var categoryF = document.getElementById('q-category').value;
+  var statusF   = document.getElementById('q-status').value;
 
   return tasksData.filter(function(t) {
     if (tScope === 'mine') {
@@ -750,8 +786,9 @@ function getFiltered() {
     if (staffF    && t.staffUuid  !== staffF)    return false;
     if (clientF   && t.clientUuid !== clientF)   return false;
     if (categoryF && t.category   !== categoryF) return false;
+    if (statusF   && t.jobStatus  !== statusF)   return false;
     if (q) {
-      var hay = [t.name, t.section, t.staffName, t.jobNumber, t.clientName, t.category].join(' ').toLowerCase();
+      var hay = [t.name, t.section, t.staffName, t.jobNumber, t.clientName, t.category, t.jobStatus].join(' ').toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
     return true;
@@ -779,11 +816,11 @@ function sortTasks(arr) {
       return (a.jobNumber||'').localeCompare(b.jobNumber||'') ||
              (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
     });
-  } else if (sortMode === 'category') {
+  } else if (sortMode === 'status') {
     copy.sort(function(a, b) {
-      var ca = a.category || 'zzz';
-      var cb = b.category || 'zzz';
-      return ca.localeCompare(cb) ||
+      var oa = STATUS_ORDER[a.jobStatus] !== undefined ? STATUS_ORDER[a.jobStatus] : 99;
+      var ob = STATUS_ORDER[b.jobStatus] !== undefined ? STATUS_ORDER[b.jobStatus] : 99;
+      return oa - ob ||
              (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz') ||
              a.name.localeCompare(b.name);
     });
@@ -928,8 +965,8 @@ function render() {
 
   if (sortMode === 'staff' && tScope === 'all') {
     renderGroupedByStaff(sorted);
-  } else if (sortMode === 'category') {
-    renderGroupedByCategory(sorted);
+  } else if (sortMode === 'status') {
+    renderGroupedByStatus(sorted);
   } else {
     var html = '<div class="task-list">';
     sorted.forEach(function(t){ html += taskCard(t); });
@@ -964,12 +1001,12 @@ function renderGroupedByStaff(sorted) {
   setBody(html);
 }
 
-function renderGroupedByCategory(sorted) {
+function renderGroupedByStatus(sorted) {
   var groups = []; var groupMap = {};
   sorted.forEach(function(t) {
-    var key = t.category || '__none__';
+    var key = t.jobStatus || '__none__';
     if (!groupMap[key]) {
-      groupMap[key] = { category: t.category || 'No Category', tasks:[] };
+      groupMap[key] = { status: t.jobStatus || 'No Status', tasks:[] };
       groups.push(groupMap[key]);
     }
     groupMap[key].tasks.push(t);
@@ -978,8 +1015,8 @@ function renderGroupedByCategory(sorted) {
   groups.forEach(function(g) {
     html += '<div class="staff-group">'
       + '<div class="staff-group-hdr">'
-      + '<span class="category-icon">&#127991;</span>'
-      + '<span class="staff-group-name">'+esc(g.category)+'</span>'
+      + '<span class="group-icon">'+statusIcon(g.status)+'</span>'
+      + '<span class="staff-group-name">'+esc(g.status)+'</span>'
       + '<span class="staff-group-ct">'+g.tasks.length+'</span>'
       + '</div><div class="task-list">';
     g.tasks.forEach(function(t){ html += taskCard(t); });
@@ -1011,6 +1048,23 @@ function stat(v, l, c) {
 }
 
 // ── Task card ──────────────────────────────────────────
+function statusBadge(status) {
+  if (!status) return '';
+  var cls = 'status-wo';
+  if (status === 'Quote')        cls = 'status-quote';
+  if (status === 'Completed')    cls = 'status-completed';
+  if (status === 'Unsuccessful') cls = 'status-unsuccessful';
+  return '<span class="badge '+cls+'">'+esc(status)+'</span>';
+}
+
+function statusIcon(status) {
+  if (status === 'Work Order')   return '&#127959;';
+  if (status === 'Quote')        return '&#128203;';
+  if (status === 'Completed')    return '&#10003;';
+  if (status === 'Unsuccessful') return '&#10007;';
+  return '&#9679;';
+}
+
 function taskCard(t) {
   var d          = t.dueDate ? daysUntil(t.dueDate) : null;
   var isOverdue  = d !== null && d < 0;
@@ -1034,8 +1088,9 @@ function taskCard(t) {
     + '<div class="title-row">'
     + '<span class="task-title">'+esc(t.name)+'</span>'
     + '<span class="badge task">Task</span>'
-    + (t.section  ? '<span class="badge section">'+esc(t.section)+'</span>' : '')
-    + (isOverdue  ? '<span class="badge overdue">Overdue</span>' : '')
+    + statusBadge(t.jobStatus)
+    + (t.section ? '<span class="badge section">'+esc(t.section)+'</span>' : '')
+    + (isOverdue ? '<span class="badge overdue">Overdue</span>' : '')
     + '</div>'
     + '<div class="meta-row">'
     + staffChip
@@ -1099,6 +1154,12 @@ function openEdit(id) {
     '<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
     +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'
     +esc(t.staffName)+'</span>';
+
+  var statusRow = document.getElementById('m-status-row');
+  if (t.jobStatus) {
+    statusRow.style.display = '';
+    document.getElementById('m-status').innerHTML = statusBadge(t.jobStatus);
+  } else { statusRow.style.display = 'none'; }
 
   var catRow = document.getElementById('m-category-row');
   if (t.category) { catRow.style.display=''; document.getElementById('m-category').textContent=t.category; }
