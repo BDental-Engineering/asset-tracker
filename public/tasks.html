@@ -378,6 +378,7 @@ var currentUser     = '';
 var currentUserUuid = '';
 var editRecord      = null;
 var debugVisible    = false;
+var rawActivityData = [];
 
 var STAFF_COLORS = [
   '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
@@ -472,7 +473,7 @@ function loadTasks(force) {
     var rawJobs       = Array.isArray(res[1]) ? res[1] : [];
     var rawItems      = Array.isArray(res[2]) ? res[2] : [];
     var rawActivities = Array.isArray(res[3]) ? res[3] : [];
-
+    rawActivityData = rawActivities; // store for debug
     rawDebugData = rawItems;
     updateDebugPanel();
 
@@ -607,6 +608,7 @@ function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
   if (!rawDebugData.length) { panel.textContent = 'No data yet.'; return; }
+
   var typeCounts = {};
   rawDebugData.forEach(function(i) { var t = i.item_type||'(none)'; typeCounts[t]=(typeCounts[t]||0)+1; });
   var activeCount    = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
@@ -615,14 +617,44 @@ function updateDebugPanel() {
     var ts=String(i.completed_timestamp||'').trim();
     return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
   }).length;
+
+  // Category map debug
+  var categoryKeys   = Object.keys(categoryMap);
+  var tasksWithCat   = tasksData.filter(function(t){ return !!t.category; }).length;
+  var tasksWithoutCat= tasksData.filter(function(t){ return !t.category; }).length;
+
+  // Sample: first task that has a job_uuid, show what categoryMap returns for it
+  var sampleTask = tasksData.find(function(t){ return !!t.jobUuid; });
+  var sampleLookup = sampleTask
+    ? 'Sample task job_uuid: ' + sampleTask.jobUuid + '\n  categoryMap result: ' + (categoryMap[sampleTask.jobUuid] || '(not found)')
+    : 'No tasks with job_uuid found';
+
+  // Raw activity sample
+  var actSample = rawActivityData && rawActivityData.length
+    ? 'Total activity records: ' + rawActivityData.length + '\n' +
+      'First record:\n' + JSON.stringify(rawActivityData[0], null, 2) + '\n\n' +
+      'Second record:\n' + JSON.stringify(rawActivityData[1] || 'n/a', null, 2)
+    : 'rawActivityData is empty or not loaded';
+
   panel.textContent =
+    '── CHECKLIST ──────────────────────────\n'+
     'Total: '+rawDebugData.length+'  active=1: '+activeCount+'  active=0: '+inactiveCount+'\n'+
     'completed (real ts): '+completedCount+'\n\n'+
     'item_type breakdown:\n'+
     Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n')+'\n\n'+
-    'First Todo:\n'+
+    '── CATEGORIES ─────────────────────────\n'+
+    'categoryMap entries: ' + categoryKeys.length + '\n'+
+    'Tasks with category: ' + tasksWithCat + '\n'+
+    'Tasks without category: ' + tasksWithoutCat + '\n\n'+
+    sampleLookup + '\n\n'+
+    'categoryMap sample (first 5):\n'+
+    categoryKeys.slice(0,5).map(function(k){ return '  '+k+' -> '+categoryMap[k]; }).join('\n')+'\n\n'+
+    '── JOB ACTIVITY RAW ───────────────────\n'+
+    actSample + '\n\n'+
+    '── FIRST TODO ─────────────────────────\n'+
     JSON.stringify(rawDebugData.find(function(i){ return String(i.item_type).toLowerCase()==='todo'; })||'none',null,2);
 }
+
 
 // ── Filters ────────────────────────────────────────────
 function populateFilters() {
