@@ -819,9 +819,14 @@ function getFiltered() {
                  (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
       if (!isMe) return false;
     }
-    if (staffF    && t.staffUuid  !== staffF)    return false;
-    if (staffF) {  if (staffF === '__unassigned__') {    if (t.staffUuid) return false;  } 
-      else {    if (t.staffUuid !== staffF) return false;  }}
+    if (staffF) {
+      if (staffF === '__unassigned__') {
+        if (t.staffUuid) return false;
+      } else {
+        if (t.staffUuid !== staffF) return false;
+      }
+    }
+    if (clientF   && t.clientUuid !== clientF)   return false;
     if (categoryF && t.category   !== categoryF) return false;
     if (statusF   && t.jobStatus  !== statusF)   return false;
     if (q) {
