@@ -273,20 +273,20 @@ button:hover{opacity:0.87;}
   <div class="debug-panel" id="debug-panel">Loading&hellip;</div>
 
   <div class="toolbar">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span style="font-size:0.75rem;color:var(--muted);font-weight:600;white-space:nowrap;">Sort by</span>
     <div class="seg-toggle">
       <button class="seg-btn active" id="ts-mine" onclick="setScope('mine')">&#128100; My Tasks</button>
       <button class="seg-btn" id="ts-all" onclick="setScope('all')">&#128101; All Staff</button>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span style="font-size:0.75rem;color:var(--muted);font-weight:600;white-space:nowrap;">Sort by</span>
       <div class="seg-toggle">
         <button class="seg-btn active" id="sort-due"   onclick="setSort('due')">&#128336; Due Date</button>
         <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
         <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
       </div>
-    </div>
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
     <select id="q-staff" onchange="render()"><option value="">All Staff</option></select>
     <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
+  </div>
   </div>
 
   <div id="task-body"></div>
