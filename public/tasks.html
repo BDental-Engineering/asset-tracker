@@ -80,11 +80,6 @@ button:hover{opacity:0.87;}
 .toolbar input{min-width:180px;}
 .toolbar input:focus,.toolbar select:focus{border-color:var(--accent);}
 .seg-toggle{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;}
-<div class="seg-toggle">
-  <button class="seg-btn active" id="sort-due"   onclick="setSort('due')">&#128336; Due Date</button>
-  <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
-  <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
-</div>
 .seg-btn{
   background:transparent;color:var(--muted);border:none;border-radius:7px;
   padding:5px 13px;font-size:0.8rem;font-weight:600;
@@ -281,6 +276,11 @@ button:hover{opacity:0.87;}
     <div class="seg-toggle">
       <button class="seg-btn active" id="ts-mine" onclick="setScope('mine')">&#128100; My Tasks</button>
       <button class="seg-btn" id="ts-all" onclick="setScope('all')">&#128101; All Staff</button>
+    </div>
+    <div class="seg-toggle">
+      <button class="seg-btn active" id="sort-due"   onclick="setSort('due')">&#128336; Due Date</button>
+      <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
+      <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
     </div>
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
     <select id="q-staff" onchange="render()"><option value="">All Staff</option></select>
