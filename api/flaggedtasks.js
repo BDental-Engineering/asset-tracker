@@ -47,42 +47,18 @@ async function getFile() {
   return { content, sha: res.body.sha };
 }
 
-function parseBody(req) {
-  return new Promise(function(resolve, reject) {
-    // Vercel may pre-parse as object or string
-    if (req.body) {
-      if (typeof req.body === 'object' && !Array.isArray(req.body)) {
-        return resolve(req.body);
-      }
-      if (typeof req.body === 'string') {
-        try { return resolve(JSON.parse(req.body)); }
-        catch(e) { return reject(new Error('Invalid JSON string body')); }
-      }
-    }
-    // Fall back to reading raw stream
-    let raw = '';
-    req.on('data', function(chunk) { raw += chunk; });
-    req.on('end', function() {
-      if (!raw) return resolve({});
-      try { resolve(JSON.parse(raw)); }
-      catch(e) { reject(new Error('Invalid JSON body')); }
-    });
-    req.on('error', reject);
-  });
-}
-
-module.exports = async (req, res) => {
+const handler = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (!REPO || !GITHUB_TOKEN) {
-    console.log('[flaggedtasks] missing env vars');
+    console.log('[flaggedtasks] missing env vars — REPO:', REPO, 'TOKEN set:', !!GITHUB_TOKEN);
     return res.status(500).json({ error: 'GitHub not configured' });
   }
 
-  // GET — return the current flagged IDs object
+  // ── GET ────────────────────────────────────────────────
   if (req.method === 'GET') {
     try {
       const { content } = await getFile();
@@ -95,30 +71,41 @@ module.exports = async (req, res) => {
     }
   }
 
-  // POST — receive the full updated flaggedIds object and overwrite the file
-   if (req.method === 'POST') {
-      try {
-        console.log('[flaggedtasks] raw req.body type:', typeof req.body, '| value:', JSON.stringify(req.body).substring(0, 200));
-        const incoming = await parseBody(req);
-        console.log('[flaggedtasks] parsed incoming type:', typeof incoming, '| value:', JSON.stringify(incoming).substring(0, 200));
+  // ── POST ───────────────────────────────────────────────
+  if (req.method === 'POST') {
+    try {
+      console.log('[flaggedtasks] POST hit');
+      console.log('[flaggedtasks] req.body type:', typeof req.body);
+      console.log('[flaggedtasks] req.body raw:', JSON.stringify(req.body).substring(0, 300));
 
-      const incoming = await parseBody(req);
+      // Vercel pre-parses JSON bodies — handle object, string, or missing
+      let incoming = req.body;
 
-      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
-        console.log('[flaggedtasks] POST bad body:', incoming);
-        return res.status(400).json({ error: 'Expected a JSON object of { uuid: true } entries' });
+      if (typeof incoming === 'string') {
+        try { incoming = JSON.parse(incoming); }
+        catch(e) {
+          console.log('[flaggedtasks] failed to parse string body:', e.message);
+          incoming = {};
+        }
       }
 
-      // Sanitise — keep only keys whose value is true
+      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+        console.log('[flaggedtasks] body was not a plain object, defaulting to {}');
+        incoming = {};
+      }
+
+      // Sanitise — keep only keys whose value is strictly true
       const cleaned = {};
       Object.keys(incoming).forEach(function(k) {
         if (incoming[k] === true) cleaned[k] = true;
       });
 
       const count = Object.keys(cleaned).length;
-      console.log('[flaggedtasks] POST saving', count, 'flagged IDs');
+      console.log('[flaggedtasks] sanitised to', count, 'flagged IDs');
 
+      // Read current SHA so GitHub lets us overwrite the file
       const { sha } = await getFile();
+      console.log('[flaggedtasks] current file sha:', sha);
 
       const encoded = Buffer.from(JSON.stringify(cleaned, null, 2)).toString('base64');
 
@@ -129,14 +116,21 @@ module.exports = async (req, res) => {
       };
       if (sha) pushPayload.sha = sha;
 
-      const pushRes = await githubRequest('PUT', '/repos/' + REPO + '/contents/' + PATH, pushPayload);
+      const pushRes = await githubRequest(
+        'PUT',
+        '/repos/' + REPO + '/contents/' + PATH,
+        pushPayload
+      );
+
+      console.log('[flaggedtasks] GitHub PUT status:', pushRes.status);
 
       if (pushRes.status !== 200 && pushRes.status !== 201) {
         throw new Error('GitHub write failed: ' + pushRes.status + ' ' + JSON.stringify(pushRes.body));
       }
 
-      console.log('[flaggedtasks] POST saved', count, 'flagged IDs to GitHub');
+      console.log('[flaggedtasks] successfully saved', count, 'flagged IDs to GitHub');
       return res.status(200).json({ ok: true, count });
+
     } catch (e) {
       console.log('[flaggedtasks] POST error:', e.message);
       return res.status(500).json({ error: e.message });
@@ -145,3 +139,13 @@ module.exports = async (req, res) => {
 
   return res.status(405).json({ error: 'Method not allowed' });
 };
+
+handler.config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+  },
+};
+
+module.exports = handler;
