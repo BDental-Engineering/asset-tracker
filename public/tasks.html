@@ -701,10 +701,25 @@ function markComplete(t) {
   var now = new Date();
   var ts  = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
             ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-  var payload = Object.assign({}, t._raw, {
+
+  // Send ONLY the fields needed — do NOT spread the full _raw object
+  // ServiceM8 rejects read-only or unexpected fields with 500
+  var payload = {
+    uuid:                    t._id,
+    active:                  1,
+    job_uuid:                t._raw.job_uuid                || '',
+    name:                    t._raw.name                    || '',
+    item_type:               t._raw.item_type               || '',
+    sort_order:              t._raw.sort_order              || 0,
+    section_name:            t._raw.section_name            || '',
     completed_timestamp:     ts,
-    completed_by_staff_uuid: currentUserUuid || t.staffUuid || ''
-  });
+    completed_by_staff_uuid: currentUserUuid || t.staffUuid || '',
+    assigned_to_staff_uuids: t._raw.assigned_to_staff_uuids || [],
+    reminder_type:           t._raw.reminder_type           || '',
+    reminder_data:           '',
+    is_locked:               t._raw.is_locked               || '0'
+  };
+
   sm8Put('/jobchecklist/' + t._id + '.json', payload).then(function(r) {
     if (r.status === 200 || r.status === 201 || r.status === 204) {
       tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
@@ -714,11 +729,14 @@ function markComplete(t) {
       toast('Task marked as completed.');
     } else {
       r.text().then(function(txt) {
-        toast('Save failed: HTTP ' + r.status + ' ' + txt.substring(0,80), true);
+        toast('Save failed: HTTP ' + r.status + ' — ' + txt.substring(0, 120), true);
       });
       render();
     }
-  }).catch(function(e) { toast('Save failed: ' + e.message, true); render(); });
+  }).catch(function(e) {
+    toast('Save failed: ' + e.message, true);
+    render();
+  });
 }
 
 // ── Edit modal ─────────────────────────────────────────
