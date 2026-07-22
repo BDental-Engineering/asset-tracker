@@ -950,7 +950,7 @@ function render() {
     return (currentUserUuid && t.staffUuid === currentUserUuid) ||
            (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
   });
-  renderStats(scope);
+  renderStats(filtered);
 
   if (!filtered.length) {
     updateBulkBar();
