@@ -281,12 +281,13 @@ button:hover{opacity:0.87;}
     <!-- Sort -->
     <div class="toolbar-group">
       <span class="toolbar-label">Sort by</span>
-      <div class="seg-toggle">
-        <button class="seg-btn active" id="sort-due"    onclick="setSort('due')">&#128336; Due Date</button>
-        <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
-        <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
-        <button class="seg-btn"        id="sort-status" onclick="setSort('status')">&#127959; Status</button>
-      </div>
+        <div class="seg-toggle">
+          <button class="seg-btn active" id="sort-due"    onclick="setSort('due')">&#128336; Due Date</button>
+          <button class="seg-btn"        id="sort-staff"  onclick="setSort('staff')">&#128100; Staff</button>
+          <button class="seg-btn"        id="sort-job"    onclick="setSort('job')">&#128188; Job</button>
+          <button class="seg-btn"        id="sort-status" onclick="setSort('status')">&#127959; Status</button>
+          <button class="seg-btn"        id="sort-name"   onclick="setSort('name')">&#128292; Name</button>
+        </div>
     </div>
     <!-- Filters -->
     <input type="text" id="q-search" placeholder="&#128269; Search&hellip;" oninput="render()"/>
@@ -646,7 +647,7 @@ function loadTasks(force) {
     toast('Load failed: ' + e.message, true);
   });
 }
-
+  
 // ── Debug ──────────────────────────────────────────────
 function toggleDebug() {
   debugVisible = !debugVisible;
@@ -792,6 +793,7 @@ function setSort(s) {
   document.getElementById('sort-staff').className  = 'seg-btn'+(s==='staff' ?' active':'');
   document.getElementById('sort-job').className    = 'seg-btn'+(s==='job'   ?' active':'');
   document.getElementById('sort-status').className = 'seg-btn'+(s==='status'?' active':'');
+  document.getElementById('sort-name').className   = 'seg-btn'+(s==='name'  ?' active':'');
   render();
 }
 
@@ -849,7 +851,13 @@ function sortTasks(arr) {
              (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz') ||
              a.name.localeCompare(b.name);
     });
-  }
+  } else if (sortMode === 'name') {
+    copy.sort(function(a, b) {
+      return  a.name.localeCompare(b.name) ||
+             (a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
+    });
+}
+
   return copy;
 }
 
