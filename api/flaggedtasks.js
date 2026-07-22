@@ -49,13 +49,21 @@ async function getFile() {
 
 function parseBody(req) {
   return new Promise(function(resolve, reject) {
-    if (req.body && typeof req.body === 'object') {
-      return resolve(req.body);
+    // Vercel may pre-parse as object or string
+    if (req.body) {
+      if (typeof req.body === 'object' && !Array.isArray(req.body)) {
+        return resolve(req.body);
+      }
+      if (typeof req.body === 'string') {
+        try { return resolve(JSON.parse(req.body)); }
+        catch(e) { return reject(new Error('Invalid JSON string body')); }
+      }
     }
+    // Fall back to reading raw stream
     let raw = '';
     req.on('data', function(chunk) { raw += chunk; });
     req.on('end', function() {
-      if (!raw) return resolve(null);
+      if (!raw) return resolve({});
       try { resolve(JSON.parse(raw)); }
       catch(e) { reject(new Error('Invalid JSON body')); }
     });
@@ -88,8 +96,12 @@ module.exports = async (req, res) => {
   }
 
   // POST — receive the full updated flaggedIds object and overwrite the file
-  if (req.method === 'POST') {
-    try {
+   if (req.method === 'POST') {
+      try {
+        console.log('[flaggedtasks] raw req.body type:', typeof req.body, '| value:', JSON.stringify(req.body).substring(0, 200));
+        const incoming = await parseBody(req);
+        console.log('[flaggedtasks] parsed incoming type:', typeof incoming, '| value:', JSON.stringify(incoming).substring(0, 200));
+
       const incoming = await parseBody(req);
 
       if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
