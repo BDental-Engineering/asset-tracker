@@ -9,6 +9,7 @@
     { "src": "api/makemodel.js",  "use": "@vercel/node" },
     { "src": "api/history.js",     "use": "@vercel/node" },
     { "src": "api/flaggedtasks.js", "use": "@vercel/node" },
+    { "src": "api/taskcomments.js", "use": "@vercel/node" },
     { "src": "public/index.html",  "use": "@vercel/static" },
     { "src": "public/tasks.html",  "use": "@vercel/static" }
   ],
@@ -19,6 +20,7 @@
     { "src": "/api/makemodel", "dest": "/api/makemodel.js" },
     { "src": "/api/history",   "dest": "/api/history.js" },
     { "src": "/api/flaggedtasks", "dest": "/api/flaggedtasks.js" },
+    { "src": "/api/taskcomments", "dest": "/api/taskcomments.js" },
     { "src": "/api/(.*)",      "dest": "/api/proxy.js" },
     { "src": "/tasks.html",    "dest": "/public/tasks.html" },
     { "src": "/(.*)",          "dest": "/public/index.html" }
