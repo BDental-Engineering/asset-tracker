@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "d1fe3297-b8f6-4823-bd48-2267551572fa",
+    "asset_name": "Surgery 2 - J876490",
+    "client_name": "Hingham Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Expired",
+    "changed_by": "Rosie Buckingham",
+    "timestamp": "2026-07-23T14:39:52.137Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "fbcb1a39-3cf0-4115-ac48-220cf2abffda",
     "asset_name": "1912004",
     "client_name": "Great Horkesley Dental Studio",
