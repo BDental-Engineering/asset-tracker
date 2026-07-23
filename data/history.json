@@ -6,6 +6,17 @@
     "client_name": "Brandon Dental Care",
     "field": "Compliance",
     "old_value": "",
+    "new_value": "Quoted",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-23T16:28:49.616Z"
+  },
+  {
+    "type": "compliance",
+    "asset_uuid": "12ca867a-472d-420f-afae-2460ef89129a",
+    "asset_name": "Surgery 2 - 2995-15",
+    "client_name": "Brandon Dental Care",
+    "field": "Compliance",
+    "old_value": "",
     "new_value": "Active",
     "changed_by": "Richard Buckingham",
     "timestamp": "2026-07-23T16:28:40.592Z"
