@@ -52,6 +52,20 @@ button:hover{opacity:0.85;}
 .view-toggle{display:flex;gap:4px;margin-left:auto;}
 .view-toggle button{padding:7px 12px;background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .view-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.comp-filter-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.comp-filter-label{font-size:0.75rem;color:var(--muted);font-weight:600;white-space:nowrap;}
+.comp-filter-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.comp-filter-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:20px;font-size:0.78rem;font-weight:600;cursor:pointer;user-select:none;transition:all 0.15s;background:var(--surface2);border:1px solid var(--border);color:var(--muted);}
+.comp-filter-pill input[type=checkbox]{display:none;}
+.comp-filter-pill:hover{border-color:var(--accent);color:var(--text);}
+.comp-filter-pill.pill-active.on{background:rgba(34,197,94,0.15);border-color:var(--green);color:var(--green);}
+.comp-filter-pill.pill-expired.on{background:rgba(239,68,68,0.15);border-color:var(--red);color:var(--red);}
+.comp-filter-pill.pill-quoted.on{background:rgba(245,158,11,0.15);border-color:var(--amber);color:var(--amber);}
+.comp-filter-pill.pill-scheduled.on{background:rgba(79,110,247,0.15);border-color:var(--accent);color:var(--accent);}
+.comp-filter-pill.pill-query.on{background:rgba(124,58,237,0.15);border-color:var(--purple);color:var(--purple);}
+.comp-filter-pill.pill-gone.on{background:rgba(136,146,176,0.15);border-color:var(--muted);color:var(--muted);}
+.comp-filter-pill.pill-decomm.on{background:rgba(239,68,68,0.1);border-color:#f87171;color:#f87171;}
+.comp-filter-pill.pill-unknown.on{background:rgba(136,146,176,0.1);border-color:var(--muted);color:var(--muted);}
 .hidden-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:10px 14px;background:rgba(146,64,14,0.12);border:1px solid #92400e;border-radius:10px;font-size:0.85rem;color:#fde68a;}
 .hidden-bar span{flex:1;}
 .bulk-bar{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(120px);z-index:250;background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 40px rgba(0,0,0,0.5);transition:transform 0.25s,opacity 0.25s;opacity:0;pointer-events:none;min-width:420px;flex-wrap:wrap;}
@@ -105,7 +119,7 @@ button:hover{opacity:0.85;}
 .due-badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
 .due-badge.purple{background:rgba(124,58,237,0.15);color:var(--purple);}
 .due-badge.grey{background:rgba(136,146,176,0.15);color:var(--muted);}
-.compliance-select{width:100%;margin-top:8px;margin-left:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.75rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
+.compliance-select{width:100%;margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:0.75rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;}
 .compliance-select:focus{border-color:var(--accent);}
 .compliance-select.saving{border-color:var(--amber);opacity:0.7;}
 .compliance-select.saved{border-color:var(--green);}
@@ -188,7 +202,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .nav-tab{background:transparent;color:var(--muted);border:none;border-radius:8px;padding:7px 14px;font-size:0.85rem;text-decoration:none;display:inline-flex;align-items:center;cursor:pointer;}
 .nav-tab.active{background:var(--surface2);color:var(--text);}
 .nav-tab:hover:not(.active){color:var(--text);}
-/* Tasks nav link special styling */
 .nav-tab-tasks{background:rgba(79,110,247,0.12);color:var(--accent);border:1px solid rgba(79,110,247,0.3);border-radius:8px;padding:7px 14px;font-size:0.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-weight:600;transition:background 0.15s,border-color 0.15s;}
 .nav-tab-tasks:hover{background:rgba(79,110,247,0.22);border-color:rgba(79,110,247,0.5);}
 .loader{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
@@ -309,20 +322,10 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
 .mhi-desc{color:var(--text);margin-bottom:2px;}
 .mhi-meta{color:var(--muted);font-size:0.72rem;}
 .mhi-meta .by{color:var(--accent);font-weight:600;}
-/* ── Tasks nav banner ── */
-.tasks-nav-banner{
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(79,110,247,0.08);border:1px solid rgba(79,110,247,0.25);
-  border-radius:10px;padding:12px 18px;margin-bottom:20px;flex-wrap:wrap;gap:10px;
-}
+.tasks-nav-banner{display:flex;align-items:center;justify-content:space-between;background:rgba(79,110,247,0.08);border:1px solid rgba(79,110,247,0.25);border-radius:10px;padding:12px 18px;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
 .tasks-nav-banner-text{font-size:0.88rem;color:var(--text);}
 .tasks-nav-banner-text span{color:var(--accent);font-weight:600;}
-.tasks-nav-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--accent);color:#fff;border-radius:8px;
-  padding:8px 18px;font-size:0.85rem;font-weight:700;
-  text-decoration:none;transition:opacity 0.15s;white-space:nowrap;
-}
+.tasks-nav-btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:8px;padding:8px 18px;font-size:0.85rem;font-weight:700;text-decoration:none;transition:opacity 0.15s;white-space:nowrap;}
 .tasks-nav-btn:hover{opacity:0.85;}
 </style>
 </head>
@@ -339,7 +342,7 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div class="nav-tabs" id="nav-tabs" style="display:none">
     <button class="nav-tab active" id="tab-dashboard" onclick="showTab('dashboard')">Dashboard</button>
     <button class="nav-tab" id="tab-clients" onclick="showTab('clients')">&#128205; Clients</button>
-    <a class="nav-tab-tasks" href="tasks.html" id="tab-tasks">&#10003; Tasks</a>
+    <a class="nav-tab-tasks" href="tasks.html">&#10003; Tasks</a>
     <button class="nav-tab" id="tab-history" onclick="showTab('history')">&#128336; History</button>
     <button class="nav-tab" id="tab-makemodel" onclick="showTab('makemodel')">&#9881; Make &amp; Model</button>
     <button class="nav-tab" id="tab-settings" onclick="showTab('settings')">Settings</button>
@@ -352,7 +355,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </header>
 
-<!-- AUTH -->
 <div id="screen-auth" class="screen active">
   <div class="auth-card">
     <h2>Asset Tracker</h2>
@@ -374,7 +376,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- LOADING -->
 <div id="screen-loading" class="screen">
   <div class="loading-card">
     <span class="loader" style="width:36px;height:36px;border-width:3px"></span>
@@ -382,13 +383,9 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="screen-dashboard" class="screen">
-  <!-- Tasks banner -->
   <div class="tasks-nav-banner">
-    <div class="tasks-nav-banner-text">
-      &#10003; <span>Tasks</span> &mdash; View and manage job activities &amp; checklist tasks linked to your assets.
-    </div>
+    <div class="tasks-nav-banner-text">&#10003; <span>Tasks</span> &mdash; View and manage job activities &amp; checklist tasks linked to your assets.</div>
     <a class="tasks-nav-btn" href="tasks.html">&#10003; Open Tasks &rarr;</a>
   </div>
   <div class="stats-bar" id="stats-bar"></div>
@@ -397,17 +394,19 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <input type="text" id="search-input" placeholder="&#128269; Search assets or clients&hellip;" oninput="renderAssets()"/>
     <select id="filter-type" onchange="renderAssets()"><option value="">All Types</option></select>
     <select id="filter-client" onchange="renderAssets()"><option value="">All Clients</option></select>
-    <select id="filter-compliance" onchange="renderAssets()">
-      <option value="">All Compliance</option>
-      <option value="Active">&#9989; Active</option>
-      <option value="Expired">&#128308; Expired</option>
-      <option value="Quoted">&#128993; Quoted</option>
-      <option value="Scheduled">&#128309; Scheduled</option>
-      <option value="Query">&#128995; Query</option>
-      <option value="Gone With Third Party">&#128100; Gone With Third Party</option>
-      <option value="Decommissioned">&#128683; Decommissioned</option>
-      <option value="Unknown">&#128123; Unknown</option>
-    </select>
+    <div class="comp-filter-group">
+      <span class="comp-filter-label">Compliance</span>
+      <div class="comp-filter-pills" id="comp-filter-pills">
+        <label class="comp-filter-pill pill-active"    ><input type="checkbox" value="Active"/>&#9989; Active</label>
+        <label class="comp-filter-pill pill-expired"   ><input type="checkbox" value="Expired"/>&#128308; Expired</label>
+        <label class="comp-filter-pill pill-quoted"    ><input type="checkbox" value="Quoted"/>&#128993; Quoted</label>
+        <label class="comp-filter-pill pill-scheduled" ><input type="checkbox" value="Scheduled"/>&#128309; Scheduled</label>
+        <label class="comp-filter-pill pill-query"     ><input type="checkbox" value="Query"/>&#128995; Query</label>
+        <label class="comp-filter-pill pill-gone"      ><input type="checkbox" value="Gone With Third Party"/>&#128100; Gone</label>
+        <label class="comp-filter-pill pill-decomm"    ><input type="checkbox" value="Decommissioned"/>&#128683; Decomm</label>
+        <label class="comp-filter-pill pill-unknown"   ><input type="checkbox" value="Unknown"/>&#128123; Unknown</label>
+      </div>
+    </div>
     <select id="filter-check" onchange="renderAssets()">
       <option value="">All Checks</option>
       <option value="service">Service Due</option>
@@ -456,7 +455,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- CLIENTS LIST -->
 <div id="screen-clients" class="screen">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
     <div>
@@ -468,7 +466,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div class="client-list-grid" id="client-list-grid"></div>
 </div>
 
-<!-- CLIENT DETAIL -->
 <div id="screen-client-detail" class="screen">
   <div class="client-detail-header">
     <button class="client-detail-back" onclick="showTab('clients')">&#8592; All Clients</button>
@@ -501,7 +498,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div class="client-assets-list" id="client-assets-list"></div>
 </div>
 
-<!-- HISTORY -->
 <div id="screen-history" class="screen">
   <div style="margin-bottom:24px;">
     <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">&#128336; Change History</h2>
@@ -514,15 +510,12 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
       <option value="compliance">Compliance only</option>
       <option value="date_change">Date changes only</option>
     </select>
-    <select id="history-user-filter" onchange="renderHistory()">
-      <option value="">All Users</option>
-    </select>
+    <select id="history-user-filter" onchange="renderHistory()"><option value="">All Users</option></select>
     <button class="btn-ghost btn-sm" onclick="loadHistory()">&#8635; Refresh</button>
   </div>
   <div id="history-list"></div>
 </div>
 
-<!-- MAKE & MODEL -->
 <div id="screen-makemodel" class="screen">
   <h2 style="margin-bottom:8px">&#9881; Make &amp; Model Service Times</h2>
   <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Define how many hours each check takes per make and model.</p>
@@ -557,7 +550,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- SETTINGS -->
 <div id="screen-settings" class="screen">
   <h2 style="margin-bottom:8px">Settings</h2>
   <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">Configure thresholds and map due-date fields per asset type.</p>
@@ -597,7 +589,6 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   <div style="margin-top:24px"><button class="btn-primary" onclick="saveSettings()">Save Settings</button></div>
 </div>
 
-<!-- Bulk action floating bar -->
 <div class="bulk-bar" id="bulk-bar">
   <span class="bulk-bar-count" id="bulk-bar-count">0 selected</span>
   <select class="bulk-bar-select" id="bulk-bar-compliance">
@@ -623,16 +614,14 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
   </div>
 </div>
 <div id="toast"></div>
-
 <script>
-// ─── State ────────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 var assets=[],assetTypes={},clientMap={},fieldMappings={};
 var ELAPSED_THRESHOLD=100,SOON_THRESHOLD=30;
 var COMPLIANCE_FIELD='Compliance',MAKE_FIELD='Make',MODEL_FIELD='Model';
 var showHidden=false,makeModelData=[],historyData=[];
 var activeClientUuid=null,currentUser='Unknown User';
 var bulkMode=false,selectedUuids=new Set();
-
 var CHECK_TYPES=[
   {key:'service',    label:'Service Due'},
   {key:'pvi',        label:'PVI Due'},
@@ -644,7 +633,34 @@ var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
 var COMPLIANCE_OPTIONS=['Active','Expired','Quoted','Scheduled','Query','Gone With Third Party'];
 var COMPLIANCE_HIDDEN=['Decommissioned','Unknown'];
 
-// ─── Local storage ────────────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',function(){
+  initCompliancePills();
+  loadLocal();
+  checkSession();
+});
+
+// ── Compliance filter pills ───────────────────────────────────────────────────
+function initCompliancePills(){
+  document.querySelectorAll('#comp-filter-pills .comp-filter-pill').forEach(function(pill){
+    pill.addEventListener('click',function(e){
+      e.preventDefault();
+      var cb=pill.querySelector('input[type=checkbox]');
+      cb.checked=!cb.checked;
+      pill.classList.toggle('on',cb.checked);
+      renderAssets();
+    });
+  });
+}
+function getComplianceFilter(){
+  var active=[];
+  document.querySelectorAll('#comp-filter-pills input[type=checkbox]').forEach(function(cb){
+    if(cb.checked) active.push(cb.value);
+  });
+  return active; // empty = show all
+}
+
+// ── Local storage ─────────────────────────────────────────────────────────────
 function saveLocal(){
   localStorage.setItem('sm8_assets',JSON.stringify(assets));
   localStorage.setItem('sm8_types',JSON.stringify(assetTypes));
@@ -675,19 +691,19 @@ function handleAuthSubmit(e){
   window.location.href='/api/auth?email='+encodeURIComponent(email);
 }
 
-// ─── User identity ────────────────────────────────────────────────────────────
+// ── Identity ──────────────────────────────────────────────────────────────────
 function readIdentityCookies(){
   var email='',name='',uuid='';
   document.cookie.split(';').forEach(function(c){
-    var parts=c.trim().split('=');var key=parts[0];var val=decodeURIComponent(parts.slice(1).join('='));
-    if(key==='sm8_user_email')email=val;
-    if(key==='sm8_user_name')name=val;
-    if(key==='sm8_user_uuid')uuid=val;
+    var p=c.trim().split('=');var k=p[0];var v=decodeURIComponent(p.slice(1).join('='));
+    if(k==='sm8_user_email')email=v;
+    if(k==='sm8_user_name')name=v;
+    if(k==='sm8_user_uuid')uuid=v;
   });
   return{email:email,name:name,uuid:uuid};
 }
 
-// ─── History API ──────────────────────────────────────────────────────────────
+// ── History ───────────────────────────────────────────────────────────────────
 function writeHistory(record){
   record.changed_by=currentUser;record.timestamp=new Date().toISOString();
   historyData.unshift(record);
@@ -695,38 +711,38 @@ function writeHistory(record){
 }
 function loadHistory(){
   fetch('/api/history',{credentials:'include'})
-    .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
-    .then(function(data){historyData=Array.isArray(data)?data:[];if(document.getElementById('screen-history').classList.contains('active'))renderHistory();})
+    .then(function(r){if(!r.ok)throw new Error('status '+r.status);return r.json();})
+    .then(function(d){historyData=Array.isArray(d)?d:[];if(document.getElementById('screen-history').classList.contains('active'))renderHistory();})
     .catch(function(){});
 }
 
-// ─── Make & Model server sync ─────────────────────────────────────────────────
+// ── Make & Model server ───────────────────────────────────────────────────────
 function loadMakeModelFromServer(){
   fetch('/api/makemodel',{credentials:'include'})
-    .then(function(res){if(!res.ok)throw new Error('status '+res.status);return res.json();})
-    .then(function(data){if(Array.isArray(data)&&data.length>0){makeModelData=data;saveLocal();}})
+    .then(function(r){if(!r.ok)throw new Error();return r.json();})
+    .then(function(d){if(Array.isArray(d)&&d.length>0){makeModelData=d;saveLocal();}})
     .catch(function(){});
 }
-function saveMakeModelToServer(onSuccess,onError){
-  var statusEl=document.getElementById('mm-sync-status');
-  if(statusEl){statusEl.textContent='Saving\u2026';statusEl.className='mm-sync-status saving';}
+function saveMakeModelToServer(onOk,onErr){
+  var el=document.getElementById('mm-sync-status');
+  if(el){el.textContent='Saving\u2026';el.className='mm-sync-status saving';}
   fetch('/api/makemodel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(makeModelData)})
-    .then(function(res){if(!res.ok)throw new Error('Server responded with '+res.status);return res.json();})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(){
-      if(statusEl){statusEl.innerHTML='&#10003; Saved';statusEl.className='mm-sync-status saved';setTimeout(function(){statusEl.textContent='';statusEl.className='mm-sync-status';},3000);}
-      if(onSuccess)onSuccess();
+      if(el){el.innerHTML='&#10003; Saved';el.className='mm-sync-status saved';setTimeout(function(){el.textContent='';el.className='mm-sync-status';},3000);}
+      if(onOk)onOk();
     }).catch(function(e){
-      if(statusEl){statusEl.innerHTML='&#9888; Server save failed';statusEl.className='mm-sync-status error';}
-      if(onError)onError(e);
+      if(el){el.innerHTML='&#9888; Server save failed';el.className='mm-sync-status error';}
+      if(onErr)onErr(e);
     });
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
+// ── API helpers ───────────────────────────────────────────────────────────────
 function sm8Get(endpoint){
   return fetch('/api/proxy?path='+endpoint+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
-    .then(function(res){
-      if(res.status===401)throw new Error('SESSION_EXPIRED');
-      return res.json().then(function(data){if(!res.ok)throw new Error(data.message||JSON.stringify(data));return data;});
+    .then(function(r){
+      if(r.status===401)throw new Error('SESSION_EXPIRED');
+      return r.json().then(function(d){if(!r.ok)throw new Error(d.message||JSON.stringify(d));return d;});
     });
 }
 function sm8Put(uuid,payload){
@@ -737,51 +753,52 @@ function sm8Put(uuid,payload){
   });
 }
 
-// ─── Auth / session ───────────────────────────────────────────────────────────
+// ── Session ───────────────────────────────────────────────────────────────────
 function checkSession(){
   var params=new URLSearchParams(window.location.search);
   var oauthError=params.get('error');
   if(oauthError){
     showScreen('auth');
-    var banner=document.getElementById('auth-error-banner');
-    banner.textContent='Sign-in failed: '+oauthError;banner.style.display='block';
+    var b=document.getElementById('auth-error-banner');
+    b.textContent='Sign-in failed: '+oauthError;b.style.display='block';
     window.history.replaceState({},'',window.location.pathname);return;
   }
   showScreen('loading');
   document.getElementById('loading-msg').textContent='Checking session\u2026';
-  var identity=readIdentityCookies();
-  if(identity.email)localStorage.setItem('sm8_session_email',identity.email);
-  if(identity.name)localStorage.setItem('sm8_session_name',identity.name);
-  if(identity.uuid)localStorage.setItem('sm8_session_uuid',identity.uuid);
-  var storedName=identity.name||localStorage.getItem('sm8_session_name')||'';
+  var id=readIdentityCookies();
+  if(id.email)localStorage.setItem('sm8_session_email',id.email);
+  if(id.name) localStorage.setItem('sm8_session_name',id.name);
+  if(id.uuid) localStorage.setItem('sm8_session_uuid',id.uuid);
+  var storedName=id.name||localStorage.getItem('sm8_session_name')||'';
   if(storedName)currentUser=storedName;
   fetch('/api/proxy?path=/assettype.json',{credentials:'include',headers:{'Accept':'application/json'}})
-  .then(function(res){if(res.status===401){showScreen('auth');return null;}return res.json();})
-  .then(function(result){
-    if(!result)return;
-    if(identity.name)currentUser=identity.name;
-    else if(localStorage.getItem('sm8_session_name'))currentUser=localStorage.getItem('sm8_session_name');
-    localStorage.setItem('sm8_session_name',currentUser);
-    var badge=document.getElementById('user-badge');badge.textContent='\uD83D\uDC64 '+currentUser;badge.style.display='inline-block';
-    loadLocal();
-    if(assets.length>0){
-      showDashboard();document.getElementById('sync-status').textContent='Loaded from cache';
-      loadMakeModelFromServer();loadHistory();backgroundSync();
-    } else {
-      showScreen('loading');document.getElementById('loading-msg').textContent='Loading your assets\u2026';
-      fetchAll().then(function(){saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
-    }
-  }).catch(function(){
-    loadLocal();
-    if(assets.length>0){showDashboard();document.getElementById('sync-status').textContent='Offline \u2014 showing cached data';}
-    else{showScreen('auth');}
-  });
+    .then(function(r){if(r.status===401){showScreen('auth');return null;}return r.json();})
+    .then(function(result){
+      if(!result)return;
+      if(id.name)currentUser=id.name;
+      else if(localStorage.getItem('sm8_session_name'))currentUser=localStorage.getItem('sm8_session_name');
+      localStorage.setItem('sm8_session_name',currentUser);
+      var badge=document.getElementById('user-badge');
+      badge.textContent='\uD83D\uDC64 '+currentUser;badge.style.display='inline-block';
+      loadLocal();
+      if(assets.length>0){
+        showDashboard();document.getElementById('sync-status').textContent='Loaded from cache';
+        loadMakeModelFromServer();loadHistory();backgroundSync();
+      } else {
+        showScreen('loading');document.getElementById('loading-msg').textContent='Loading your assets\u2026';
+        fetchAll().then(function(){saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
+      }
+    }).catch(function(){
+      loadLocal();
+      if(assets.length>0){showDashboard();document.getElementById('sync-status').textContent='Offline \u2014 cached data';}
+      else showScreen('auth');
+    });
 }
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
     showScreen('auth');
-    var banner=document.getElementById('auth-error-banner');
-    banner.textContent='Your session has expired. Please sign in again.';banner.style.display='block';
+    var b=document.getElementById('auth-error-banner');
+    b.textContent='Your session has expired. Please sign in again.';b.style.display='block';
   } else {toast('Error: '+e.message,true);showScreen('auth');}
 }
 function backgroundSync(){
@@ -789,7 +806,7 @@ function backgroundSync(){
     .catch(function(e){if(e.message==='SESSION_EXPIRED')handleFetchError(e);});
 }
 
-// ─── Data fetching ────────────────────────────────────────────────────────────
+// ── Fetch all data ────────────────────────────────────────────────────────────
 function fetchAll(){
   return sm8Get('/assettype').then(function(types){
     assetTypes={};
@@ -805,25 +822,23 @@ function fetchAll(){
       var fields=assetTypes[typeUuid].fields;
       CHECK_TYPES.forEach(function(ct){
         if(!fieldMappings[typeUuid][ct.key]){
-          var guess=fields.find(function(f){
-            return f.name.toLowerCase().indexOf(ct.label.toLowerCase())!==-1
-              ||f.name.toLowerCase().indexOf(ct.key.toLowerCase())!==-1;
-          });
-          if(!guess&&ct.key==='service')
-            guess=fields.find(function(f){return /due|expir|next.service|service.date|renewal|review/i.test(f.name);});
-          if(!guess&&ct.key==='validation')
-            guess=fields.find(function(f){return /valid/i.test(f.name);});
+          var guess=fields.find(function(f){return f.name.toLowerCase().indexOf(ct.label.toLowerCase())!==-1||f.name.toLowerCase().indexOf(ct.key.toLowerCase())!==-1;});
+          if(!guess&&ct.key==='service') guess=fields.find(function(f){return /due|expir|next.service|service.date|renewal|review/i.test(f.name);});
+          if(!guess&&ct.key==='validation') guess=fields.find(function(f){return /valid/i.test(f.name);});
           if(guess)fieldMappings[typeUuid][ct.key]=guess.name;
         }
       });
     });
     return sm8Get('/company');
-  }).then(function(companies){clientMap={};companies.forEach(function(c){clientMap[c.uuid]=c.name;});});
+  }).then(function(companies){
+    clientMap={};companies.forEach(function(c){clientMap[c.uuid]=c.name;});
+  });
 }
 function syncAssets(){
   var btn=document.getElementById('btn-sync');btn.innerHTML='<span class="loader"></span>';btn.disabled=true;
   fetchAll().then(function(){
-    saveLocal();renderAll();document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
+    saveLocal();renderAll();
+    document.getElementById('sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();
     toast('Synced! '+assets.length+' assets.');btn.innerHTML='&#8635; Sync';btn.disabled=false;
   }).catch(function(e){
     toast('Sync failed: '+e.message,true);btn.innerHTML='&#8635; Sync';btn.disabled=false;
@@ -831,7 +846,7 @@ function syncAssets(){
   });
 }
 
-// ─── Screen management ────────────────────────────────────────────────────────
+// ── Screens ───────────────────────────────────────────────────────────────────
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');s.style.display='none';});
   var t=document.getElementById('screen-'+name);t.style.display='';t.classList.add('active');
@@ -842,18 +857,13 @@ function showDashboard(){
   document.getElementById('btn-logout').style.display='inline-block';
   document.getElementById('sync-status').style.display='inline-block';
   document.getElementById('user-badge').style.display='inline-block';
-  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.classList.remove('active');
-  });
+  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});
   document.getElementById('tab-dashboard').classList.add('active');
   showScreen('dashboard');renderAll();
 }
 function showTab(tab){
-  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.classList.remove('active');
-  });
-  var activeTab=document.getElementById('tab-'+tab);
-  if(activeTab)activeTab.classList.add('active');
+  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});
+  var at=document.getElementById('tab-'+tab);if(at)at.classList.add('active');
   if(tab==='dashboard'){showScreen('dashboard');renderAll();}
   else if(tab==='clients'){showScreen('clients');renderClientList();}
   else if(tab==='history'){showScreen('history');renderHistory();}
@@ -863,14 +873,12 @@ function showTab(tab){
 function openClientDetail(uuid){
   activeClientUuid=uuid;
   document.getElementById('client-detail-name').textContent=clientMap[uuid]||'Unknown Client';
-  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.classList.remove('active');
-  });
+  ['tab-dashboard','tab-clients','tab-history','tab-makemodel','tab-settings'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('active');});
   var el=document.getElementById('tab-clients');if(el)el.classList.add('active');
   showScreen('client-detail');renderClientDetail();
 }
 
-// ─── Bulk select ──────────────────────────────────────────────────────────────
+// ── Bulk select ───────────────────────────────────────────────────────────────
 function toggleBulkMode(){
   bulkMode=!bulkMode;
   var btn=document.getElementById('btn-bulk-mode');
@@ -888,8 +896,7 @@ function toggleAssetSelection(uuid,checked){
   if(card){card.classList.toggle('bulk-selected',checked);card.classList.toggle('row-bulk-selected',checked);}
 }
 function toggleSelectAll(checked){
-  var visible=filteredAssets();
-  visible.forEach(function(a){if(checked)selectedUuids.add(a.uuid);else selectedUuids.delete(a.uuid);});
+  filteredAssets().forEach(function(a){if(checked)selectedUuids.add(a.uuid);else selectedUuids.delete(a.uuid);});
   updateBulkBar();renderAssets();
 }
 function updateBulkBar(){
@@ -898,121 +905,145 @@ function updateBulkBar(){
   bar.classList.toggle('visible',bulkMode&&n>0);
   document.getElementById('bulk-bar-count').textContent=n+' asset'+(n===1?'':'s')+' selected';
   document.getElementById('bulk-bar-progress').textContent='';
-  var label=document.getElementById('bulk-selected-label');
-  if(label)label.textContent=n>0?n+' selected':'';
+  var lbl=document.getElementById('bulk-selected-label');if(lbl)lbl.textContent=n>0?n+' selected':'';
   var allCb=document.getElementById('bulk-select-all-cb');
-  if(allCb){var visible=filteredAssets();allCb.checked=visible.length>0&&visible.every(function(a){return selectedUuids.has(a.uuid);});}
+  if(allCb){var vis=filteredAssets();allCb.checked=vis.length>0&&vis.every(function(a){return selectedUuids.has(a.uuid);});}
 }
 function clearBulkSelection(){selectedUuids.clear();updateBulkBar();renderAssets();}
 
-// ─── Bulk compliance apply ────────────────────────────────────────────────────
+// ── Core compliance PUT (shared by cards + modal) ─────────────────────────────
+function doComplianceUpdate(uuid,newValue,selectEl,msgEl){
+  selectEl.classList.remove('saved','error');selectEl.classList.add('saving');
+    if(msgEl){msgEl.textContent='Saving\u2026';msgEl.className='compliance-status-msg saving';}
+  var asset=assets.find(function(a){return a.uuid===uuid;});
+  if(!asset){
+    selectEl.classList.remove('saving');selectEl.classList.add('error');
+    if(msgEl){msgEl.textContent='Asset not found.';msgEl.className='compliance-status-msg error';}
+    toast('Asset not found.',true);return;
+  }
+  var oldValue=getAnyFieldValue(asset,COMPLIANCE_FIELD)||'';
+  fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
+    .then(function(r){if(r.status===401)throw new Error('SESSION_EXPIRED');return r.json();})
+    .then(function(live){
+      var fd=Array.isArray(live.field_data)?JSON.parse(JSON.stringify(live.field_data)):[];
+      var lower=COMPLIANCE_FIELD.toLowerCase();var found=false;
+      fd=fd.map(function(f){
+        if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
+        return f;
+      });
+      if(!found){
+        var tf=(assetTypes[live.asset_type_uuid]&&assetTypes[live.asset_type_uuid].fields)||[];
+        var fd2=tf.find(function(f){return String(f.name||'').toLowerCase()===lower;});
+        fd.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fd2?fd2.uuid:''});
+      }
+      return sm8Put(uuid,{uuid:live.uuid,active:live.active||'1',name:live.name||'',asset_type_uuid:live.asset_type_uuid||'',company_uuid:live.company_uuid||'',field_data:fd});
+    })
+    .then(function(r){
+      return r.text().then(function(txt){
+        if(r.status===200||r.status===201||r.status===204)return txt;
+        throw new Error('HTTP '+r.status+': '+txt);
+      });
+    })
+    .then(function(){
+      setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
+      saveLocal();
+      selectEl.classList.remove('saving');selectEl.classList.add('saved');
+      if(msgEl){msgEl.textContent='\u2713 Saved';msgEl.className='compliance-status-msg saved';}
+      setTimeout(function(){
+        selectEl.classList.remove('saved');
+        if(msgEl){msgEl.textContent='';msgEl.className='compliance-status-msg';}
+      },2500);
+      writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
+      renderAll();
+      toast('Compliance updated to: '+newValue);
+    })
+    .catch(function(e){
+      selectEl.classList.remove('saving');selectEl.classList.add('error');
+      if(msgEl){msgEl.textContent='Failed.';msgEl.className='compliance-status-msg error';}
+      if(e.message==='SESSION_EXPIRED')handleFetchError(e);
+      else toast('Failed: '+e.message,true);
+    });
+}
+
+// Card-level select (kanban, list, client detail)
+function updateComplianceField(uuid,newValue,selectEl){
+  doComplianceUpdate(uuid,newValue,selectEl,null);
+}
+// Modal select
+function updateModalCompliance(uuid,newValue,selectEl){
+  var msgEl=document.getElementById('comp-msg-'+uuid);
+  doComplianceUpdate(uuid,newValue,selectEl,msgEl||null);
+}
+
+// ── Bulk compliance ───────────────────────────────────────────────────────────
 function applyBulkCompliance(){
   var newValue=document.getElementById('bulk-bar-compliance').value;
   if(!newValue){toast('Please select a compliance status first.',true);return;}
   var uuids=Array.from(selectedUuids);
   if(!uuids.length){toast('No assets selected.',true);return;}
   var btn=document.getElementById('bulk-bar-apply');
-  var progressEl=document.getElementById('bulk-bar-progress');
-  btn.disabled=true;var done=0,failed=0;progressEl.textContent='0 / '+uuids.length;
+  var prog=document.getElementById('bulk-bar-progress');
+  btn.disabled=true;var done=0,failed=0;prog.textContent='0 / '+uuids.length;
   function next(i){
     if(i>=uuids.length){
-      btn.disabled=false;progressEl.textContent='';
+      btn.disabled=false;prog.textContent='';
       var msg='Updated '+done+' asset'+(done===1?'':'s');if(failed)msg+=' ('+failed+' failed)';
       toast(msg,failed>0);selectedUuids.clear();document.getElementById('bulk-bar-compliance').value='';
       updateBulkBar();renderAll();return;
     }
     var uuid=uuids[i];var asset=assets.find(function(a){return a.uuid===uuid;});
-    if(!asset){failed++;done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);return;}
+    if(!asset){failed++;done++;prog.textContent=done+' / '+uuids.length;next(i+1);return;}
     var oldValue=getAnyFieldValue(asset,COMPLIANCE_FIELD)||'';
     fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
-      .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
-      .then(function(liveAsset){
-        var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
+      .then(function(r){if(r.status===401)throw new Error('SESSION_EXPIRED');return r.json();})
+      .then(function(live){
+        var fd=Array.isArray(live.field_data)?JSON.parse(JSON.stringify(live.field_data)):[];
         var lower=COMPLIANCE_FIELD.toLowerCase();var found=false;
-        fieldData=fieldData.map(function(f){
+        fd=fd.map(function(f){
           if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
           return f;
         });
         if(!found){
-          var typeUuid=liveAsset.asset_type_uuid;
-          var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
-          var fieldDef=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
-          fieldData.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
+          var tf=(assetTypes[live.asset_type_uuid]&&assetTypes[live.asset_type_uuid].fields)||[];
+          var fd2=tf.find(function(f){return String(f.name||'').toLowerCase()===lower;});
+          fd.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fd2?fd2.uuid:''});
         }
-        return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
+        return sm8Put(uuid,{uuid:live.uuid,active:live.active||'1',name:live.name||'',asset_type_uuid:live.asset_type_uuid||'',company_uuid:live.company_uuid||'',field_data:fd});
       })
-      .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status);});})
+      .then(function(r){return r.text().then(function(txt){if(r.status===200||r.status===201||r.status===204)return txt;throw new Error('HTTP '+r.status);});})
       .then(function(){
         setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
         writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
-        done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);
+        done++;prog.textContent=done+' / '+uuids.length;next(i+1);
       })
       .catch(function(e){
         if(e.message==='SESSION_EXPIRED'){handleFetchError(e);btn.disabled=false;return;}
-        failed++;done++;progressEl.textContent=done+' / '+uuids.length;next(i+1);
+        failed++;done++;prog.textContent=done+' / '+uuids.length;next(i+1);
       });
   }
   next(0);
 }
 
-// ─── Compliance update (single) ───────────────────────────────────────────────
-function updateComplianceField(uuid,newValue,selectEl){
-  selectEl.classList.remove('saved','error');selectEl.classList.add('saving');
-  var asset=assets.find(function(a){return a.uuid===uuid;});
-  if(!asset){selectEl.classList.remove('saving');selectEl.classList.add('error');toast('Asset not found.',true);return;}
-  var oldValue=getAnyFieldValue(asset,COMPLIANCE_FIELD)||'';
-  fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
-    .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
-    .then(function(liveAsset){
-      var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
-      var lower=COMPLIANCE_FIELD.toLowerCase();var found=false;
-      fieldData=fieldData.map(function(f){
-        if(String(f.fieldName||'').toLowerCase()===lower){found=true;return Object.assign({},f,{fieldValue:newValue});}
-        return f;
-      });
-      if(!found){
-        var typeUuid=liveAsset.asset_type_uuid;
-        var typeFields=(assetTypes[typeUuid]&&assetTypes[typeUuid].fields)||[];
-        var fieldDef=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
-        fieldData.push({uuid:'',active:'1',fieldName:COMPLIANCE_FIELD,fieldValue:newValue,fieldType:'Multiple Choice',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
-      }
-      return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
-    })
-    .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status+': '+text);});})
-    .then(function(){
-      setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);saveLocal();
-      selectEl.classList.remove('saving');selectEl.classList.add('saved');
-      setTimeout(function(){selectEl.classList.remove('saved');},2500);
-      writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
-      renderAll();toast('Compliance updated to: '+newValue);
-    })
-    .catch(function(e){
-      selectEl.classList.remove('saving');selectEl.classList.add('error');
-      if(e.message==='SESSION_EXPIRED')handleFetchError(e);
-      else toast('Failed: '+e.message,true);
-    });
-}
-
-// ─── Due date update ──────────────────────────────────────────────────────────
+// ── Due date update ───────────────────────────────────────────────────────────
 function saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName){
   var asset=assets.find(function(a){return a.uuid===uuid;});
   if(!asset){toast('Asset not found.',true);return Promise.reject(new Error('not found'));}
   return fetch('/api/proxy?path=/asset/'+uuid+'.json',{credentials:'include',headers:{'Accept':'application/json'}})
-    .then(function(res){if(res.status===401)throw new Error('SESSION_EXPIRED');return res.json();})
-    .then(function(liveAsset){
-      var fieldName=(fieldMappings[liveAsset.asset_type_uuid]&&fieldMappings[liveAsset.asset_type_uuid][checkKey])||null;
+    .then(function(r){if(r.status===401)throw new Error('SESSION_EXPIRED');return r.json();})
+    .then(function(live){
+      var fieldName=(fieldMappings[live.asset_type_uuid]&&fieldMappings[live.asset_type_uuid][checkKey])||null;
       if(!fieldName)throw new Error('No field mapped for '+checkKey);
-      var fieldData=Array.isArray(liveAsset.field_data)?JSON.parse(JSON.stringify(liveAsset.field_data)):[];
+      var fd=Array.isArray(live.field_data)?JSON.parse(JSON.stringify(live.field_data)):[];
       var found=false;
-      fieldData=fieldData.map(function(f){if(f.fieldName===fieldName){found=true;return Object.assign({},f,{fieldValue:newDate});}return f;});
+      fd=fd.map(function(f){if(f.fieldName===fieldName){found=true;return Object.assign({},f,{fieldValue:newDate});}return f;});
       if(!found){
-        var typeFields=(assetTypes[liveAsset.asset_type_uuid]&&assetTypes[liveAsset.asset_type_uuid].fields)||[];
-        var fieldDef=typeFields.find(function(f){return f.name===fieldName;});
-        fieldData.push({uuid:'',active:'1',fieldName:fieldName,fieldValue:newDate,fieldType:'Date',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fieldDef?fieldDef.uuid:''});
+        var tf=(assetTypes[live.asset_type_uuid]&&assetTypes[live.asset_type_uuid].fields)||[];
+        var fd2=tf.find(function(f){return f.name===fieldName;});
+        fd.push({uuid:'',active:'1',fieldName:fieldName,fieldValue:newDate,fieldType:'Date',sortOrder:0,asset_uuid:uuid,asset_type_field_uuid:fd2?fd2.uuid:''});
       }
-      return sm8Put(uuid,{uuid:liveAsset.uuid,active:liveAsset.active||'1',name:liveAsset.name||'',asset_type_uuid:liveAsset.asset_type_uuid||'',company_uuid:liveAsset.company_uuid||'',field_data:fieldData});
+      return sm8Put(uuid,{uuid:live.uuid,active:live.active||'1',name:live.name||'',asset_type_uuid:live.asset_type_uuid||'',company_uuid:live.company_uuid||'',field_data:fd});
     })
-    .then(function(res){return res.text().then(function(text){if(res.status===200||res.status===201||res.status===204)return text;throw new Error('HTTP '+res.status+': '+text);});})
+    .then(function(r){return r.text().then(function(txt){if(r.status===200||r.status===201||r.status===204)return txt;throw new Error('HTTP '+r.status+': '+txt);});})
     .then(function(){
       if(Array.isArray(asset.field_data)){
         var fn=(fieldMappings[asset.asset_type_uuid]&&fieldMappings[asset.asset_type_uuid][checkKey])||null;
@@ -1025,7 +1056,7 @@ function saveDueDate(uuid,checkKey,newDate,oldDate,assetName,clientName){
     });
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function compliancePillClass(val){if(!val)return '';return val.replace(/\s+/g,'');}
 function mmKey(make,model){return(String(make||'').trim()+'|||'+String(model||'').trim()).toLowerCase();}
 function getMMLookup(){var map={};makeModelData.forEach(function(r){map[mmKey(r.make,r.model)]=r;});return map;}
@@ -1037,10 +1068,7 @@ function getAssetHours(asset){
 }
 function getCheckHours(hours,checkKey){
   if(!hours)return null;
-  var fieldMap={service:'service',pvi:'pvi',validation:'validation',performance:'performance',emc:'emc'};
-  var field=fieldMap[checkKey];
-  if(!field)return null;
-  return fmtHrs(hours[field]);
+  var v=hours[checkKey];return fmtHrs(v);
 }
 function suppressionReason(asset,overallStatus){
   var c=getAnyFieldValue(asset,COMPLIANCE_FIELD);if(!c)return null;
@@ -1080,8 +1108,11 @@ function daysUntil(dateStr){
   return Math.round((due.getTime()-today.getTime())/86400000);
 }
 function statusOf(days){
-  if(days===null)return 'no-date';if(days<-ELAPSED_THRESHOLD)return 'elapsed';
-  if(days<0)return 'overdue';if(days<=SOON_THRESHOLD)return 'due-soon';return 'ok';
+  if(days===null)return 'no-date';
+  if(days<-ELAPSED_THRESHOLD)return 'elapsed';
+  if(days<0)return 'overdue';
+  if(days<=SOON_THRESHOLD)return 'due-soon';
+  return 'ok';
 }
 function worstStatus(statuses){
   var best='no-date';
@@ -1090,14 +1121,19 @@ function worstStatus(statuses){
 }
 function statusColor(status){return{'elapsed':'purple','overdue':'red','due-soon':'amber','ok':'green'}[status]||'grey';}
 function statusLabel(days,status){
-  if(days===null)return 'No date';if(status==='elapsed')return Math.abs(days)+'d elapsed';
-  if(days<0)return Math.abs(days)+'d overdue';if(days===0)return 'Due today';return days+'d left';
+  if(days===null)return 'No date';
+  if(status==='elapsed')return Math.abs(days)+'d elapsed';
+  if(days<0)return Math.abs(days)+'d overdue';
+  if(days===0)return 'Due today';
+  return days+'d left';
 }
 function progressPct(days){if(days===null)return 0;if(days<=0)return 100;if(days>=365)return 2;return Math.max(2,Math.round((1-days/365)*100));}
 function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function formatDate(str){
-  if(!str)return '\u2014';var d=new Date(String(str).trim().substring(0,10)+'T00:00:00');
-  if(isNaN(d.getTime()))return str;return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+  if(!str)return '\u2014';
+  var d=new Date(String(str).trim().substring(0,10)+'T00:00:00');
+  if(isNaN(d.getTime()))return str;
+  return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
 }
 function formatDateTime(str){
   if(!str)return '';var d=new Date(str);if(isNaN(d.getTime()))return str;
@@ -1117,7 +1153,7 @@ function toggleShowHidden(){
   renderAssets();
 }
 
-// ─── Enriched assets ──────────────────────────────────────────────────────────
+// ── Enriched assets ───────────────────────────────────────────────────────────
 function enrichedAssets(){
   return assets.map(function(a){
     var typeUuid=a.asset_type_uuid;
@@ -1142,30 +1178,29 @@ function sortedAssets(data){
   return data.slice().sort(function(a,b){
     var ca=a.clientName.toLowerCase(),cb=b.clientName.toLowerCase();
     if(ca<cb)return -1;if(ca>cb)return 1;
-    var da=a.urgentDays===null?999999:a.urgentDays;var db=b.urgentDays===null?999999:b.urgentDays;
+    var da=a.urgentDays===null?999999:a.urgentDays;
+    var db=b.urgentDays===null?999999:b.urgentDays;
     return da-db;
   });
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// ── Dashboard render ──────────────────────────────────────────────────────────
 function renderAll(){updateKanbanLabels();populateFilters();renderStats();renderSummaryBar();renderAssets();}
 function updateKanbanLabels(){
   document.getElementById('kanban-elapsed-label').textContent='Elapsed (>'+ELAPSED_THRESHOLD+'d)';
   document.getElementById('kanban-soon-label').textContent='Due Soon (\u2264'+SOON_THRESHOLD+'d)';
 }
 function populateFilters(){
-  var typeSel=document.getElementById('filter-type');var typeCurrent=typeSel.value;
+  var typeSel=document.getElementById('filter-type');var tc=typeSel.value;
   typeSel.innerHTML='<option value="">All Types</option>';
   Object.keys(assetTypes).sort(function(a,b){return assetTypes[a].name.localeCompare(assetTypes[b].name);}).forEach(function(uuid){
-    var opt=document.createElement('option');opt.value=uuid;opt.textContent=assetTypes[uuid].name;
-    if(uuid===typeCurrent)opt.selected=true;typeSel.appendChild(opt);
+    var o=document.createElement('option');o.value=uuid;o.textContent=assetTypes[uuid].name;if(uuid===tc)o.selected=true;typeSel.appendChild(o);
   });
-  var clientSel=document.getElementById('filter-client');var clientCurrent=clientSel.value;
+  var clientSel=document.getElementById('filter-client');var cc=clientSel.value;
   clientSel.innerHTML='<option value="">All Clients</option>';
   var seen={};assets.forEach(function(a){if(a.company_uuid)seen[a.company_uuid]=true;});
   Object.keys(seen).sort(function(a,b){return(clientMap[a]||'').localeCompare(clientMap[b]||'');}).forEach(function(uuid){
-    var opt=document.createElement('option');opt.value=uuid;opt.textContent=clientMap[uuid]||uuid;
-    if(uuid===clientCurrent)opt.selected=true;clientSel.appendChild(opt);
+    var o=document.createElement('option');o.value=uuid;o.textContent=clientMap[uuid]||uuid;if(uuid===cc)o.selected=true;clientSel.appendChild(o);
   });
 }
 function filteredAssets(){
@@ -1174,13 +1209,13 @@ function filteredAssets(){
   var clientFilter=document.getElementById('filter-client').value;
   var checkFilter=document.getElementById('filter-check').value;
   var statusFilter=document.getElementById('filter-status').value;
-  var complianceFilter=document.getElementById('filter-compliance').value;
+  var complianceFilter=getComplianceFilter();
   return enrichedAssets().filter(function(a){
     if(a.suppressed&&!showHidden)return false;
     if(search&&String(a.name||'').toLowerCase().indexOf(search)===-1&&String(a.typeName||'').toLowerCase().indexOf(search)===-1&&String(a.clientName||'').toLowerCase().indexOf(search)===-1)return false;
     if(typeFilter&&a.asset_type_uuid!==typeFilter)return false;
     if(clientFilter&&a.company_uuid!==clientFilter)return false;
-    if(complianceFilter&&String(a.compliance||'')!==complianceFilter)return false;
+    if(complianceFilter.length){var cv=String(a.compliance||'');if(complianceFilter.indexOf(cv)===-1)return false;}
     if(checkFilter){if(!a.checks[checkFilter]||a.checks[checkFilter].date===null)return false;if(statusFilter&&a.checks[checkFilter].status!==statusFilter)return false;}
     else{if(statusFilter&&a.status!==statusFilter)return false;}
     return true;
@@ -1193,7 +1228,7 @@ function renderStats(){
   var so=all.filter(function(a){return a.status==='due-soon';}).length;
   var ok=all.filter(function(a){return a.status==='ok';}).length;
   var nd=all.filter(function(a){return a.status==='no-date';}).length;
-  var hidCount=enrichedAssets().filter(function(a){return a.suppressed;}).length;
+  var hid=enrichedAssets().filter(function(a){return a.suppressed;}).length;
   document.getElementById('stats-bar').innerHTML=
     '<div class="stat-card blue"><span class="stat-label">Total</span><span class="stat-value">'+all.length+'</span></div>'+
     '<div class="stat-card purple"><span class="stat-label">Elapsed</span><span class="stat-value">'+el+'</span></div>'+
@@ -1201,7 +1236,7 @@ function renderStats(){
     '<div class="stat-card amber"><span class="stat-label">Due Soon</span><span class="stat-value">'+so+'</span></div>'+
     '<div class="stat-card green"><span class="stat-label">OK</span><span class="stat-value">'+ok+'</span></div>'+
     '<div class="stat-card"><span class="stat-label">No Date</span><span class="stat-value" style="color:var(--muted)">'+nd+'</span></div>'+
-    (hidCount?'<div class="stat-card"><span class="stat-label">Hidden</span><span class="stat-value" style="color:#b45309">'+hidCount+'</span></div>':'');
+    (hid?'<div class="stat-card"><span class="stat-label">Hidden</span><span class="stat-value" style="color:#b45309">'+hid+'</span></div>':'');
 }
 function renderSummaryBar(){
   var all=enrichedAssets().filter(function(a){return !a.suppressed;});var total=all.length;
@@ -1216,7 +1251,11 @@ function renderSummaryBar(){
     '<div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em">Status Overview</div>'+
     '<div class="summary-bar">'+seg(el,'#7c3aed','Elapsed')+seg(ov,'#ef4444','Overdue')+seg(so,'#f59e0b','Due Soon')+seg(ok,'#22c55e','OK')+seg(nd,'#4b5563','No Date')+'</div>'+
     '<div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem">'+
-    (el?'<span style="color:#7c3aed">&#9632; Elapsed</span>':'')+(ov?'<span style="color:#ef4444">&#9632; Overdue</span>':'')+(so?'<span style="color:#f59e0b">&#9632; Due Soon</span>':'')+(ok?'<span style="color:#22c55e">&#9632; OK</span>':'')+(nd?'<span style="color:#4b5563">&#9632; No Date</span>':'')+'</div>';
+    (el?'<span style="color:#7c3aed">&#9632; Elapsed</span>':'')+
+    (ov?'<span style="color:#ef4444">&#9632; Overdue</span>':'')+
+    (so?'<span style="color:#f59e0b">&#9632; Due Soon</span>':'')+
+    (ok?'<span style="color:#22c55e">&#9632; OK</span>':'')+
+    (nd?'<span style="color:#4b5563">&#9632; No Date</span>':'')+'</div>';
 }
 function suppressionPill(reason){
   if(!reason)return '';
@@ -1225,11 +1264,15 @@ function suppressionPill(reason){
 }
 function hoursPill(hrs){if(!hrs)return '';return '<span class="hours-pill">&#128336; '+hrs+'</span>';}
 function compPill(val){if(!val)return '';return '<span class="comp-pill '+esc(compliancePillClass(val))+'">'+esc(val)+'</span>';}
+
 function complianceSelectHTML(uuid,currentValue,cssClass){
   var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
   var selectedVal=isHidden?'':(currentValue||'');
   var opts=COMPLIANCE_OPTIONS.map(function(o){return '<option value="'+esc(o)+'"'+(o===selectedVal?' selected':'')+'>'+esc(o)+'</option>';}).join('');
-  return '<select class="'+cssClass+'" onchange="updateComplianceField(\''+uuid+'\',this.value,this)" onclick="event.stopPropagation()">'
+  var handler=cssClass==='modal-compliance-select'
+    ?'updateModalCompliance(\''+uuid+'\',this.value,this)'
+    :'updateComplianceField(\''+uuid+'\',this.value,this)';
+  return '<select class="'+cssClass+'" onchange="'+handler+'" onclick="event.stopPropagation()">'
     +'<option value="">— Set Status —</option>'+opts+'</select>';
 }
 
@@ -1240,7 +1283,7 @@ function renderAssets(){
   if(showHidden&&hiddenCount>0){
     hidBar.style.display='flex';
     document.getElementById('hidden-bar-text').innerHTML='&#128065; Showing '+hiddenCount+' hidden asset'+(hiddenCount===1?'':'s');
-  } else {hidBar.style.display='none';}
+  } else hidBar.style.display='none';
   var allCb=document.getElementById('bulk-select-all-cb');
   if(allCb)allCb.checked=sorted.length>0&&sorted.every(function(a){return selectedUuids.has(a.uuid);});
   var cols={'elapsed':[],'overdue':[],'due-soon':[],'ok':[],'no-date':[]};
@@ -1253,8 +1296,7 @@ function renderAssets(){
       ?'<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0">None</div>'
       :cols[status].map(assetCard).join('');
   });
-  var cbHeader=document.getElementById('list-cb-header');
-  if(cbHeader)cbHeader.style.display=bulkMode?'':'none';
+  var cbH=document.getElementById('list-cb-header');if(cbH)cbH.style.display=bulkMode?'':'none';
   var tbody=document.getElementById('list-body');
   if(sorted.length===0){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:40px">No assets found.</td></tr>';return;}
   var html='';var lastClient=null;
@@ -1263,8 +1305,7 @@ function renderAssets(){
       html+='<tr class="client-group-header"><td colspan="10">&#128205; '+esc(a.clientName)+'</td></tr>';
       lastClient=a.clientName;
     }
-    var worstColor=statusColor(a.status);
-    var isSelected=selectedUuids.has(a.uuid);
+    var wc=statusColor(a.status);var isSel=selectedUuids.has(a.uuid);
     var checkCells=CHECK_TYPES.map(function(ct){
       var c=a.checks[ct.key];
       if(!c||c.date===null)return '<td><span style="color:var(--muted);font-size:0.78rem">\u2014</span></td>';
@@ -1274,28 +1315,27 @@ function renderAssets(){
         +'<div style="font-size:0.72rem;color:var(--muted)">'+formatDate(c.date)+'</div>'
         +(hrs?'<div>'+hoursPill(hrs)+'</div>':'')+'</td>';
     }).join('');
-    html+='<tr class="'+(a.suppressed?'row-suppressed':'')+(isSelected?' row-bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+(bulkMode?'toggleAssetSelection(\''+esc(a.uuid)+'\',!selectedUuids.has(\''+esc(a.uuid)+'\'));renderAssets()':'openModal(\''+esc(a.uuid)+'\')')+'">'
-      +(bulkMode?'<td onclick="event.stopPropagation()"><input type="checkbox" class="asset-cb" '+(isSelected?'checked':'')+' onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/></td>':'')
+    html+='<tr class="'+(a.suppressed?'row-suppressed':'')+(isSel?' row-bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+(bulkMode?'toggleAssetSelection(\''+esc(a.uuid)+'\',!selectedUuids.has(\''+esc(a.uuid)+'\'));renderAssets()':'openModal(\''+esc(a.uuid)+'\')')+'">'
+      +(bulkMode?'<td onclick="event.stopPropagation()"><input type="checkbox" class="asset-cb" '+(isSel?'checked':'')+' onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/></td>':'')
       +'<td class="td-name">'+esc(a.name||'Unnamed')+(a.suppressed?suppressionPill(a.supReason):'')
       +(a.make||a.model?'<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</div>':'')+'</td>'
       +'<td onclick="event.stopPropagation()">'+compPill(a.compliance)+'<br/>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</td>'
       +'<td><span class="tag">'+esc(a.typeName)+'</span></td>'
       +checkCells
-      +'<td><span class="due-badge '+worstColor+'">'+esc(a.status)+'</span></td>'
+      +'<td><span class="due-badge '+wc+'">'+esc(a.status)+'</span></td>'
       +'</tr>';
   });
   tbody.innerHTML=html;
 }
 
 function assetCard(a){
-  var worstColor=statusColor(a.status);
-  var worstCss=worstColor==='purple'?'var(--purple)':'var(--'+worstColor+')';
+  var wc=statusColor(a.status);
+  var wcss=wc==='purple'?'var(--purple)':'var(--'+wc+')';
   var pct=progressPct(a.urgentDays);
-  var isSelected=selectedUuids.has(a.uuid);
+  var isSel=selectedUuids.has(a.uuid);
   var checkRows=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];if(!c||c.date===null)return '';
-    var col=statusColor(c.status);
-    var hrs=getCheckHours(a.hours,ct.key);
+    var col=statusColor(c.status);var hrs=getCheckHours(a.hours,ct.key);
     return '<div class="check-row"><span class="check-label">'+esc(ct.label)+'</span>'
       +'<span class="check-right"><span class="check-badge '+col+'">'+statusLabel(c.days,c.status)+'</span>'
       +'<span class="check-date">'+formatDate(c.date)+'</span>'
@@ -1304,9 +1344,9 @@ function assetCard(a){
   var cardClick=bulkMode
     ?'toggleAssetSelection(\''+esc(a.uuid)+'\',!selectedUuids.has(\''+esc(a.uuid)+'\'));renderAssets()'
     :'openModal(\''+esc(a.uuid)+'\')';
-  return '<div class="asset-card '+worstColor+(a.suppressed?' is-suppressed':'')+(isSelected?' bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+cardClick+'">'
+  return '<div class="asset-card '+wc+(a.suppressed?' is-suppressed':'')+(isSel?' bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+cardClick+'">'
     +'<div class="asset-card-top">'
-    +(bulkMode?'<input type="checkbox" class="asset-cb" '+(isSelected?'checked':'')+' onclick="event.stopPropagation()" onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/>':'')
+    +(bulkMode?'<input type="checkbox" class="asset-cb" '+(isSel?'checked':'')+' onclick="event.stopPropagation()" onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/>':'')
     +'<div class="asset-card-top-content">'
     +'<div class="asset-card-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
     +'<div class="asset-card-client">&#128205; '+esc(a.clientName)+'</div>'
@@ -1314,11 +1354,11 @@ function assetCard(a){
     +'</div></div>'
     +'<div class="compliance-wrap"><div class="compliance-label">Compliance</div>'+complianceSelectHTML(a.uuid,a.compliance,'compliance-select')+'</div>'
     +(checkRows?'<div class="asset-card-checks">'+checkRows+'</div>':'')
-    +'<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+worstCss+'"></div></div></div>'
+    +'<div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:'+pct+'%;background:'+wcss+'"></div></div></div>'
     +'</div>';
 }
 
-// ─── Client list ──────────────────────────────────────────────────────────────
+// ── Client list ───────────────────────────────────────────────────────────────
 function renderClientList(){
   var search=(document.getElementById('client-list-search').value||'').toLowerCase();
   var all=enrichedAssets();
@@ -1328,16 +1368,16 @@ function renderClientList(){
   if(search)clientUuids=clientUuids.filter(function(uuid){return(clientMap[uuid]||'Unknown').toLowerCase().indexOf(search)!==-1;});
   if(!clientUuids.length){document.getElementById('client-list-grid').innerHTML='<p style="color:var(--muted)">No clients found.</p>';return;}
   var html=clientUuids.map(function(uuid){
-    var clientAssets=byClient[uuid];var visible=clientAssets.filter(function(a){return !a.suppressed;});
+    var ca=byClient[uuid];var vis=ca.filter(function(a){return !a.suppressed;});
     var name=clientMap[uuid]||'Unknown Client';
-    var el=visible.filter(function(a){return a.status==='elapsed';}).length;
-    var ov=visible.filter(function(a){return a.status==='overdue';}).length;
-    var so=visible.filter(function(a){return a.status==='due-soon';}).length;
-    var ok=visible.filter(function(a){return a.status==='ok';}).length;
-    var nd=visible.filter(function(a){return a.status==='no-date';}).length;
-    var total=visible.length;
-    var worst=worstStatus(visible.length?visible.map(function(a){return a.status;}):['no-date']);
-    var worstColor=statusColor(worst);
+    var el=vis.filter(function(a){return a.status==='elapsed';}).length;
+    var ov=vis.filter(function(a){return a.status==='overdue';}).length;
+    var so=vis.filter(function(a){return a.status==='due-soon';}).length;
+    var ok=vis.filter(function(a){return a.status==='ok';}).length;
+    var nd=vis.filter(function(a){return a.status==='no-date';}).length;
+    var total=vis.length;
+    var worst=worstStatus(vis.length?vis.map(function(a){return a.status;}):['no-date']);
+    var wc=statusColor(worst);
     function barSeg(n,col){if(!n||!total)return '';return '<div class="client-list-bar-seg" style="flex:'+n+';background:'+col+'"></div>';}
     var bar=barSeg(el,'#7c3aed')+barSeg(ov,'#ef4444')+barSeg(so,'#f59e0b')+barSeg(ok,'#22c55e')+barSeg(nd,'#4b5563');
     var pills='';
@@ -1347,29 +1387,29 @@ function renderClientList(){
     if(ok)pills+='<span class="client-count-pill green">'+ok+' ok</span>';
     if(nd)pills+='<span class="client-count-pill grey">'+nd+' no date</span>';
     return '<div class="client-list-card" onclick="openClientDetail(\''+esc(uuid)+'\')">'
-      +'<div class="client-list-name"><span style="color:var(--'+worstColor+')">&#9679;</span>'+esc(name)+'</div>'
+      +'<div class="client-list-name"><span style="color:var(--'+wc+')">&#9679;</span>'+esc(name)+'</div>'
       +(total?'<div class="client-list-bar">'+bar+'</div>':'')
       +'<div class="client-list-counts">'+pills+'</div>'
-      +'<div class="client-asset-count">'+total+' asset'+(total===1?'':'s')+(clientAssets.length>total?' &middot; '+(clientAssets.length-total)+' hidden':'')+'</div>'
+      +'<div class="client-asset-count">'+total+' asset'+(total===1?'':'s')+(ca.length>total?' &middot; '+(ca.length-total)+' hidden':'')+'</div>'
       +'</div>';
   }).join('');
   document.getElementById('client-list-grid').innerHTML=html;
 }
 
-// ─── Client detail ────────────────────────────────────────────────────────────
+// ── Client detail ─────────────────────────────────────────────────────────────
 function renderClientDetail(){
   if(!activeClientUuid)return;
   var search=(document.getElementById('client-detail-search').value||'').toLowerCase();
   var statusFilter=document.getElementById('client-detail-status-filter').value;
   var complianceFilter=document.getElementById('client-detail-compliance-filter').value;
   var all=enrichedAssets().filter(function(a){return a.company_uuid===activeClientUuid;});
-  var visible=all.filter(function(a){return !a.suppressed;});
-  var el=visible.filter(function(a){return a.status==='elapsed';}).length;
-  var ov=visible.filter(function(a){return a.status==='overdue';}).length;
-  var so=visible.filter(function(a){return a.status==='due-soon';}).length;
-  var ok=visible.filter(function(a){return a.status==='ok';}).length;
-  var nd=visible.filter(function(a){return a.status==='no-date';}).length;
-  document.getElementById('client-detail-asset-count').textContent=visible.length+' asset'+(visible.length===1?'':'s');
+  var vis=all.filter(function(a){return !a.suppressed;});
+  var el=vis.filter(function(a){return a.status==='elapsed';}).length;
+  var ov=vis.filter(function(a){return a.status==='overdue';}).length;
+  var so=vis.filter(function(a){return a.status==='due-soon';}).length;
+  var ok=vis.filter(function(a){return a.status==='ok';}).length;
+  var nd=vis.filter(function(a){return a.status==='no-date';}).length;
+  document.getElementById('client-detail-asset-count').textContent=vis.length+' asset'+(vis.length===1?'':'s');
   document.getElementById('client-detail-stats').innerHTML=
     '<div class="client-detail-stat"><div class="ds-value" style="color:var(--purple)">'+el+'</div><div class="ds-label">Elapsed</div></div>'+
     '<div class="client-detail-stat"><div class="ds-value" style="color:var(--red)">'+ov+'</div><div class="ds-label">Overdue</div></div>'+
@@ -1389,13 +1429,13 @@ function renderClientDetail(){
   });
   if(!filtered.length){document.getElementById('client-assets-list').innerHTML='<p style="color:var(--muted);padding:20px 0">No assets match the current filters.</p>';return;}
   var html=filtered.map(function(a){
-    var worstColor=statusColor(a.status);
+    var wc=statusColor(a.status);
     var checkBadges=CHECK_TYPES.map(function(ct){
       var c=a.checks[ct.key];if(!c||c.date===null)return '';
       var col=statusColor(c.status);
       return '<div class="car-check"><div class="car-check-label">'+esc(ct.label.replace(' Due',''))+'</div><div class="car-check-badge '+col+'">'+statusLabel(c.days,c.status)+'</div></div>';
     }).filter(Boolean).join('');
-    return '<div class="client-asset-row '+worstColor+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+a.uuid+'\')">'
+    return '<div class="client-asset-row '+wc+(a.suppressed?' is-suppressed':'')+'" onclick="openModal(\''+esc(a.uuid)+'\')">'
       +'<div style="flex:1;min-width:0;">'
       +'<div class="car-name">'+esc(a.name||'Unnamed Asset')+(a.suppressed?suppressionPill(a.supReason):'')+'</div>'
       +'<div class="car-type">'+esc(a.typeName)+'</div>'
@@ -1408,25 +1448,26 @@ function renderClientDetail(){
   document.getElementById('client-assets-list').innerHTML=html;
 }
 
-// ─── History ──────────────────────────────────────────────────────────────────
+// ── History ───────────────────────────────────────────────────────────────────
 function renderHistory(){
   var search=(document.getElementById('history-search').value||'').toLowerCase();
   var typeFilter=document.getElementById('history-type-filter').value;
   var userFilter=document.getElementById('history-user-filter').value;
   var users={};historyData.forEach(function(h){if(h.changed_by)users[h.changed_by]=true;});
-  var userSel=document.getElementById('history-user-filter');var currentUserFilter=userSel.value;
+  var userSel=document.getElementById('history-user-filter');var cur=userSel.value;
   userSel.innerHTML='<option value="">All Users</option>';
-  Object.keys(users).sort().forEach(function(u){var opt=document.createElement('option');opt.value=u;opt.textContent=u;if(u===currentUserFilter)opt.selected=true;userSel.appendChild(opt);});
+  Object.keys(users).sort().forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;if(u===cur)o.selected=true;userSel.appendChild(o);});
   var filtered=historyData.filter(function(h){
     if(typeFilter&&h.type!==typeFilter)return false;
     if(userFilter&&h.changed_by!==userFilter)return false;
     if(search&&String(h.asset_name||'').toLowerCase().indexOf(search)===-1&&String(h.client_name||'').toLowerCase().indexOf(search)===-1&&String(h.changed_by||'').toLowerCase().indexOf(search)===-1)return false;
     return true;
   });
-  if(!filtered.length){document.getElementById('history-list').innerHTML='<div class="history-empty">&#128336; No history yet. Changes to compliance and due dates will appear here.</div>';return;}
+  if(!filtered.length){document.getElementById('history-list').innerHTML='<div class="history-empty">&#128336; No history yet.</div>';return;}
   var html='<div class="history-timeline">';
   filtered.forEach(function(h,i){
-    var isLast=i===filtered.length-1;var dotClass=h.type==='compliance'?'compliance':'date_change';
+    var isLast=i===filtered.length-1;
+    var dotClass=h.type==='compliance'?'compliance':'date_change';
     var desc='';
     if(h.type==='compliance'){desc='Compliance: <span class="history-val-old">'+esc(h.old_value||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(h.new_value||'\u2014')+'</span>';}
     else{desc=esc(h.field||'Date')+': <span class="history-val-old">'+esc(formatDate(h.old_value)||'\u2014')+'</span> &rarr; <span class="history-val-new">'+esc(formatDate(h.new_value)||'\u2014')+'</span>';}
@@ -1442,13 +1483,13 @@ function renderHistory(){
   html+='</div>';document.getElementById('history-list').innerHTML=html;
 }
 
-// ─── Asset modal ──────────────────────────────────────────────────────────────
+// ── Asset modal ───────────────────────────────────────────────────────────────
 function openModal(uuid){
   if(!uuid||bulkMode)return;
   var all=enrichedAssets();var a=null;
   for(var i=0;i<all.length;i++){if(all[i].uuid===uuid){a=all[i];break;}}
   if(!a)return;
-  var worstColor=statusColor(a.status);
+  var wc=statusColor(a.status);
   var checkCards=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];
     var isMapped=!!(fieldMappings[a.asset_type_uuid]&&fieldMappings[a.asset_type_uuid][ct.key]);
@@ -1460,7 +1501,7 @@ function openModal(uuid){
     var hrs=getCheckHours(a.hours,ct.key);
     var currentDate=c?c.date||'':'';
     return '<div class="modal-check-card">'
-      +'<button class="mc-edit-btn" onclick="toggleDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')" title="Edit date">&#9998;</button>'
+      +'<button class="mc-edit-btn" onclick="toggleDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')">&#9998;</button>'
       +'<div class="mc-label">'+esc(ct.label)+'</div>'
       +'<div class="mc-days" style="color:'+css+'">'+absD+'</div>'
       +'<div class="mc-sub">'+sub+'</div>'
@@ -1472,8 +1513,7 @@ function openModal(uuid){
       +'<div class="mc-date-actions">'
       +'<button class="mc-date-save" onclick="commitDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\',\''+esc(currentDate)+'\',\''+esc(a.name||'')+'\',\''+esc(a.clientName||'')+'\')">Save</button>'
       +'<button class="mc-date-cancel" onclick="cancelDateEdit(\''+esc(uuid)+'\',\''+ct.key+'\')">Cancel</button>'
-      +'</div></div>'
-      +'</div>';
+      +'</div></div></div>';
   }).filter(Boolean).join('');
   var elapsedBanner=a.status==='elapsed'?'<div class="elapsed-banner">&#9888; Elapsed &mdash; one or more checks are more than '+ELAPSED_THRESHOLD+' days overdue</div>':'';
   var suppressedBanner=a.suppressed?'<div class="suppressed-banner">'+(a.supReason==='decommissioned'?'&#128683; This asset is <strong>Decommissioned</strong> and is normally hidden.':'&#128123; This asset has <strong>Unknown</strong> compliance and is hidden because its status is '+a.status+'.')+'</div>':'';
@@ -1482,12 +1522,11 @@ function openModal(uuid){
   if(assetHistory.length){
     historyHTML='<div class="modal-history"><h4>&#128336; Recent Changes</h4>';
     assetHistory.forEach(function(h){
-      var dotClass=h.type==='compliance'?'compliance':'date_change';
+      var dc=h.type==='compliance'?'compliance':'date_change';
       var desc=h.type==='compliance'
         ?'Compliance: <strong>'+esc(h.old_value||'\u2014')+'</strong> &rarr; <strong>'+esc(h.new_value||'\u2014')+'</strong>'
         :esc(h.field||'Date')+': <strong>'+esc(formatDate(h.old_value)||'\u2014')+'</strong> &rarr; <strong>'+esc(formatDate(h.new_value)||'\u2014')+'</strong>';
-      historyHTML+='<div class="modal-history-item">'
-        +'<div class="mhi-dot '+dotClass+'"></div>'
+      historyHTML+='<div class="modal-history-item"><div class="mhi-dot '+dc+'"></div>'
         +'<div class="mhi-content"><div class="mhi-desc">'+desc+'</div>'
         +'<div class="mhi-meta"><span class="by">'+esc(h.changed_by||'Unknown')+'</span> &middot; '+esc(formatDateTime(h.timestamp))+'</div>'
         +'</div></div>';
@@ -1500,7 +1539,7 @@ function openModal(uuid){
       var val=f.fieldValue||'\u2014';if(f.fieldType==='Date'&&f.fieldValue)val=formatDate(f.fieldValue);
       cfRows+='<div class="field-row"><span class="field-label">'+esc(f.fieldName)+'</span><span class="field-value">'+esc(val)+'</span></div>';
     });
-  } else {cfRows='<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';}
+  } else cfRows='<p style="color:var(--muted);font-size:0.85rem">No fields on this asset.</p>';
   document.getElementById('modal-body').innerHTML=
     '<h2>'+esc(a.name||'Unnamed Asset')+'</h2>'
     +'<div class="modal-type">'
@@ -1508,7 +1547,7 @@ function openModal(uuid){
     +'<span class="tag tag-client" style="cursor:pointer" onclick="closeModalDirect();openClientDetail(\''+esc(a.company_uuid||'')+'\')">&#128205; '+esc(a.clientName)+'</span>'
     +(a.make||a.model?'<span class="tag">'+esc([a.make,a.model].filter(Boolean).join(' '))+'</span>':'')
     +(a.compliance?compPill(a.compliance):'')
-    +'<span class="due-badge '+worstColor+'" style="margin-left:4px">'+esc(a.status)+'</span>'
+    +'<span class="due-badge '+wc+'" style="margin-left:4px">'+esc(a.status)+'</span>'
     +'</div>'
     +suppressedBanner+elapsedBanner
     +'<div class="modal-compliance"><h4>&#9989; Compliance Status</h4>'
@@ -1524,14 +1563,14 @@ function openModal(uuid){
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-// ─── Date edit UI ─────────────────────────────────────────────────────────────
+// ── Date edit ─────────────────────────────────────────────────────────────────
 function toggleDateEdit(uuid,checkKey,currentDate,assetName,clientName){
-  var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);if(!editEl)return;
-  var isOpen=editEl.style.display!=='none';
-  document.querySelectorAll('.mc-date-edit').forEach(function(el){el.style.display='none';});
-  if(!isOpen){editEl.style.display='flex';var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);if(inp){inp.value=currentDate?currentDate.substring(0,10):'';inp.focus();}}
+  var el=document.getElementById('edit-'+uuid+'-'+checkKey);if(!el)return;
+  var isOpen=el.style.display!=='none';
+  document.querySelectorAll('.mc-date-edit').forEach(function(e){e.style.display='none';});
+  if(!isOpen){el.style.display='flex';var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);if(inp){inp.value=currentDate?currentDate.substring(0,10):'';inp.focus();}}
 }
-function cancelDateEdit(uuid,checkKey){var editEl=document.getElementById('edit-'+uuid+'-'+checkKey);if(editEl)editEl.style.display='none';}
+function cancelDateEdit(uuid,checkKey){var el=document.getElementById('edit-'+uuid+'-'+checkKey);if(el)el.style.display='none';}
 function commitDateEdit(uuid,checkKey,oldDate,assetName,clientName){
   var inp=document.getElementById('dateinput-'+uuid+'-'+checkKey);if(!inp)return;
   var newDate=inp.value;if(!newDate){toast('Please pick a date.',true);return;}
@@ -1544,7 +1583,7 @@ function commitDateEdit(uuid,checkKey,oldDate,assetName,clientName){
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
 
-// ─── Make & Model ─────────────────────────────────────────────────────────────
+// ── Make & Model ──────────────────────────────────────────────────────────────
 function renderMakeModel(){
   var search=(document.getElementById('mm-search').value||'').toLowerCase();
   var rows=makeModelData.filter(function(r){if(!search)return true;return r.make.toLowerCase().indexOf(search)!==-1||r.model.toLowerCase().indexOf(search)!==-1;});
@@ -1552,16 +1591,16 @@ function renderMakeModel(){
   if(!rows.length){html='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">No entries yet.</td></tr>';}
   else{
     rows.forEach(function(r){
-      var realIdx=makeModelData.indexOf(r);
+      var idx=makeModelData.indexOf(r);
       html+='<tr>'
         +'<td><div class="mm-make">'+esc(r.make)+'</div></td>'
         +'<td><div class="mm-model">'+esc(r.model)+'</div></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+realIdx+',\'service\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+realIdx+',\'pvi\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.validation||'')+'" oninput="mmChanged(this,'+realIdx+',\'validation\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+realIdx+',\'performance\')" placeholder="\u2014"/></td>'
-        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+realIdx+',\'emc\')" placeholder="\u2014"/></td>'
-        +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+realIdx+')">&#10005;</button></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.service||'')+'" oninput="mmChanged(this,'+idx+',\'service\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.pvi||'')+'" oninput="mmChanged(this,'+idx+',\'pvi\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.validation||'')+'" oninput="mmChanged(this,'+idx+',\'validation\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.performance||'')+'" oninput="mmChanged(this,'+idx+',\'performance\')" placeholder="\u2014"/></td>'
+        +'<td><input class="mm-input" type="number" min="0" step="0.5" value="'+esc(r.emc||'')+'" oninput="mmChanged(this,'+idx+',\'emc\')" placeholder="\u2014"/></td>'
+        +'<td><button class="btn-danger btn-sm" onclick="deleteMakeModelRow('+idx+')">&#10005;</button></td>'
         +'</tr>';
     });
   }
@@ -1609,14 +1648,14 @@ function importMakeModel(event){
       if(!make&&!model)return;
       var existing=makeModelData.find(function(r){return mmKey(r.make,r.model)===mmKey(make,model);});
       if(existing){existing.service=service;existing.pvi=pvi;existing.validation=validation;existing.performance=perf;existing.emc=emc;}
-      else{makeModelData.push({make:make,model:model,service:service,pvi:pvi,validation:validation,performance:perf,emc:emc});}
+      else makeModelData.push({make:make,model:model,service:service,pvi:pvi,validation:validation,performance:perf,emc:emc});
     });
     saveMakeModel();renderMakeModel();toast('CSV imported!');event.target.value='';
   };
   reader.readAsText(file);
 }
 
-// ─── Settings ─────────────────────────────────────────────────────────────────
+// ── Settings ──────────────────────────────────────────────────────────────────
 function saveMakeModelFields(){
   MAKE_FIELD=document.getElementById('input-make-field').value.trim()||'Make';
   MODEL_FIELD=document.getElementById('input-model-field').value.trim()||'Model';
@@ -1661,14 +1700,8 @@ function setView(v){
   document.getElementById('btn-kanban').classList.toggle('active',v==='kanban');
   document.getElementById('btn-list').classList.toggle('active',v==='list');
 }
-
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-loadLocal();
-checkSession();
 </script>
 </body>
 </html>
-
-
 
 
