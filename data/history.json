@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "54f58bbf-b4b5-4bbd-9503-231c3688dd0a",
+    "asset_name": "Plant - CH203190",
+    "client_name": "Hingham Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Rosie Buckingham",
+    "timestamp": "2026-07-23T14:41:48.709Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "d1fe3297-b8f6-4823-bd48-2267551572fa",
     "asset_name": "Surgery 2 - J876490",
     "client_name": "Hingham Dental Practice",
