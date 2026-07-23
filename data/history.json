@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "12ca867a-472d-420f-afae-2460ef89129a",
+    "asset_name": "Surgery 2 - 2995-15",
+    "client_name": "Brandon Dental Care",
+    "field": "Compliance",
+    "old_value": "Quoted",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-23T17:04:55.355Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "fbcb1a39-3cf0-4115-ac48-220cf2abffda",
     "asset_name": "1912004",
     "client_name": "Great Horkesley Dental Studio",
