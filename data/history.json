@@ -8,6 +8,17 @@
     "old_value": "",
     "new_value": "Quoted",
     "changed_by": "Rosie Buckingham",
+    "timestamp": "2026-07-23T14:52:07.173Z"
+  },
+  {
+    "type": "compliance",
+    "asset_uuid": "54f58bbf-b4b5-4bbd-9503-231c3688dd0a",
+    "asset_name": "Plant - CH203190",
+    "client_name": "Hingham Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Quoted",
+    "changed_by": "Rosie Buckingham",
     "timestamp": "2026-07-23T14:51:43.626Z"
   },
   {
