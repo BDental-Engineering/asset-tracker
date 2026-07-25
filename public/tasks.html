@@ -1457,8 +1457,8 @@ function taskCard(t) {
   var isOverdue =!t.isCompleted&&d!==null&&d<0;
   var colorCls  =t.isCompleted?'c-completed':(t.flagged?'c-flagged':(isOverdue?'c-overdue':'c-active'));
   var isSelected=!!selectedIds[t._id];
-  var sm8Btn=t.jobNumber
-    ?'<a class="open-sm8-btn" href="https://go.servicem8.com/job_dispatch?search='+esc(t.jobNumber)+
+  var sm8Btn=t.jobUuidSm8
+    ?'<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/'+esc(t.jobUuidSm8)+
     '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
   var flagBtn=!t.isCompleted
     ?'<button class="flag-btn'+(t.flagged?' flagged':'')+'" onclick="toggleFlag(\''+esc(t._id)+'\',event)" title="'+(t.flagged?'Remove flag':'Flag for follow-up')+'">&#9873;</button>':'';
