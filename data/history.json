@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "a7d49a36-3d64-4e65-af09-23659f34007a",
+    "asset_name": "Surgery 4 - XA37219S",
+    "client_name": "A W Brown Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Decommissioned",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-25T20:14:42.563Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "12ca867a-472d-420f-afae-2460ef89129a",
     "asset_name": "Surgery 2 - 2995-15",
     "client_name": "Brandon Dental Care",
