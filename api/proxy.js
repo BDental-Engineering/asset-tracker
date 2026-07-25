@@ -33,8 +33,6 @@ function refreshToken(refreshTok) {
   });
 }
 
-// Safely encode a path+querystring for use in https.request
-// Splits on '?' then encodes each query value individually
 function encodeSm8Path(rawPath) {
   const qIdx = rawPath.indexOf('?');
   if (qIdx === -1) return rawPath;
@@ -42,13 +40,11 @@ function encodeSm8Path(rawPath) {
   const pathPart  = rawPath.substring(0, qIdx);
   const queryPart = rawPath.substring(qIdx + 1);
 
-  // Parse query string manually and re-encode each value
   const encoded = queryPart.split('&').map(function(pair) {
     const eqIdx = pair.indexOf('=');
     if (eqIdx === -1) return encodeURIComponent(pair);
     const key = pair.substring(0, eqIdx);
     const val = pair.substring(eqIdx + 1);
-    // Decode first (in case already partially encoded), then re-encode cleanly
     let decodedVal;
     try { decodedVal = decodeURIComponent(val); }
     catch(e) { decodedVal = val; }
@@ -97,7 +93,6 @@ module.exports = async function(req, res) {
   if (!sm8Path) { res.status(400).json({ error: 'No path provided' }); return; }
   if (!sm8Path.startsWith('/')) sm8Path = '/' + sm8Path;
 
-  // Re-encode the path so spaces and special chars don't crash https.request
   const safePath = encodeSm8Path(sm8Path);
 
   const method = req.headers['x-http-method-override'] || req.method;
@@ -112,7 +107,9 @@ module.exports = async function(req, res) {
       method:   method,
       headers: {
         'Authorization': 'Bearer ' + session.access_token,
-        'Accept':        'application/json'
+        'Accept':        'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma':        'no-cache'
       }
     };
 
@@ -129,6 +126,15 @@ module.exports = async function(req, res) {
       sm8Res.on('end', function() {
         console.log('[proxy] <--', sm8Res.statusCode, options.path);
         res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+
+        // 304 = ServiceM8 returned "Not Modified" with no body — treat as empty array
+        if (sm8Res.statusCode === 304) {
+          console.log('[proxy] 304 received for', options.path, '— returning []');
+          res.status(200).json([]);
+          return;
+        }
+
         try {
           res.status(sm8Res.statusCode).json(JSON.parse(data));
         } catch(e) {
