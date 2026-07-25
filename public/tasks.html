@@ -1194,7 +1194,7 @@ function getFiltered() {
       if (statusF.indexOf(key)===-1) return false;
     }
     if (q) {
-      var hay=[t.name,t.section,t.staffName,t.jobNumber,t.clientName,t.category,t.jobStatus].join(' ').toLowerCase();
+      var hay=[t.name,t.jobNumber,t.clientName].join(' ').toLowerCase();
       if (hay.indexOf(q)===-1) return false;
     }
     return true;
