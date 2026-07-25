@@ -1814,10 +1814,10 @@ function setAddMsg(msg, type) {
 }
 
 function saveNewTask() {
-  var name       = (document.getElementById('add-name').value || '').trim();
-  var jobNum     = (document.getElementById('add-job-number').value || '').trim();
-  var staffUuid  = document.getElementById('add-staff-select').value;
-  var dueDate    = document.getElementById('add-due-date').value;
+  var name      = (document.getElementById('add-name').value || '').trim();
+  var jobNum    = (document.getElementById('add-job-number').value || '').trim();
+  var staffUuid = document.getElementById('add-staff-select').value;
+  var dueDate   = document.getElementById('add-due-date').value;
 
   if (!name) { setAddMsg('Task name cannot be empty.', 'error'); return; }
 
@@ -1830,7 +1830,6 @@ function saveNewTask() {
   setAddMsg('Creating\u2026', 'saving');
   document.getElementById('add-save-btn').disabled = true;
 
-  // Build reminder fields
   var reminderType = '';
   var reminderData = null;
   if (dueDate) {
@@ -1838,38 +1837,31 @@ function saveNewTask() {
     reminderData = { absoluteDateTime: dueDate + ' 08:00:00' };
   }
 
-  // Generate a UUID for the new task
-  var newUuid = generateUUID();
-
   var payload = {
-    job_uuid:    jobUuid,
-    name:        name,
-    section_name: 'Comments',
-    item_type:   'Todo',
-    sort_order:  0,
+    job_uuid:                     jobUuid,
+    name:                         name,
+    section_name:                 'Comments',
+    item_type:                    'Todo',
+    sort_order:                   0,
     completed_timestamp:          '',
     completed_by_staff_uuid:      '',
     completed_during_checkin_uuid:'',
-    reminder_type: reminderType,
-    reminder_data: reminderData,
-    regarding_object:      '',
-    regarding_object_uuid: '',
-    fulfilled_by_object_name: '',
-    fulfilled_by_object_uuid: '',
-    assigned_to_staff_uuids: staffUuid ? [staffUuid] : [],
-    is_locked: '0'
+    reminder_type:                reminderType,
+    reminder_data:                reminderData,
+    regarding_object:             '',
+    regarding_object_uuid:        '',
+    fulfilled_by_object_name:     '',
+    fulfilled_by_object_uuid:     '',
+    assigned_to_staff_uuids:      staffUuid ? [staffUuid] : [],
+    is_locked:                    '0'
   };
 
-  // POST to create new checklist item
   fetch('/api/proxy?path=' + encodeURIComponent('/jobchecklist.json'), {
-    method: 'POST',
+    method:      'POST',
     credentials: 'include',
-    headers: {
-      'Accept':       'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-    }).then(function(r) {
+    headers:     { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body:        JSON.stringify(payload)
+  }).then(function(r) {
     document.getElementById('add-save-btn').disabled = false;
     console.log('[addTask] status:', r.status);
     r.text().then(function(txt) {
@@ -1877,10 +1869,7 @@ function saveNewTask() {
       if (r.status === 200 || r.status === 201 || r.status === 204) {
         setAddMsg('\u2713 Task created!', 'ok');
         toast('Task "' + name + '" created successfully.');
-        setTimeout(function() {
-          closeAddModal();
-          loadTasks(true);
-        }, 800);
+        setTimeout(function() { closeAddModal(); loadTasks(true); }, 800);
       } else {
         setAddMsg('Failed: ' + txt.substring(0, 100), 'error');
         toast('Create failed: HTTP ' + r.status, true);
@@ -1891,13 +1880,8 @@ function saveNewTask() {
     setAddMsg('Failed: ' + e.message, 'error');
     toast('Create failed: ' + e.message, true);
   });
-    }
-  }).catch(function(e) {
-    document.getElementById('add-save-btn').disabled = false;
-    setAddMsg('Failed: ' + e.message, 'error');
-    toast('Create failed: ' + e.message, true);
-  });
 }
+
 
 function closeAddModal() {
   document.getElementById('add-modal').classList.remove('open');
