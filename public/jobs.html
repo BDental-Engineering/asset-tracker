@@ -186,7 +186,8 @@ button:hover{opacity:0.87;}
     <span class="user-badge" id="user-badge"></span>
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="tasks.html">&#10003; Tasks</a>
-    <button class="btn-ghost btn-sm" onclick="loadJobs(true)">&#8635; Refresh</button>
+        <button class="btn-ghost btn-sm" onclick="loadJobs(true)">&#8635; Refresh</button>
+    <button class="btn-ghost btn-sm" onclick="debugMaterials()">&#128269; Debug Materials</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
 </header>
@@ -741,6 +742,26 @@ function buildMaterialsHTML(materials) {
   if (!summary)      summary = sorted.length + ' item' + (sorted.length > 1 ? 's' : '');
 
   return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + '</div>' + html;
+}
+function debugMaterials() {
+  sm8Get('/jobmaterial.json').then(function(data) {
+    console.log('[materials] total records:', data.length);
+    console.log('[materials] first 3 records:', JSON.stringify(data.slice(0,3), null, 2));
+    // Find records matching any of our loaded jobs
+    var jobUuids = jobsData.map(function(j){ return j.uuid; });
+    var matched  = data.filter(function(m){ return jobUuids.indexOf(m.job_uuid) !== -1; });
+    console.log('[materials] matched to current jobs:', matched.length);
+    console.log('[materials] matched sample:', JSON.stringify(matched.slice(0,3), null, 2));
+    alert(
+      'Total material records: ' + data.length + '\n' +
+      'Matched to current jobs: ' + matched.length + '\n\n' +
+      'Check browser console for full details.\n\n' +
+      'First record keys: ' + (data[0] ? Object.keys(data[0]).join(', ') : 'none')
+    );
+  }).catch(function(e) {
+    alert('Error fetching materials: ' + e.message);
+    console.error('[materials] error:', e);
+  });
 }
 
 </script>
