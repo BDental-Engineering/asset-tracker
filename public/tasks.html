@@ -1457,9 +1457,9 @@ function taskCard(t) {
   var isOverdue =!t.isCompleted&&d!==null&&d<0;
   var colorCls  =t.isCompleted?'c-completed':(t.flagged?'c-flagged':(isOverdue?'c-overdue':'c-active'));
   var isSelected=!!selectedIds[t._id];
-  var sm8Btn=t.jobUuidSm8
-    ?'<a class="open-sm8-btn" href="https://app.servicem8.com/job/'+esc(t.jobUuidSm8)+
-      '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
+  var sm8Btn=t.jobNumber
+    ?'<a class="open-sm8-btn" href="https://go.servicem8.com/job_dispatch?search='+esc(t.jobNumber)+
+    '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
   var flagBtn=!t.isCompleted
     ?'<button class="flag-btn'+(t.flagged?' flagged':'')+'" onclick="toggleFlag(\''+esc(t._id)+'\',event)" title="'+(t.flagged?'Remove flag':'Flag for follow-up')+'">&#9873;</button>':'';
   var dateDisplay=t.dueDate?'<span>&#128336; Due '+fmtDate(t.dueDate)+'</span>':'';
@@ -1530,7 +1530,7 @@ function openEdit(id) {
   editRecord=t;
   var sm8Link=document.getElementById('m-sm8-link');
   if (t.jobUuidSm8){
-    sm8Link.href='https://go.servicem8.com/job_card.html#edit,uuid='+t.jobUuidSm8;
+    sm8Link.href='https://go.servicem8.com/job_dispatch?search='+t.jobNumber;
     sm8Link.innerHTML='&#128279; Open Job #'+esc(t.jobNumber)+' in ServiceM8';
     sm8Link.style.display='inline-flex';
   } else { sm8Link.style.display='none'; }
