@@ -122,6 +122,7 @@ button:hover{opacity:0.87;}
 .badge.status-wo{background:rgba(34,197,94,0.13);color:var(--green);}
 .badge.status-completed{background:rgba(136,146,176,0.13);color:var(--muted);}
 .badge.status-unsuccessful{background:rgba(239,68,68,0.13);color:var(--red);}
+.badge.commented{background:rgba(79,110,247,0.12);color:var(--accent);}
 .meta-row{display:flex;flex-wrap:wrap;gap:10px;font-size:0.75rem;color:var(--muted);margin-bottom:5px;align-items:center;}
 .task-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;}
 .due-pill{font-size:0.7rem;font-weight:700;padding:3px 9px;border-radius:10px;white-space:nowrap;}
@@ -192,7 +193,7 @@ button:hover{opacity:0.87;}
 .modal-overlay.open{display:flex;}
 .modal{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:28px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;position:relative;
+  padding:28px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;position:relative;
 }
 .modal-close{
   position:absolute;top:14px;right:14px;
@@ -262,8 +263,7 @@ button:hover{opacity:0.87;}
   transition:all 0.3s;max-width:320px;pointer-events:none;
 }
 #toast.show{transform:translateY(0);opacity:1;}
-
-/* ── Task Comments ────────────────────────────────────────────────────────── */
+/* ── Task Comments ── */
 .tc-btn{
   display:inline-flex;align-items:center;gap:5px;
   background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.25);
@@ -313,6 +313,15 @@ button:hover{opacity:0.87;}
 .tc-submit:disabled{opacity:0.5;cursor:not-allowed;}
 .tc-status{font-size:0.75rem;color:var(--muted);}
 .tc-wrap{display:flex;flex-direction:column;margin-top:8px;}
+/* ── Reassign ── */
+.reassign-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.reassign-select{
+  flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;
+}
+.reassign-select:focus{border-color:var(--accent);}
+.reassign-select option{background:var(--surface2);color:var(--text);}
+.reassign-msg{font-size:0.75rem;margin-top:6px;min-height:16px;}
 </style>
 </head>
 <body>
@@ -342,7 +351,6 @@ button:hover{opacity:0.87;}
 </div>
 
 <div class="page" id="main-page" style="display:none">
-
   <div class="page-header">
     <div class="page-header-left">
       <h1 id="page-title">&#10003; Tasks</h1>
@@ -457,17 +465,16 @@ button:hover{opacity:0.87;}
       </div>
     </div>
 
-    <!-- Comments section inside modal -->
-    <div class="frow" id="m-comments-section">
-      <label>&#128172; Comments</label>
-      <div class="tc-list" id="m-tc-list" style="margin-bottom:10px;"></div>
-      <div class="tc-compose">
-        <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment…"></textarea>
-        <div class="tc-compose-row">
-          <button class="tc-submit" id="m-tc-submit" onclick="postModalComment()">Post</button>
-          <span class="tc-status" id="m-tc-status"></span>
-        </div>
+    <div class="frow">
+      <label>Assigned To</label>
+      <div class="reassign-row">
+        <div id="m-staff-display" style="flex:1;min-width:120px;"></div>
+        <select id="m-reassign-select" class="reassign-select">
+          <option value="">— Reassign to… —</option>
+        </select>
+        <button class="btn-primary btn-sm" onclick="reassignTask()">&#128100; Reassign</button>
       </div>
+      <div class="reassign-msg" id="m-reassign-msg"></div>
     </div>
 
     <div class="frow" id="m-status-row" style="display:none">
@@ -486,14 +493,23 @@ button:hover{opacity:0.87;}
       <label>Linked Job</label>
       <div class="readonly-val" id="m-job-display"></div>
     </div>
-    <div class="frow">
-      <label>Assigned To</label>
-      <div class="readonly-val" id="m-staff-display"></div>
-    </div>
     <div class="frow" id="m-reminder-row" style="display:none">
       <label>Due / Reminder</label>
       <div class="readonly-val" id="m-reminder"></div>
     </div>
+
+    <div class="frow">
+      <label>&#128172; Comments</label>
+      <div class="tc-list" id="m-tc-list" style="margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
+      <div class="tc-compose">
+        <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment…"></textarea>
+        <div class="tc-compose-row">
+          <button class="tc-submit" id="m-tc-submit" onclick="postModalComment()">Post</button>
+          <span class="tc-status" id="m-tc-status"></span>
+        </div>
+      </div>
+    </div>
+
     <div class="frow">
       <label>Raw ServiceM8 Data</label>
       <textarea id="m-raw" style="font-family:monospace;font-size:0.72rem;min-height:120px;" readonly></textarea>
@@ -535,13 +551,10 @@ var currentUserUuid = '';
 var editRecord      = null;
 var debugVisible    = false;
 var completedMode   = false;
-
-// ── Comments state ─────────────────────────────────────
-var commentsCache   = {};   // taskId → comment[]
+var commentsCache   = {};
 var COMMENTS_API    = '/api/taskcomments';
 
-var STATUS_ORDER = { 'Work Order':0, 'Quote':1, 'Unsuccessful':2, 'Completed':3 };
-
+var STATUS_ORDER = { 'Work Order':0,'Quote':1,'Unsuccessful':2,'Completed':3 };
 var STAFF_COLORS = [
   '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
   '#06b6d4','#f97316','#ec4899','#84cc16','#14b8a6',
@@ -557,8 +570,8 @@ window.addEventListener('DOMContentLoaded', function() {
   currentUserUuid = id.uuid || '';
   if (currentUser) document.getElementById('user-badge').textContent = '\uD83D\uDC64 ' + currentUser;
   initStatusPills();
-  loadFlaggedIds().then(function(){
-    loadAllComments().then(function(){
+  loadFlaggedIds().then(function() {
+    loadAllComments().then(function() {
       checkSession();
     });
   });
@@ -587,7 +600,6 @@ function initStatusPills() {
     });
   });
 }
-
 function getStatusFilter() {
   var active = [];
   document.querySelectorAll('#q-status-pills input[type=checkbox]').forEach(function(cb) {
@@ -603,18 +615,15 @@ function loadFlaggedIds() {
     .then(function(d){ flaggedIds = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; })
     .catch(function(){ flaggedIds = {}; });
 }
-
 function saveFlaggedIds() {
   return fetch('/api/flaggedtasks', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
     body: JSON.stringify(flaggedIds)
   }).then(function(r){
     return r.json().then(function(d){ console.log('[flaggedtasks] save response:', d); });
   }).catch(function(e){ console.warn('[flaggedtasks] save failed:', e); });
 }
-
 function toggleFlag(id, event) {
   if (event) event.stopPropagation();
   if (flaggedIds[id]) delete flaggedIds[id]; else flaggedIds[id] = true;
@@ -623,7 +632,6 @@ function toggleFlag(id, event) {
   if (t) t.flagged = !!flaggedIds[id];
   render();
 }
-
 function toggleModalFlag() {
   if (!editRecord) return;
   var id = editRecord._id;
@@ -638,21 +646,17 @@ function toggleModalFlag() {
 }
 
 // ── Comments ───────────────────────────────────────────
-// Load the entire comments map once on boot so counts are available immediately
 function loadAllComments() {
   return fetch(COMMENTS_API, { credentials:'include' })
     .then(function(r){ return r.ok ? r.json() : {}; })
-    .then(function(d){
-      commentsCache = (d && typeof d==='object' && !Array.isArray(d)) ? d : {};
-    })
+    .then(function(d){ commentsCache = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; })
     .catch(function(){ commentsCache = {}; });
 }
-
 function getCommentCount(taskId) {
   return Array.isArray(commentsCache[taskId]) ? commentsCache[taskId].length : 0;
 }
 
-// Render the inline comment panel inside a task card
+// Inline card comment panel
 function buildCommentPanel(taskId) {
   var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
   var count  = getCommentCount(taskId);
@@ -660,8 +664,7 @@ function buildCommentPanel(taskId) {
     + '<button class="tc-btn' + (count > 0 ? ' has-comments' : '') + '" '
     +   'id="tc-btn-' + safeId + '" '
     +   'onclick="toggleCommentPanel(\'' + esc(taskId) + '\')">'
-    + '&#128172;'
-    + (count > 0 ? ' <span class="tc-count" id="tc-count-' + safeId + '">' + count + '</span>' : ' <span class="tc-count" id="tc-count-' + safeId + '">0</span>')
+    + '&#128172; <span class="tc-count" id="tc-count-' + safeId + '">' + count + '</span>'
     + '</button>'
     + '<div class="tc-panel" id="tc-panel-' + safeId + '">'
     +   '<div class="tc-list" id="tc-list-' + safeId + '"></div>'
@@ -675,29 +678,20 @@ function buildCommentPanel(taskId) {
     + '</div>'
     + '</div>';
 }
-
 function toggleCommentPanel(taskId) {
   var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
   var panel  = document.getElementById('tc-panel-' + safeId);
   if (!panel) return;
   var isOpen = panel.classList.contains('open');
-  // Close all open panels first
   document.querySelectorAll('.tc-panel.open').forEach(function(p){ p.classList.remove('open'); });
-  if (!isOpen) {
-    panel.classList.add('open');
-    renderCardCommentList(taskId);
-  }
+  if (!isOpen) { panel.classList.add('open'); renderCardCommentList(taskId); }
 }
-
 function renderCardCommentList(taskId) {
   var safeId   = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
   var listEl   = document.getElementById('tc-list-' + safeId);
   if (!listEl) return;
   var comments = commentsCache[taskId] || [];
-  if (!comments.length) {
-    listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>';
-    return;
-  }
+  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
   listEl.innerHTML = comments.map(function(c) {
     return '<div class="tc-item" id="tc-c-' + esc(c.id) + '">'
       + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
@@ -708,12 +702,11 @@ function renderCardCommentList(taskId) {
   }).join('');
   listEl.scrollTop = listEl.scrollHeight;
 }
-
 function postCardComment(taskId) {
   var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var ta     = document.getElementById('tc-ta-'  + safeId);
-  var st     = document.getElementById('tc-st-'  + safeId);
-  var sub    = document.querySelector('#tc-panel-' + safeId + ' .tc-submit');
+  var ta  = document.getElementById('tc-ta-'  + safeId);
+  var st  = document.getElementById('tc-st-'  + safeId);
+  var sub = document.querySelector('#tc-panel-' + safeId + ' .tc-submit');
   if (!ta || !st || !sub) return;
   var text = (ta.value || '').trim();
   if (!text) { st.textContent = 'Please enter a comment.'; return; }
@@ -721,7 +714,7 @@ function postCardComment(taskId) {
   fetch(COMMENTS_API, {
     method:'POST', credentials:'include',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId: taskId, text: text, author: currentUser || 'Unknown' })
+    body: JSON.stringify({ taskId:taskId, text:text, author:currentUser||'Unknown' })
   })
     .then(function(r){ return r.json(); })
     .then(function(data) {
@@ -736,30 +729,26 @@ function postCardComment(taskId) {
     })
     .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
 }
-
 function deleteCardComment(taskId, commentId) {
   if (!confirm('Delete this comment?')) return;
   fetch(COMMENTS_API, {
     method:'DELETE', credentials:'include',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId: taskId, commentId: commentId })
+    body: JSON.stringify({ taskId:taskId, commentId:commentId })
   })
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (data.error) { toast('Delete failed: ' + data.error, true); return; }
-      if (commentsCache[taskId]) {
+      if (commentsCache[taskId])
         commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
-      }
       var el = document.getElementById('tc-c-' + commentId);
       if (el) el.remove();
       updateCommentBadge(taskId);
-      // Also refresh modal list if open for same task
       if (editRecord && editRecord._id === taskId) renderModalCommentList(taskId);
       toast('Comment deleted.');
     })
     .catch(function(e){ toast('Delete failed: ' + e.message, true); });
 }
-
 function updateCommentBadge(taskId) {
   var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
   var count  = getCommentCount(taskId);
@@ -769,15 +758,12 @@ function updateCommentBadge(taskId) {
   if (btn) btn.classList.toggle('has-comments', count > 0);
 }
 
-// ── Modal comments ─────────────────────────────────────
+// Modal comment list
 function renderModalCommentList(taskId) {
   var listEl   = document.getElementById('m-tc-list');
   if (!listEl) return;
   var comments = commentsCache[taskId] || [];
-  if (!comments.length) {
-    listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>';
-    return;
-  }
+  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
   listEl.innerHTML = comments.map(function(c) {
     return '<div class="tc-item" id="m-tc-c-' + esc(c.id) + '">'
       + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
@@ -788,20 +774,19 @@ function renderModalCommentList(taskId) {
   }).join('');
   listEl.scrollTop = listEl.scrollHeight;
 }
-
 function postModalComment() {
   if (!editRecord) return;
   var taskId = editRecord._id;
-  var ta     = document.getElementById('m-tc-textarea');
-  var st     = document.getElementById('m-tc-status');
-  var sub    = document.getElementById('m-tc-submit');
-  var text   = (ta.value || '').trim();
+  var ta  = document.getElementById('m-tc-textarea');
+  var st  = document.getElementById('m-tc-status');
+  var sub = document.getElementById('m-tc-submit');
+  var text = (ta.value || '').trim();
   if (!text) { st.textContent = 'Please enter a comment.'; return; }
   sub.disabled = true; st.textContent = 'Saving\u2026';
   fetch(COMMENTS_API, {
     method:'POST', credentials:'include',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId: taskId, text: text, author: currentUser || 'Unknown' })
+    body: JSON.stringify({ taskId:taskId, text:text, author:currentUser||'Unknown' })
   })
     .then(function(r){ return r.json(); })
     .then(function(data) {
@@ -816,20 +801,18 @@ function postModalComment() {
     })
     .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
 }
-
 function deleteModalComment(taskId, commentId) {
   if (!confirm('Delete this comment?')) return;
   fetch(COMMENTS_API, {
     method:'DELETE', credentials:'include',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId: taskId, commentId: commentId })
+    body: JSON.stringify({ taskId:taskId, commentId:commentId })
   })
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (data.error) { toast('Delete failed: ' + data.error, true); return; }
-      if (commentsCache[taskId]) {
+      if (commentsCache[taskId])
         commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
-      }
       var el = document.getElementById('m-tc-c-' + commentId);
       if (el) el.remove();
       updateCommentBadge(taskId);
@@ -837,6 +820,105 @@ function deleteModalComment(taskId, commentId) {
       toast('Comment deleted.');
     })
     .catch(function(e){ toast('Delete failed: ' + e.message, true); });
+}
+
+// ── Reassign ───────────────────────────────────────────
+function populateReassignDropdown(currentStaffUuid) {
+  var sel = document.getElementById('m-reassign-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Reassign to… —</option>';
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid;
+    o.textContent = s.name;
+    if (s.uuid === currentStaffUuid) o.disabled = true;
+    sel.appendChild(o);
+  });
+  sel.value = '';
+}
+function reassignTask() {
+  if (!editRecord) return;
+  var sel  = document.getElementById('m-reassign-select');
+  var msg  = document.getElementById('m-reassign-msg');
+  var newStaffUuid = sel.value;
+  if (!newStaffUuid) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Please select a staff member to reassign to.';
+    return;
+  }
+  var newStaffName = staffMap[newStaffUuid] || 'Unknown';
+  var oldStaffName = editRecord.staffName   || 'Unassigned';
+  var t   = editRecord;
+  var raw = t._raw;
+  msg.style.color = 'var(--amber)';
+  msg.textContent = 'Saving\u2026';
+  var payload = {
+    uuid: t._id,
+    job_uuid: raw.job_uuid || '',
+    name: raw.name || '',
+    section_name: raw.section_name || '',
+    item_type: raw.item_type || 'Todo',
+    sort_order: raw.sort_order || 0,
+    completed_timestamp: raw.completed_timestamp || '',
+    completed_by_staff_uuid: raw.completed_by_staff_uuid || '',
+    completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
+    reminder_type: raw.reminder_type || '',
+    reminder_data: (raw.reminder_data && !Array.isArray(raw.reminder_data)) ? raw.reminder_data : null,
+    regarding_object: raw.regarding_object || '',
+    regarding_object_uuid: raw.regarding_object_uuid || '',
+    fulfilled_by_object_name: raw.fulfilled_by_object_name || '',
+    fulfilled_by_object_uuid: raw.fulfilled_by_object_uuid || '',
+    assigned_to_staff_uuids: [newStaffUuid],
+    is_locked: raw.is_locked || '0'
+  };
+  sm8Put('/jobchecklist/' + t._id + '.json', payload)
+    .then(function(r) {
+      return r.text().then(function(txt) {
+        if (r.status===200||r.status===201||r.status===204) return txt;
+        throw new Error('HTTP ' + r.status + ': ' + txt.substring(0,120));
+      });
+    })
+    .then(function() {
+      t.staffUuid  = newStaffUuid;
+      t.staffName  = newStaffName;
+      t.staffColor = staffColorMap[newStaffUuid] || '#8892b0';
+      raw.assigned_to_staff_uuids = [newStaffUuid];
+      document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
+      populateReassignDropdown(newStaffUuid);
+      msg.style.color = 'var(--green)';
+      msg.textContent = '\u2713 Reassigned to ' + newStaffName;
+      setTimeout(function(){ msg.textContent = ''; }, 3000);
+      // Auto-post reassignment comment
+      var commentText = '\uD83D\uDD04 Reassigned from ' + oldStaffName
+        + ' to ' + newStaffName + ' by ' + (currentUser || 'Unknown');
+      fetch(COMMENTS_API, {
+        method:'POST', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ taskId:t._id, text:commentText, author:currentUser||'Unknown' })
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if (data.comment) {
+            if (!commentsCache[t._id]) commentsCache[t._id] = [];
+            commentsCache[t._id].push(data.comment);
+            renderModalCommentList(t._id);
+            updateCommentBadge(t._id);
+          }
+        })
+        .catch(function(e){ console.warn('[reassign] comment post failed:', e.message); });
+      render();
+      toast('Task reassigned to ' + newStaffName + '.');
+    })
+    .catch(function(e) {
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Failed: ' + e.message;
+      toast('Reassign failed: ' + e.message, true);
+    });
+}
+function staffChipHTML(color, name) {
+  return '<span class="staff-chip" style="background:' + esc(color) + '22;border-color:' + esc(color) + '55;">'
+    + '<span class="staff-chip-dot" style="background:' + esc(color) + '"></span>'
+    + esc(name) + '</span>';
 }
 
 // ── Completed mode ─────────────────────────────────────
@@ -849,17 +931,17 @@ function toggleCompletedMode() {
   var sortGroup = document.getElementById('sort-group');
   var bulkBar   = document.getElementById('bulk-bar');
   if (completedMode) {
-    btn.innerHTML       = '&#9003; Show Incomplete';
-    title.textContent   = '✓ Completed Tasks';
-    sub.textContent     = 'Recently completed checklist tasks from ServiceM8.';
+    btn.innerHTML = '&#9003; Show Incomplete';
+    title.textContent = '\u2713 Completed Tasks';
+    sub.textContent   = 'Recently completed checklist tasks from ServiceM8.';
     sortGroup.style.display = 'none';
     bulkBar.style.display   = 'none';
     selectedIds = {};
     banner.style.display = 'flex';
   } else {
-    btn.innerHTML       = '&#10003; Show Completed';
-    title.innerHTML     = '&#10003; Tasks';
-    sub.textContent     = 'Incomplete checklist tasks from ServiceM8.';
+    btn.innerHTML = '&#10003; Show Completed';
+    title.innerHTML = '&#10003; Tasks';
+    sub.textContent = 'Incomplete checklist tasks from ServiceM8.';
     sortGroup.style.display = '';
     banner.style.display    = 'none';
   }
@@ -907,7 +989,6 @@ function loadTasks(force) {
   updateBulkBar();
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
-
   Promise.all([
     sm8Get('/staff.json'),
     sm8Get('/job.json'),
@@ -918,10 +999,8 @@ function loadTasks(force) {
     var rawJobs       = Array.isArray(res[1]) ? res[1] : [];
     var rawItems      = Array.isArray(res[2]) ? res[2] : [];
     var rawCategories = Array.isArray(res[3]) ? res[3] : [];
-
     rawDebugData    = rawItems;
     rawCategoryData = rawCategories;
-
     staffList = rawStaff
       .filter(function(s){ return String(s.active)==='1'; })
       .map(function(s){ return { uuid:s.uuid, name:((s.first||'')+' '+(s.last||'')).trim()||s.email||s.uuid }; });
@@ -930,13 +1009,11 @@ function loadTasks(force) {
       staffMap[s.uuid]      = s.name;
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
-
     jobMap = {};
     rawJobs.filter(function(j){ return String(j.active)==='1'; }).forEach(function(j){
       jobMap[j.uuid] = { _raw:j, uuid:j.uuid, number:j.generated_job_id||'', desc:j.job_description||'',
                          clientUuid:j.company_uuid||'', status:j.status||'', catUuid:j.category_uuid||'' };
     });
-
     rawCatNameMap = {};
     rawCategories.filter(function(c){ return String(c.active)==='1'; })
       .forEach(function(c){ rawCatNameMap[c.uuid]=c.name; });
@@ -945,7 +1022,6 @@ function loadTasks(force) {
       var cu = j.category_uuid||j.job_category_uuid||'';
       if (cu && rawCatNameMap[cu]) categoryMap[j.uuid] = rawCatNameMap[cu];
     });
-
     function mapItem(i) {
       var job        = jobMap[i.job_uuid] || {};
       var clientUuid = job.clientUuid || '';
@@ -981,7 +1057,6 @@ function loadTasks(force) {
         completedTs:isCompleted?ts:'', isCompleted:isCompleted
       };
     }
-
     var activeTodos = rawItems.filter(function(i){
       if (String(i.active)!=='1') return false;
       if (i.item_type && String(i.item_type).toLowerCase()!=='todo') return false;
@@ -994,17 +1069,14 @@ function loadTasks(force) {
       var ts=String(i.completed_timestamp||'').trim();
       return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
     });
-
     tasksData     = activeTodos.map(mapItem);
     completedData = completedTodos.map(mapItem).sort(function(a,b){ return b.completedTs.localeCompare(a.completedTs); });
     tasksLoaded   = true;
-
     setSyncMsg('Last synced: '+new Date().toLocaleTimeString()+
                ' \u2014 '+tasksData.length+' incomplete, '+completedData.length+' completed');
     updateDebugPanel();
     populateFilters();
     render();
-
   }).catch(function(e){
     if (e.message==='SESSION_EXPIRED'){ showAuth(); return; }
     setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div>'+
@@ -1085,7 +1157,6 @@ function populateFilters() {
     if(c===qv) o.selected=true; qs.appendChild(o);
   });
 }
-
 function setScope(s) {
   tScope = s;
   document.getElementById('ts-mine').className = 'seg-btn'+(s==='mine'?' active':'');
@@ -1099,7 +1170,6 @@ function setSort(s) {
   });
   render();
 }
-
 function getFiltered() {
   var source    = completedMode ? completedData : tasksData;
   var q         = (document.getElementById('q-search').value||'').toLowerCase();
@@ -1107,7 +1177,6 @@ function getFiltered() {
   var clientF   = document.getElementById('q-client').value;
   var categoryF = document.getElementById('q-category').value;
   var statusF   = getStatusFilter();
-
   return source.filter(function(t) {
     if (!completedMode && tScope==='mine') {
       var isMe = (currentUserUuid && t.staffUuid===currentUserUuid) ||
@@ -1131,7 +1200,6 @@ function getFiltered() {
     return true;
   });
 }
-
 function sortTasks(arr) {
   var copy = arr.slice();
   if (sortMode==='due') {
@@ -1280,7 +1348,6 @@ function render() {
   }
   updateBulkBar();
 }
-
 function renderGroupedByStaff(sorted) {
   var groups=[]; var groupMap={};
   sorted.forEach(function(t){
@@ -1300,7 +1367,6 @@ function renderGroupedByStaff(sorted) {
   });
   setBody(html);
 }
-
 function renderGroupedByStatus(sorted) {
   var groups=[]; var groupMap={};
   sorted.forEach(function(t){
@@ -1320,15 +1386,13 @@ function renderGroupedByStatus(sorted) {
   });
   setBody(html);
 }
-
 function renderGroupedByFlagged(sorted) {
   var flaggedTasks  =sorted.filter(function(t){ return  t.flagged; });
   var unflaggedTasks=sorted.filter(function(t){ return !t.flagged; });
   var html='';
   if (flaggedTasks.length) {
     html+='<div class="staff-group"><div class="staff-group-hdr">'
-      +'<span class="group-icon">&#9873;</span>'
-      +'<span class="staff-group-name">Flagged</span>'
+      +'<span class="group-icon">&#9873;</span><span class="staff-group-name">Flagged</span>'
       +'<span class="staff-group-ct">'+flaggedTasks.length+'</span>'
       +'</div><div class="task-list">';
     flaggedTasks.forEach(function(t){ html+=taskCard(t); });
@@ -1336,8 +1400,7 @@ function renderGroupedByFlagged(sorted) {
   }
   if (unflaggedTasks.length) {
     html+='<div class="staff-group"><div class="staff-group-hdr">'
-      +'<span class="group-icon">&#9711;</span>'
-      +'<span class="staff-group-name">Not Flagged</span>'
+      +'<span class="group-icon">&#9711;</span><span class="staff-group-name">Not Flagged</span>'
       +'<span class="staff-group-ct">'+unflaggedTasks.length+'</span>'
       +'</div><div class="task-list">';
     unflaggedTasks.forEach(function(t){ html+=taskCard(t); });
@@ -1345,7 +1408,6 @@ function renderGroupedByFlagged(sorted) {
   }
   setBody(html);
 }
-
 function renderStats(scope) {
   if (completedMode) {
     document.getElementById('stats-bar').innerHTML=
@@ -1390,30 +1452,22 @@ function statusIcon(status) {
   if (status==='Unsuccessful') return '&#10007;';
   return '&#9679;';
 }
-
 function taskCard(t) {
   var d         =t.dueDate?daysUntil(t.dueDate):null;
   var isOverdue =!t.isCompleted&&d!==null&&d<0;
   var colorCls  =t.isCompleted?'c-completed':(t.flagged?'c-flagged':(isOverdue?'c-overdue':'c-active'));
   var isSelected=!!selectedIds[t._id];
-
   var sm8Btn=t.jobUuidSm8
     ?'<a class="open-sm8-btn" href="https://go.servicem8.com/job_card.html#edit,uuid='+esc(t.jobUuidSm8)+
       '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
-
   var flagBtn=!t.isCompleted
     ?'<button class="flag-btn'+(t.flagged?' flagged':'')+'" onclick="toggleFlag(\''+esc(t._id)+'\',event)" title="'+(t.flagged?'Remove flag':'Flag for follow-up')+'">&#9873;</button>':'';
-
   var dateDisplay=t.dueDate?'<span>&#128336; Due '+fmtDate(t.dueDate)+'</span>':'';
   var completedDisplay=t.isCompleted&&t.completedTs?'<span>&#10003; Completed '+fmtDate(t.completedTs)+'</span>':'';
-
-  var staffChip='<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
-    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'+esc(t.staffName)+'</span>';
-
   var checkboxHtml=!t.isCompleted
     ?'<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\''+esc(t._id)+'\',this.checked,event)"'+(isSelected?' checked':'')+'/>':
      '<span style="width:17px;flex-shrink:0;"></span>';
-
+  var commentCount=getCommentCount(t._id);
   return '<div class="task-card '+colorCls+(isSelected?' selected':'')+'" data-id="'+esc(t._id)+'" onclick="openEdit(\''+esc(t._id)+'\')">'
     +checkboxHtml
     +'<div class="task-body">'
@@ -1424,10 +1478,11 @@ function taskCard(t) {
     +(t.flagged&&!t.isCompleted?'<span class="badge flagged">&#9873; Flagged</span>':'')
     +(t.section?'<span class="badge section">'+esc(t.section)+'</span>':'')
     +(isOverdue?'<span class="badge overdue">Overdue</span>':'')
-    +(getCommentCount(t._id)>0?'<span class="badge" style="background:rgba(79,110,247,0.12);color:var(--accent)">&#128172; '+getCommentCount(t._id)+'</span>':'')
+    +(commentCount>0?'<span class="badge commented">&#128172; '+commentCount+'</span>':'')
     +'</div>'
     +'<div class="meta-row">'
-    +staffChip
+    +'<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
+    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'+esc(t.staffName)+'</span>'
     +(t.category  ?'<span>&#127991; '+esc(t.category)+'</span>':'')
     +(t.clientName?'<span>&#128205; '+esc(t.clientName)+'</span>':'')
     +(t.jobNumber ?'<span>&#128188; Job #'+esc(t.jobNumber)+(t.jobDesc?' &mdash; '+esc(t.jobDesc.substring(0,40)):'')+' </span>':'')
@@ -1438,7 +1493,6 @@ function taskCard(t) {
     +'<div class="task-right">'+(!t.isCompleted?duePill(t):'')+flagBtn+sm8Btn+'</div>'
     +'</div>';
 }
-
 function duePill(t) {
   if (!t.dueDate) return '<span class="due-pill none">No date</span>';
   var d=daysUntil(t.dueDate);
@@ -1474,73 +1528,61 @@ function openEdit(id) {
   var t=source.find(function(x){ return x._id===id; });
   if (!t) return;
   editRecord=t;
-
   var sm8Link=document.getElementById('m-sm8-link');
   if (t.jobUuidSm8){
     sm8Link.href='https://go.servicem8.com/job_card.html#edit,uuid='+t.jobUuidSm8;
     sm8Link.innerHTML='&#128279; Open Job #'+esc(t.jobNumber)+' in ServiceM8';
     sm8Link.style.display='inline-flex';
   } else { sm8Link.style.display='none'; }
-
   document.getElementById('m-name').value    =t.name;
   document.getElementById('m-name').disabled =t.isCompleted;
   document.getElementById('m-due-date').value=t.dueDate||'';
   document.getElementById('m-due-date').disabled=t.isCompleted;
   updateDuePreview();
-
   var cb =document.getElementById('m-flag-cb');
   var row=document.getElementById('m-flag-row');
   cb.checked=!!t.flagged; cb.disabled=t.isCompleted;
   row.classList.toggle('flagged',!!t.flagged);
   row.style.opacity=t.isCompleted?'0.4':'1';
   row.style.pointerEvents=t.isCompleted?'none':'';
-
-  // Render comments in modal
+  // Assigned to + reassign
+  populateReassignDropdown(t.staffUuid);
+  document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
+  document.getElementById('m-reassign-msg').textContent = '';
+  // Comments
   renderModalCommentList(t._id);
   document.getElementById('m-tc-textarea').value = '';
   document.getElementById('m-tc-status').textContent = '';
-
   var statusRow=document.getElementById('m-status-row');
   if(t.jobStatus){ statusRow.style.display=''; document.getElementById('m-status').innerHTML=statusBadge(t.jobStatus); }
   else { statusRow.style.display='none'; }
-
   var catRow=document.getElementById('m-category-row');
   if(t.category){ catRow.style.display=''; document.getElementById('m-category').textContent=t.category; }
   else { catRow.style.display='none'; }
-
   var secRow=document.getElementById('m-section-row');
   if(t.section){ secRow.style.display=''; document.getElementById('m-section').textContent=t.section; }
   else { secRow.style.display='none'; }
-
   var jobRow=document.getElementById('m-job-row');
   if(t.jobNumber){
     jobRow.style.display='';
     document.getElementById('m-job-display').textContent='Job #'+t.jobNumber+(t.jobDesc?' \u2014 '+t.jobDesc:'');
   } else { jobRow.style.display='none'; }
-
-  document.getElementById('m-staff-display').innerHTML=
-    '<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
-    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'+esc(t.staffName)+'</span>';
-
   var remRow=document.getElementById('m-reminder-row');
   if(t.reminderType){ remRow.style.display=''; document.getElementById('m-reminder').textContent=t.reminderType+(t.reminderData?': '+t.reminderData:''); }
   else { remRow.style.display='none'; }
-
   document.getElementById('m-raw').value=JSON.stringify(t._raw,null,2);
   document.getElementById('m-save-btn').style.display    =t.isCompleted?'none':'';
   document.getElementById('m-complete-btn').style.display=t.isCompleted?'none':'';
-
   setSaveMsg('','');
   openModal();
 }
-
 function updateDuePreview() {
   var val=document.getElementById('m-due-date').value;
   var el =document.getElementById('m-due-preview');
   if(!val){ el.textContent='No due date set'; return; }
   var d=daysUntil(val);
   if(d===null){ el.textContent=''; return; }
-  if(d<0)       el.textContent=Math.abs(d)+' day'+(Math.abs(d)===1?'':'s')+' overdue';
+   if(d<0)        el.textContent=Math.abs(d)+' day'+(Math.abs(d)===1?'':'s')+' overdue';
   else if(d===0) el.textContent='Due today';
   else           el.textContent='Due in '+d+' day'+(d===1?'':'s');
 }
@@ -1553,7 +1595,7 @@ function setSaveMsg(msg,type){
 function saveTaskEdits() {
   if (!editRecord) return;
   var newName   =document.getElementById('m-name').value.trim();
-  var  newDueDate=document.getElementById('m-due-date').value;
+  var newDueDate=document.getElementById('m-due-date').value;
   if (!newName){ setSaveMsg('Task name cannot be empty.','error'); return; }
   setSaveMsg('Saving\u2026','saving');
   document.getElementById('m-save-btn').disabled=true;
@@ -1656,4 +1698,5 @@ function toast(msg,isError){
 </script>
 </body>
 </html>
+
 
