@@ -1869,20 +1869,28 @@ function saveNewTask() {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
-  }).then(function(r) {
+    }).then(function(r) {
     document.getElementById('add-save-btn').disabled = false;
-    if (r.status === 200 || r.status === 201 || r.status === 204) {
-      setAddMsg('\u2713 Task created!', 'ok');
-      toast('Task "' + name + '" created successfully.');
-      setTimeout(function() {
-        closeAddModal();
-        loadTasks(true); // Refresh to show new task
-      }, 800);
-    } else {
-      r.text().then(function(txt) {
+    console.log('[addTask] status:', r.status);
+    r.text().then(function(txt) {
+      console.log('[addTask] response body:', txt);
+      if (r.status === 200 || r.status === 201 || r.status === 204) {
+        setAddMsg('\u2713 Task created!', 'ok');
+        toast('Task "' + name + '" created successfully.');
+        setTimeout(function() {
+          closeAddModal();
+          loadTasks(true);
+        }, 800);
+      } else {
         setAddMsg('Failed: ' + txt.substring(0, 100), 'error');
         toast('Create failed: HTTP ' + r.status, true);
-      });
+      }
+    });
+  }).catch(function(e) {
+    document.getElementById('add-save-btn').disabled = false;
+    setAddMsg('Failed: ' + e.message, 'error');
+    toast('Create failed: ' + e.message, true);
+  });
     }
   }).catch(function(e) {
     document.getElementById('add-save-btn').disabled = false;
