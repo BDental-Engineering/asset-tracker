@@ -70,7 +70,6 @@ button:hover{opacity:0.87;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty-wrap{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty-icon{font-size:2.8rem;margin-bottom:12px;}
-/* ── Kanban ── */
 .kanban-wrap{overflow-x:auto;padding-bottom:16px;}
 .kanban-board{display:grid;grid-template-columns:repeat(4,minmax(280px,1fr));gap:16px;min-width:1120px;}
 .kanban-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:12px;}
@@ -78,7 +77,6 @@ button:hover{opacity:0.87;}
 .col-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .col-count{margin-left:auto;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:0.72rem;color:var(--muted);}
 .kanban-cards{display:flex;flex-direction:column;gap:10px;min-height:80px;}
-/* ── Job card ── */
 .job-card{
   background:var(--surface2);border:1px solid var(--border);border-radius:10px;
   padding:14px;cursor:pointer;transition:border-color 0.18s,transform 0.15s,box-shadow 0.15s;
@@ -113,7 +111,6 @@ button:hover{opacity:0.87;}
 }
 .open-sm8-btn:hover{background:rgba(79,110,247,0.22);}
 .no-jobs{color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0;}
-/* ── Modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;position:relative;}
@@ -134,10 +131,7 @@ button:hover{opacity:0.87;}
 .field-row:last-child{border-bottom:none;}
 .field-label{font-size:0.8rem;color:var(--muted);}
 .field-value{font-size:0.85rem;font-weight:500;text-align:right;max-width:65%;}
-.booking-card{
-  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
-  padding:14px;margin-bottom:10px;
-}
+.booking-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
 .booking-card.next{border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.05);}
 .booking-date{font-size:1rem;font-weight:700;color:var(--green);margin-bottom:4px;}
 .booking-time{font-size:0.82rem;color:var(--muted);margin-bottom:4px;}
@@ -146,6 +140,16 @@ button:hover{opacity:0.87;}
 .badge{display:inline-block;font-size:0.67rem;font-weight:700;padding:2px 7px;border-radius:7px;}
 .badge-wo{background:rgba(34,197,94,0.13);color:var(--green);}
 .badge-quote{background:rgba(245,158,11,0.13);color:var(--amber);}
+.materials-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.materials-table th{text-align:left;padding:7px 10px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--border);}
+.materials-table td{padding:7px 10px;font-size:0.82rem;border-bottom:1px solid var(--border);vertical-align:top;}
+.materials-table tr:last-child td{border-bottom:none;}
+.materials-table tr:hover td{background:rgba(255,255,255,0.02);}
+.mat-name{font-weight:600;color:var(--text);}
+.mat-qty{font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;}
+.mat-type{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px;}
+.mat-type.service{background:rgba(79,110,247,0.12);color:var(--accent);}
+.mat-type.material{background:rgba(34,197,94,0.12);color:var(--green);}
 #auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:32px;}
 #auth-screen.show{display:flex;}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;text-align:center;}
@@ -155,20 +159,6 @@ button:hover{opacity:0.87;}
 .auth-btn:hover{opacity:0.85;}
 #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
 #toast.show{transform:translateY(0);opacity:1;}
-/* ── Materials ── */
-.materials-table{width:100%;border-collapse:collapse;margin-top:4px;}
-.materials-table th{text-align:left;padding:7px 10px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--border);}
-.materials-table td{padding:7px 10px;font-size:0.82rem;border-bottom:1px solid var(--border);vertical-align:top;}
-.materials-table tr:last-child td{border-bottom:none;}
-.materials-table tr:hover td{background:rgba(255,255,255,0.02);}
-.mat-name{font-weight:600;color:var(--text);}
-.mat-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
-.mat-qty{font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;}
-.mat-type{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px;}
-.mat-type.service{background:rgba(79,110,247,0.12);color:var(--accent);}
-.mat-type.material{background:rgba(34,197,94,0.12);color:var(--green);}
-.mat-type.other{background:rgba(136,146,176,0.12);color:var(--muted);}
-.mat-count-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.2);border-radius:6px;padding:2px 7px;font-size:0.68rem;color:var(--accent);font-weight:600;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -186,8 +176,7 @@ button:hover{opacity:0.87;}
     <span class="user-badge" id="user-badge"></span>
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="tasks.html">&#10003; Tasks</a>
-        <button class="btn-ghost btn-sm" onclick="loadJobs(true)">&#8635; Refresh</button>
-    <button class="btn-ghost btn-sm" onclick="debugMaterials()">&#128269; Debug Materials</button>
+    <button class="btn-ghost btn-sm" onclick="loadJobs(true)">&#8635; Refresh</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
 </header>
@@ -219,7 +208,8 @@ button:hover{opacity:0.87;}
 
   <div class="sync-bar">
     <span id="sync-detail">Loading&hellip;</span>
-    <a style="color:var(--accent);font-size:0.78rem;font-weight:600;text-decoration:none;" href="https://go.servicem8.com" target="_blank" rel="noopener">&#128279; Open ServiceM8</a>
+    <a style="color:var(--accent);font-size:0.78rem;font-weight:600;text-decoration:none;"
+       href="https://go.servicem8.com" target="_blank" rel="noopener">&#128279; Open ServiceM8</a>
   </div>
 
   <div class="toolbar">
@@ -232,7 +222,6 @@ button:hover{opacity:0.87;}
   </div>
 </div>
 
-<!-- Job Detail Modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
@@ -245,21 +234,21 @@ button:hover{opacity:0.87;}
 <script>
 // ── Config ─────────────────────────────────────────────
 var COLUMNS = [
-  { key: 'Planned Maintenance', label: 'Planned Maintenance', color: '#4f6ef7' },
-  { key: 'Repairs',             label: 'Repairs',             color: '#ef4444' },
-  { key: 'Remedial',            label: 'Remedial',            color: '#f59e0b' },
-  { key: 'Install',             label: 'Install',             color: '#22c55e' }
+  { key:'Planned Maintenance', label:'Planned Maintenance', color:'#4f6ef7' },
+  { key:'Repairs',             label:'Repairs',             color:'#ef4444' },
+  { key:'Remedial',            label:'Remedial',            color:'#f59e0b' },
+  { key:'Install',             label:'Install',             color:'#22c55e' }
 ];
 
 // ── State ──────────────────────────────────────────────
-var jobsData      = [];
-var bookingsMap   = {};   // job_uuid → array of booking objects
-var staffMap      = {};   // uuid → name
-var clientMap     = {};   // uuid → name
-var categoryMap   = {};   // uuid → name
-var jobsLoaded    = false;
-var statusFilter  = 'both';
-var currentUser   = '';
+var jobsData     = [];
+var bookingsMap  = {};
+var staffMap     = {};
+var clientMap    = {};
+var categoryMap  = {};
+var jobsLoaded   = false;
+var statusFilter = 'both';
+var currentUser  = '';
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
@@ -297,13 +286,17 @@ function showMain() {
   document.getElementById('main-page').style.display = 'block';
 }
 
-// ── API helpers ────────────────────────────────────────
+// ── API ────────────────────────────────────────────────
 function sm8Get(path) {
   return fetch('/api/proxy?path=' + encodeURIComponent(path), {
-    credentials:'include', headers:{'Accept':'application/json'}
+    credentials:'include',
+    headers:{ 'Accept':'application/json', 'Cache-Control':'no-cache' }
   }).then(function(r){
-    if (r.status===401) throw new Error('SESSION_EXPIRED');
-    return r.json().then(function(d){ if (!r.ok) throw new Error(d.message||('HTTP '+r.status)); return d; });
+    if (r.status === 401) throw new Error('SESSION_EXPIRED');
+    return r.json().then(function(d){
+      if (!r.ok) throw new Error(d.message || ('HTTP ' + r.status));
+      return d;
+    });
   });
 }
 
@@ -314,7 +307,7 @@ function loadJobs(force) {
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading jobs&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
-    Promise.all([
+  Promise.all([
     sm8Get('/job.json'),
     sm8Get('/staff.json'),
     sm8Get('/category.json'),
@@ -329,7 +322,6 @@ function loadJobs(force) {
     var rawActivities = Array.isArray(res[4]) ? res[4] : [];
     var rawMaterials  = Array.isArray(res[5]) ? res[5] : [];
 
-
     // Staff map
     staffMap = {};
     rawStaff.filter(function(s){ return String(s.active)==='1'; }).forEach(function(s){
@@ -342,29 +334,27 @@ function loadJobs(force) {
       categoryMap[c.uuid] = c.name || '';
     });
 
-    // Client map (merge with localStorage)
+    // Client map
     rawCompanies.filter(function(c){ return String(c.active)==='1'; }).forEach(function(c){
       clientMap[c.uuid] = c.name || '';
     });
 
-    // Build bookings map from job activities (type = 'scheduled')
+    // Bookings map
     bookingsMap = {};
     rawActivities.forEach(function(a) {
       if (!a.job_uuid) return;
-      // Activities with a scheduled date are bookings
       var dateStr = a.start_date || a.date || '';
       if (!dateStr) return;
       if (!bookingsMap[a.job_uuid]) bookingsMap[a.job_uuid] = [];
       bookingsMap[a.job_uuid].push(a);
     });
-
-    // Sort bookings by date ascending
     Object.keys(bookingsMap).forEach(function(jid) {
       bookingsMap[jid].sort(function(a, b) {
         return (a.start_date||a.date||'').localeCompare(b.start_date||b.date||'');
       });
     });
-        // Build materials map — active field is integer 1 not string '1'
+
+    // Materials map — active comes back as integer 1, not string '1'
     var materialsMap = {};
     rawMaterials.forEach(function(m) {
       if (!m.job_uuid) return;
@@ -373,20 +363,22 @@ function loadJobs(force) {
       materialsMap[m.job_uuid].push(m);
     });
 
+    console.log('[jobs] rawMaterials count:', rawMaterials.length);
+    console.log('[jobs] materialsMap keys:', Object.keys(materialsMap).length);
 
-    // Filter jobs: active, status = Work Order or Quote
+    // Filter and map jobs
     var colKeys = COLUMNS.map(function(c){ return c.key.toLowerCase(); });
     jobsData = rawJobs.filter(function(j) {
       if (String(j.active) !== '1') return false;
       var s = j.status || '';
       if (s !== 'Work Order' && s !== 'Quote') return false;
-      // Only jobs whose category matches one of our columns
       var catName = (categoryMap[j.category_uuid] || '').toLowerCase();
       return colKeys.indexOf(catName) !== -1;
     }).map(function(j) {
-      var catName = categoryMap[j.category_uuid] || '';
-      var bookings = bookingsMap[j.uuid] || [];
+      var catName     = categoryMap[j.category_uuid] || '';
+      var bookings    = bookingsMap[j.uuid] || [];
       var nextBooking = getNextBooking(bookings);
+      var materials   = materialsMap[j.uuid] || [];
       return {
         uuid:        j.uuid,
         number:      j.generated_job_id || '',
@@ -400,21 +392,24 @@ function loadJobs(force) {
         date:        j.date             || '',
         bookings:    bookings,
         nextBooking: nextBooking,
-        materials:   materialsMap[j.uuid] || [],
+        materials:   materials,
         _raw:        j
       };
     });
 
+    console.log('[jobs] jobsData count:', jobsData.length);
+    console.log('[jobs] sample materials on first job:', jobsData[0] ? jobsData[0].materials.length : 'n/a');
+
     jobsLoaded = true;
-    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
-               ' \u2014 ' + jobsData.length + ' active jobs');
+    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() + ' \u2014 ' + jobsData.length + ' active jobs');
     populateClientFilter();
     render();
+
   }).catch(function(e) {
     if (e.message === 'SESSION_EXPIRED') { showAuth(); return; }
-    setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div>' +
-            '<p>Failed to load: ' + esc(e.message) + '</p><br/>' +
-            '<button class="btn-ghost" onclick="loadJobs(true)">Retry</button></div>');
+    setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div>'
+      + '<p>Failed to load: ' + esc(e.message) + '</p><br/>'
+      + '<button class="btn-ghost" onclick="loadJobs(true)">Retry</button></div>');
     toast('Load failed: ' + e.message, true);
   });
 }
@@ -473,15 +468,11 @@ function render() {
   var filtered = getFiltered();
   renderStats(filtered);
 
-  var board = document.getElementById('kanban-board');
-  var html  = '';
-
+  var html = '';
   COLUMNS.forEach(function(col) {
     var jobs = filtered.filter(function(j){
       return j.category.toLowerCase() === col.key.toLowerCase();
     });
-
-    // Sort: Work Orders first, then by next booking date
     jobs.sort(function(a, b) {
       var sa = a.status === 'Work Order' ? 0 : 1;
       var sb = b.status === 'Work Order' ? 0 : 1;
@@ -490,38 +481,30 @@ function render() {
       var db = b.nextBooking ? (b.nextBooking.start_date||b.nextBooking.date||'9999') : '9999';
       return da.localeCompare(db);
     });
-
-    html += '<div class="kanban-col">';
-    html += '<div class="kanban-col-header">';
-    html += '<span class="col-dot" style="background:' + col.color + '"></span>';
-    html += esc(col.label);
-    html += '<span class="col-count">' + jobs.length + '</span>';
-    html += '</div>';
-    html += '<div class="kanban-cards">';
-
-    if (!jobs.length) {
-      html += '<div class="no-jobs">No jobs</div>';
-    } else {
-      jobs.forEach(function(j){ html += jobCard(j); });
-    }
-
-    html += '</div></div>';
+    html += '<div class="kanban-col">'
+      + '<div class="kanban-col-header">'
+      + '<span class="col-dot" style="background:' + col.color + '"></span>'
+      + esc(col.label)
+      + '<span class="col-count">' + jobs.length + '</span>'
+      + '</div>'
+      + '<div class="kanban-cards">'
+      + (jobs.length ? jobs.map(jobCard).join('') : '<div class="no-jobs">No jobs</div>')
+      + '</div></div>';
   });
 
-  board.innerHTML = html;
+  document.getElementById('kanban-board').innerHTML = html;
 }
 
 function renderStats(filtered) {
-  var wo    = filtered.filter(function(j){ return j.status === 'Work Order'; }).length;
-  var quote = filtered.filter(function(j){ return j.status === 'Quote'; }).length;
-  var booked= filtered.filter(function(j){ return !!j.nextBooking; }).length;
-  var total = filtered.length;
-
+  var wo     = filtered.filter(function(j){ return j.status === 'Work Order'; }).length;
+  var quote  = filtered.filter(function(j){ return j.status === 'Quote'; }).length;
+  var booked = filtered.filter(function(j){ return !!j.nextBooking; }).length;
+  var total  = filtered.length;
   document.getElementById('stats-bar').innerHTML =
-    stat(total,  'Total Jobs',    'var(--text)')  +
-    stat(wo,     'Work Orders',   'var(--green)') +
-    stat(quote,  'Quotes',        'var(--amber)') +
-    stat(booked, 'Booked',        'var(--accent)');
+    stat(total,  'Total Jobs',   'var(--text)')   +
+    stat(wo,     'Work Orders',  'var(--green)')  +
+    stat(quote,  'Quotes',       'var(--amber)')  +
+    stat(booked, 'Booked',       'var(--accent)');
 }
 
 function stat(v,l,c) {
@@ -530,29 +513,35 @@ function stat(v,l,c) {
 
 // ── Job card ───────────────────────────────────────────
 function jobCard(j) {
-  var isWO      = j.status === 'Work Order';
-  var colorCls  = isWO ? 'status-wo' : 'status-quote';
-  var badgeCls  = isWO ? 'wo' : 'quote';
-  var badgeLbl  = isWO ? '&#127959; Work Order' : '&#128203; Quote';
+  var isWO     = j.status === 'Work Order';
+  var colorCls = isWO ? 'status-wo' : 'status-quote';
+  var badgeCls = isWO ? 'wo' : 'quote';
+  var badgeLbl = isWO ? '&#127959; Work Order' : '&#128203; Quote';
 
-  var bookingHTML = '';
-  if (j.nextBooking) {
-    var nb  = j.nextBooking;
-    var dStr = nb.start_date || nb.date || '';
-    var d    = dStr ? new Date(dStr.substring(0,10)+'T00:00:00') : null;
-    var today = new Date(); today.setHours(0,0,0,0);
-    var isFuture = d && d >= today;
-    bookingHTML = '<div class="job-booking has-booking">'
-      + '&#128197; ' + (d ? fmtDate(dStr) : '\u2014')
-      + (nb.start_time ? ' &middot; ' + nb.start_time.substring(0,5) : '')
-      + (isFuture ? ' <span style="color:var(--green);font-weight:700">\u2713 Upcoming</span>' : '')
-      + '</div>';
-  } else {
-    bookingHTML = '<div class="job-booking no-booking">&#128197; No booking scheduled</div>';
-  }
+  var bookingHTML = j.nextBooking
+    ? (function(){
+        var nb = j.nextBooking;
+        var dStr = nb.start_date || nb.date || '';
+        var d = dStr ? new Date(dStr.substring(0,10)+'T00:00:00') : null;
+        var today = new Date(); today.setHours(0,0,0,0);
+        var isFuture = d && d >= today;
+        return '<div class="job-booking has-booking">&#128197; '
+          + (d ? fmtDate(dStr) : '\u2014')
+          + (nb.start_time ? ' &middot; ' + nb.start_time.substring(0,5) : '')
+          + (isFuture ? ' <span style="color:var(--green);font-weight:700">\u2713 Upcoming</span>' : '')
+          + '</div>';
+      })()
+    : '<div class="job-booking no-booking">&#128197; No booking scheduled</div>';
+
+  var matCount = j.materials.length;
+  var matPill  = matCount
+    ? '<span style="font-size:0.68rem;color:var(--muted);margin-top:2px;display:block;">&#128230; '
+      + matCount + ' item' + (matCount===1?'':'s') + '</span>'
+    : '';
 
   var sm8Btn = j.uuid
-    ? '<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/'+esc(j.uuid)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open</a>'
+    ? '<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/'+esc(j.uuid)+'"'
+      + ' target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open</a>'
     : '';
 
   return '<div class="job-card ' + colorCls + '" onclick="openJobModal(\'' + esc(j.uuid) + '\')">'
@@ -567,7 +556,8 @@ function jobCard(j) {
     +   (j.date      ? '<span class="job-meta-item">&#128336; ' + fmtDate(j.date) + '</span>' : '')
     + '</div>'
     + bookingHTML
-    + '<div class="job-card-actions">' + sm8Btn + '</div>'
+    + matPill
+    + '<div class="job-card-actions" style="margin-top:8px">' + sm8Btn + '</div>'
     + '</div>';
 }
 
@@ -577,10 +567,10 @@ function openJobModal(uuid) {
   if (!j) return;
 
   var isWO     = j.status === 'Work Order';
-  var badgeCls = isWO ? 'badge-wo' : 'badge-quote';
+  var badgeCls = isWO ? 'badge-wo'    : 'badge-quote';
   var badgeLbl = isWO ? '&#127959; Work Order' : '&#128203; Quote';
 
-  // Bookings section
+  // Bookings HTML
   var bookingsHTML = '';
   if (j.bookings && j.bookings.length) {
     var today = new Date(); today.setHours(0,0,0,0);
@@ -592,25 +582,24 @@ function openJobModal(uuid) {
       var d = new Date((b.start_date||b.date||'').substring(0,10)+'T00:00:00');
       return isNaN(d.getTime()) || d < today;
     });
-
     if (future.length) {
       bookingsHTML += '<div class="modal-section-title">&#128197; Upcoming Bookings</div>';
       future.forEach(function(b, i) {
-        var dStr = b.start_date || b.date || '';
+        var dStr  = b.start_date || b.date || '';
         var sName = staffMap[b.staff_uuid] || b.staff_uuid || '';
         bookingsHTML += '<div class="booking-card' + (i===0?' next':'') + '">'
           + (i===0 ? '<div class="booking-label">&#9733; Next Booking</div>' : '')
           + '<div class="booking-date">' + fmtDate(dStr) + '</div>'
-          + (b.start_time ? '<div class="booking-time">&#128336; ' + esc(b.start_time.substring(0,5)) + (b.end_time?' &ndash; '+esc(b.end_time.substring(0,5)):'') + '</div>' : '')
+          + (b.start_time ? '<div class="booking-time">&#128336; ' + esc(b.start_time.substring(0,5))
+              + (b.end_time ? ' &ndash; ' + esc(b.end_time.substring(0,5)) : '') + '</div>' : '')
           + (sName ? '<div class="booking-staff">&#128100; ' + esc(sName) + '</div>' : '')
           + '</div>';
       });
     }
-
     if (past.length) {
       bookingsHTML += '<div class="modal-section-title" style="margin-top:14px">&#128336; Past Bookings</div>';
       past.slice().reverse().slice(0,5).forEach(function(b){
-        var dStr = b.start_date || b.date || '';
+        var dStr  = b.start_date || b.date || '';
         var sName = staffMap[b.staff_uuid] || b.staff_uuid || '';
         bookingsHTML += '<div class="booking-card">'
           + '<div class="booking-date" style="color:var(--muted)">' + fmtDate(dStr) + '</div>'
@@ -623,17 +612,15 @@ function openJobModal(uuid) {
     bookingsHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:10px 0">No bookings found for this job.</div>';
   }
 
-  // Raw fields
   var raw = j._raw;
   var fieldsHTML =
-    fieldRow('Job Number',   '#' + esc(j.number)) +
-    fieldRow('Status',       '<span class="badge '+badgeCls+'">'+badgeLbl+'</span>') +
-    fieldRow('Category',     esc(j.category)) +
-    fieldRow('Client',       esc(j.clientName || '\u2014')) +
-    fieldRow('Assigned To',  esc(j.staffName  || 'Unassigned')) +
-    fieldRow('Job Date',     fmtDate(j.date)) +
-    fieldRow('Created',      fmtDate(raw.date_created||'')) +
-    (raw.total_amount != null ? fieldRow('Total', '\$' + parseFloat(raw.total_amount||0).toFixed(2)) : '');
+    fieldRow('Job Number',  '#' + esc(j.number)) +
+    fieldRow('Status',      '<span class="badge ' + badgeCls + '">' + badgeLbl + '</span>') +
+    fieldRow('Category',    esc(j.category)) +
+    fieldRow('Client',      esc(j.clientName || '\u2014')) +
+    fieldRow('Assigned To', esc(j.staffName  || 'Unassigned')) +
+    fieldRow('Job Date',    fmtDate(j.date)) +
+    fieldRow('Created',     fmtDate(raw.date_created || ''));
 
   document.getElementById('modal-body').innerHTML =
     '<h3>' + esc(j.desc || 'Job #' + j.number) + '</h3>'
@@ -642,17 +629,16 @@ function openJobModal(uuid) {
     +   '<span style="color:var(--muted)">Job #' + esc(j.number) + '</span>'
     +   (j.clientName ? '<span style="color:var(--accent)">&#128205; ' + esc(j.clientName) + '</span>' : '')
     + '</div>'
-    + '<a class="modal-sm8-link" href="https://go.servicem8.com/openjob/'+esc(j.uuid)+'" target="_blank" rel="noopener">'
-    +   '&#128279; Open Job in ServiceM8'
-    + '</a>'
+    + '<a class="modal-sm8-link" href="https://go.servicem8.com/openjob/' + esc(j.uuid) + '"'
+    +   ' target="_blank" rel="noopener">&#128279; Open Job in ServiceM8</a>'
     + '<div class="modal-section">'
     +   '<div class="modal-section-title">&#128188; Job Details</div>'
     +   fieldsHTML
     + '</div>'
     + '<div class="modal-section">'
     +   bookingsHTML
-    + '</div>';
-      '<div class="modal-section">'
+    + '</div>'
+    + '<div class="modal-section">'
     +   '<div class="modal-section-title">&#128230; Materials &amp; Services</div>'
     +   buildMaterialsHTML(j.materials)
     + '</div>';
@@ -661,25 +647,76 @@ function openJobModal(uuid) {
 }
 
 function fieldRow(label, value) {
-  return '<div class="field-row"><span class="field-label">'+label+'</span><span class="field-value">'+value+'</span></div>';
+  return '<div class="field-row">'
+    + '<span class="field-label">' + label + '</span>'
+    + '<span class="field-value">' + value + '</span>'
+    + '</div>';
 }
 
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
 function onOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+// ── Materials ──────────────────────────────────────────
+function buildMaterialsHTML(materials) {
+  if (!materials || !materials.length) {
+    return '<div style="color:var(--muted);font-size:0.85rem;padding:10px 0">No materials or services on this job.</div>';
+  }
+
+  var sorted = materials.slice().sort(function(a, b) {
+    var sa = parseInt(a.sort_order || 0, 10);
+    var sb = parseInt(b.sort_order || 0, 10);
+    if (sa !== sb) return sa - sb;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
+  function guessType(name) {
+    if (/labour|labor|travel|call.?out|service.?fee|hire|inspection|freight|delivery/i.test(name||'')) return 'service';
+    return 'material';
+  }
+
+  var serviceCount  = 0;
+  var materialCount = 0;
+
+  var rows = sorted.map(function(m) {
+    var name    = (m.name || 'Unnamed Item').trim();
+    var qty     = parseFloat(m.quantity || 1);
+    var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
+    var type    = guessType(name);
+    if (type === 'service') serviceCount++; else materialCount++;
+    var typeCls = type === 'service' ? 'service' : 'material';
+    var typeLbl = type === 'service' ? 'Service'  : 'Material';
+    return '<tr>'
+      + '<td><div class="mat-name">' + esc(name) + '</div>'
+      +     '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span></td>'
+      + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var summary = '';
+  if (serviceCount)  summary += serviceCount  + ' service'  + (serviceCount  > 1 ? 's' : '');
+  if (materialCount) summary += (summary ? ', ' : '') + materialCount + ' material' + (materialCount > 1 ? 's' : '');
+  if (!summary)      summary = sorted.length + ' item' + (sorted.length > 1 ? 's' : '');
+
+  return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + '</div>'
+    + '<table class="materials-table">'
+    + '<thead><tr><th>Name</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>';
+}
 
 // ── Helpers ────────────────────────────────────────────
 function fmtDate(str) {
   if (!str) return '\u2014';
   var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return str;
-  return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+  return new Date(+m[1], +m[2]-1, +m[3]).toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
 }
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-function setBody(html)   { document.getElementById('kanban-board').innerHTML = html; }
-function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML  = html; }
+function setBody(html)    { document.getElementById('kanban-board').innerHTML = html; }
+function setSyncMsg(html) { document.getElementById('sync-detail').innerHTML  = html; }
 
 var toastTimer = null;
 function toast(msg, isError) {
@@ -691,83 +728,6 @@ function toast(msg, isError) {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
 }
-// ── Materials ──────────────────────────────────────────
-function buildMaterialsHTML(materials) {
-  if (!materials || !materials.length) {
-    return '<div style="color:var(--muted);font-size:0.85rem;padding:10px 0">No materials or services on this job.</div>';
-  }
-
-  // Sort by sort_order then name
-  var sorted = materials.slice().sort(function(a, b) {
-    var sa = parseInt(a.sort_order || 0, 10);
-    var sb = parseInt(b.sort_order || 0, 10);
-    if (sa !== sb) return sa - sb;
-    return (a.name || '').localeCompare(b.name || '');
-  });
-
-  // Guess type from name since ServiceM8 doesn't return item_type on jobmaterial
-  function guessType(name) {
-    var n = (name || '').toLowerCase();
-    if (/labour|labor|travel|call.?out|service.?fee|hire|inspection|freight|delivery/i.test(n)) return 'service';
-    return 'material';
-  }
-
-  var html = '<table class="materials-table">'
-    + '<thead><tr>'
-    + '<th>Name</th>'
-    + '<th style="text-align:right;width:60px">Qty</th>'
-    + '</tr></thead><tbody>';
-
-  sorted.forEach(function(m) {
-    var name    = (m.name || 'Unnamed Item').trim();
-    var qty     = parseFloat(m.quantity || 1);
-    var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
-    var type    = guessType(name);
-    var typeCls = type === 'service' ? 'service' : 'material';
-    var typeLbl = type === 'service' ? 'Service'  : 'Material';
-
-    html += '<tr>'
-      + '<td>'
-      +   '<div class="mat-name">' + esc(name) + '</div>'
-      +   '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span>'
-      + '</td>'
-      + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
-      + '</tr>';
-  });
-
-  html += '</tbody></table>';
-
-  var serviceCount  = sorted.filter(function(m){ return guessType(m.name) === 'service';  }).length;
-  var materialCount = sorted.filter(function(m){ return guessType(m.name) === 'material'; }).length;
-  var summary = '';
-  if (serviceCount)  summary += serviceCount  + ' service'  + (serviceCount  > 1 ? 's' : '');
-  if (materialCount) summary += (summary ? ', ' : '') + materialCount + ' material' + (materialCount > 1 ? 's' : '');
-  if (!summary)      summary = sorted.length + ' item' + (sorted.length > 1 ? 's' : '');
-
-  return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + '</div>' + html;
-}
-
-function debugMaterials() {
-  sm8Get('/jobmaterial.json').then(function(data) {
-    console.log('[materials] total records:', data.length);
-    console.log('[materials] first 3 records:', JSON.stringify(data.slice(0,3), null, 2));
-    // Find records matching any of our loaded jobs
-    var jobUuids = jobsData.map(function(j){ return j.uuid; });
-    var matched  = data.filter(function(m){ return jobUuids.indexOf(m.job_uuid) !== -1; });
-    console.log('[materials] matched to current jobs:', matched.length);
-    console.log('[materials] matched sample:', JSON.stringify(matched.slice(0,3), null, 2));
-    alert(
-      'Total material records: ' + data.length + '\n' +
-      'Matched to current jobs: ' + matched.length + '\n\n' +
-      'Check browser console for full details.\n\n' +
-      'First record keys: ' + (data[0] ? Object.keys(data[0]).join(', ') : 'none')
-    );
-  }).catch(function(e) {
-    alert('Error fetching materials: ' + e.message);
-    console.error('[materials] error:', e);
-  });
-}
-
 </script>
 </body>
 </html>
