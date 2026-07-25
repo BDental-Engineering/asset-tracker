@@ -1530,7 +1530,7 @@ function openEdit(id) {
   editRecord=t;
   var sm8Link=document.getElementById('m-sm8-link');
   if (t.jobUuidSm8){
-    sm8Link.href='https://go.servicem8.com/job_dispatch?search='+t.jobNumber;
+    sm8Link.href='https://go.servicem8.com/openjob/'+t.jobUuidSm8;
     sm8Link.innerHTML='&#128279; Open Job #'+esc(t.jobNumber)+' in ServiceM8';
     sm8Link.style.display='inline-flex';
   } else { sm8Link.style.display='none'; }
