@@ -364,13 +364,15 @@ function loadJobs(force) {
         return (a.start_date||a.date||'').localeCompare(b.start_date||b.date||'');
       });
     });
-    // Build materials map
+        // Build materials map — active field is integer 1 not string '1'
     var materialsMap = {};
     rawMaterials.forEach(function(m) {
-      if (!m.job_uuid || String(m.active) !== '1') return;
+      if (!m.job_uuid) return;
+      if (m.active !== 1 && String(m.active) !== '1') return;
       if (!materialsMap[m.job_uuid]) materialsMap[m.job_uuid] = [];
       materialsMap[m.job_uuid].push(m);
     });
+
 
     // Filter jobs: active, status = Work Order or Quote
     var colKeys = COLUMNS.map(function(c){ return c.key.toLowerCase(); });
@@ -695,47 +697,48 @@ function buildMaterialsHTML(materials) {
     return '<div style="color:var(--muted);font-size:0.85rem;padding:10px 0">No materials or services on this job.</div>';
   }
 
-  // Sort: services first, then materials, then others
+  // Sort by sort_order then name
   var sorted = materials.slice().sort(function(a, b) {
-    var typeOrder = function(m) {
-      var t = (m.item_type || '').toLowerCase();
-      if (t === 'service') return 0;
-      if (t === 'material') return 1;
-      return 2;
-    };
-    return typeOrder(a) - typeOrder(b) || (a.name || '').localeCompare(b.name || '');
+    var sa = parseInt(a.sort_order || 0, 10);
+    var sb = parseInt(b.sort_order || 0, 10);
+    if (sa !== sb) return sa - sb;
+    return (a.name || '').localeCompare(b.name || '');
   });
 
+  // Guess type from name since ServiceM8 doesn't return item_type on jobmaterial
+  function guessType(name) {
+    var n = (name || '').toLowerCase();
+    if (/labour|labor|travel|call.?out|service.?fee|hire|inspection|freight|delivery/i.test(n)) return 'service';
+    return 'material';
+  }
+
   var html = '<table class="materials-table">'
-    + '<thead><tr><th>Name / Description</th><th style="text-align:right">Qty</th></tr></thead>'
-    + '<tbody>';
+    + '<thead><tr>'
+    + '<th>Name</th>'
+    + '<th style="text-align:right;width:60px">Qty</th>'
+    + '</tr></thead><tbody>';
 
   sorted.forEach(function(m) {
-    var name    = m.name        || m.description || 'Unnamed Item';
-    var desc    = m.description && m.description !== name ? m.description : '';
-    var qty     = parseFloat(m.qty || m.quantity || 1);
+    var name    = (m.name || 'Unnamed Item').trim();
+    var qty     = parseFloat(m.quantity || 1);
     var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
-    var unit    = m.unit || '';
-    var itemType = (m.item_type || '').toLowerCase();
-    var typeCls  = itemType === 'service' ? 'service' : itemType === 'material' ? 'material' : 'other';
-    var typeLbl  = itemType === 'service' ? 'Service' : itemType === 'material' ? 'Material' : (m.item_type || 'Item');
+    var type    = guessType(name);
+    var typeCls = type === 'service' ? 'service' : 'material';
+    var typeLbl = type === 'service' ? 'Service'  : 'Material';
 
     html += '<tr>'
       + '<td>'
       +   '<div class="mat-name">' + esc(name) + '</div>'
-      +   (desc ? '<div class="mat-desc">' + esc(desc) + '</div>' : '')
-      +   '<span class="mat-type ' + typeCls + '">' + esc(typeLbl) + '</span>'
+      +   '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span>'
       + '</td>'
-      + '<td class="mat-qty">' + esc(qtyStr) + (unit ? ' <span style="font-size:0.7rem;color:var(--muted)">'+esc(unit)+'</span>' : '') + '</td>'
+      + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
       + '</tr>';
   });
 
   html += '</tbody></table>';
 
-  // Summary count pill on the card
-  var serviceCount  = sorted.filter(function(m){ return (m.item_type||'').toLowerCase()==='service';  }).length;
-  var materialCount = sorted.filter(function(m){ return (m.item_type||'').toLowerCase()==='material'; }).length;
-
+  var serviceCount  = sorted.filter(function(m){ return guessType(m.name) === 'service';  }).length;
+  var materialCount = sorted.filter(function(m){ return guessType(m.name) === 'material'; }).length;
   var summary = '';
   if (serviceCount)  summary += serviceCount  + ' service'  + (serviceCount  > 1 ? 's' : '');
   if (materialCount) summary += (summary ? ', ' : '') + materialCount + ' material' + (materialCount > 1 ? 's' : '');
@@ -743,6 +746,7 @@ function buildMaterialsHTML(materials) {
 
   return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + '</div>' + html;
 }
+
 function debugMaterials() {
   sm8Get('/jobmaterial.json').then(function(data) {
     console.log('[materials] total records:', data.length);
