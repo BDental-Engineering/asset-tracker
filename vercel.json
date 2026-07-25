@@ -11,6 +11,7 @@
     { "src": "api/flaggedtasks.js", "use": "@vercel/node" },
     { "src": "api/taskcomments.js", "use": "@vercel/node" },
     { "src": "public/index.html",  "use": "@vercel/static" },
+    { "src": "public/jobs.html",  "use": "@vercel/static" },
     { "src": "public/tasks.html",  "use": "@vercel/static" }
   ],
   "routes": [
@@ -23,6 +24,7 @@
     { "src": "/api/taskcomments", "dest": "/api/taskcomments.js" },
     { "src": "/api/(.*)",      "dest": "/api/proxy.js" },
     { "src": "/tasks.html",    "dest": "/public/tasks.html" },
+    { "src": "/jobs.html",    "dest": "/public/jobs.html" },
     { "src": "/(.*)",          "dest": "/public/index.html" }
   ]
 }
