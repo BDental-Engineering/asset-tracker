@@ -155,6 +155,20 @@ button:hover{opacity:0.87;}
 .auth-btn:hover{opacity:0.85;}
 #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
 #toast.show{transform:translateY(0);opacity:1;}
+/* ── Materials ── */
+.materials-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.materials-table th{text-align:left;padding:7px 10px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--border);}
+.materials-table td{padding:7px 10px;font-size:0.82rem;border-bottom:1px solid var(--border);vertical-align:top;}
+.materials-table tr:last-child td{border-bottom:none;}
+.materials-table tr:hover td{background:rgba(255,255,255,0.02);}
+.mat-name{font-weight:600;color:var(--text);}
+.mat-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+.mat-qty{font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;}
+.mat-type{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px;}
+.mat-type.service{background:rgba(79,110,247,0.12);color:var(--accent);}
+.mat-type.material{background:rgba(34,197,94,0.12);color:var(--green);}
+.mat-type.other{background:rgba(136,146,176,0.12);color:var(--muted);}
+.mat-count-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.2);border-radius:6px;padding:2px 7px;font-size:0.68rem;color:var(--accent);font-weight:600;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -299,18 +313,21 @@ function loadJobs(force) {
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading jobs&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
-  Promise.all([
+    Promise.all([
     sm8Get('/job.json'),
     sm8Get('/staff.json'),
     sm8Get('/category.json'),
     sm8Get('/company.json'),
-    sm8Get('/jobactivity.json')
+    sm8Get('/jobactivity.json'),
+    sm8Get('/jobmaterial.json')
   ]).then(function(res) {
     var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
     var rawStaff      = Array.isArray(res[1]) ? res[1] : [];
     var rawCategories = Array.isArray(res[2]) ? res[2] : [];
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawActivities = Array.isArray(res[4]) ? res[4] : [];
+    var rawMaterials  = Array.isArray(res[5]) ? res[5] : [];
+
 
     // Staff map
     staffMap = {};
@@ -346,6 +363,13 @@ function loadJobs(force) {
         return (a.start_date||a.date||'').localeCompare(b.start_date||b.date||'');
       });
     });
+    // Build materials map
+    var materialsMap = {};
+    rawMaterials.forEach(function(m) {
+      if (!m.job_uuid || String(m.active) !== '1') return;
+      if (!materialsMap[m.job_uuid]) materialsMap[m.job_uuid] = [];
+      materialsMap[m.job_uuid].push(m);
+    });
 
     // Filter jobs: active, status = Work Order or Quote
     var colKeys = COLUMNS.map(function(c){ return c.key.toLowerCase(); });
@@ -373,6 +397,7 @@ function loadJobs(force) {
         date:        j.date             || '',
         bookings:    bookings,
         nextBooking: nextBooking,
+        materials:   materialsMap[j.uuid] || [],
         _raw:        j
       };
     });
@@ -624,6 +649,10 @@ function openJobModal(uuid) {
     + '<div class="modal-section">'
     +   bookingsHTML
     + '</div>';
+      '<div class="modal-section">'
+    +   '<div class="modal-section-title">&#128230; Materials &amp; Services</div>'
+    +   buildMaterialsHTML(j.materials)
+    + '</div>';
 
   document.getElementById('modal').classList.add('open');
 }
@@ -659,6 +688,61 @@ function toast(msg, isError) {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
 }
+// ── Materials ──────────────────────────────────────────
+function buildMaterialsHTML(materials) {
+  if (!materials || !materials.length) {
+    return '<div style="color:var(--muted);font-size:0.85rem;padding:10px 0">No materials or services on this job.</div>';
+  }
+
+  // Sort: services first, then materials, then others
+  var sorted = materials.slice().sort(function(a, b) {
+    var typeOrder = function(m) {
+      var t = (m.item_type || '').toLowerCase();
+      if (t === 'service') return 0;
+      if (t === 'material') return 1;
+      return 2;
+    };
+    return typeOrder(a) - typeOrder(b) || (a.name || '').localeCompare(b.name || '');
+  });
+
+  var html = '<table class="materials-table">'
+    + '<thead><tr><th>Name / Description</th><th style="text-align:right">Qty</th></tr></thead>'
+    + '<tbody>';
+
+  sorted.forEach(function(m) {
+    var name    = m.name        || m.description || 'Unnamed Item';
+    var desc    = m.description && m.description !== name ? m.description : '';
+    var qty     = parseFloat(m.qty || m.quantity || 1);
+    var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
+    var unit    = m.unit || '';
+    var itemType = (m.item_type || '').toLowerCase();
+    var typeCls  = itemType === 'service' ? 'service' : itemType === 'material' ? 'material' : 'other';
+    var typeLbl  = itemType === 'service' ? 'Service' : itemType === 'material' ? 'Material' : (m.item_type || 'Item');
+
+    html += '<tr>'
+      + '<td>'
+      +   '<div class="mat-name">' + esc(name) + '</div>'
+      +   (desc ? '<div class="mat-desc">' + esc(desc) + '</div>' : '')
+      +   '<span class="mat-type ' + typeCls + '">' + esc(typeLbl) + '</span>'
+      + '</td>'
+      + '<td class="mat-qty">' + esc(qtyStr) + (unit ? ' <span style="font-size:0.7rem;color:var(--muted)">'+esc(unit)+'</span>' : '') + '</td>'
+      + '</tr>';
+  });
+
+  html += '</tbody></table>';
+
+  // Summary count pill on the card
+  var serviceCount  = sorted.filter(function(m){ return (m.item_type||'').toLowerCase()==='service';  }).length;
+  var materialCount = sorted.filter(function(m){ return (m.item_type||'').toLowerCase()==='material'; }).length;
+
+  var summary = '';
+  if (serviceCount)  summary += serviceCount  + ' service'  + (serviceCount  > 1 ? 's' : '');
+  if (materialCount) summary += (summary ? ', ' : '') + materialCount + ' material' + (materialCount > 1 ? 's' : '');
+  if (!summary)      summary = sorted.length + ' item' + (sorted.length > 1 ? 's' : '');
+
+  return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + '</div>' + html;
+}
+
 </script>
 </body>
 </html>
