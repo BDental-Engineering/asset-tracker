@@ -1842,7 +1842,6 @@ function saveNewTask() {
   var newUuid = generateUUID();
 
   var payload = {
-    uuid:        newUuid,
     job_uuid:    jobUuid,
     name:        name,
     section_name: 'Comments',
@@ -1862,7 +1861,7 @@ function saveNewTask() {
   };
 
   // POST to create new checklist item
-  fetch('/api/proxy?path=' + encodeURIComponent('/jobchecklist/' + newUuid + '.json'), {
+  fetch('/api/proxy?path=' + encodeURIComponent('/jobchecklist.json'), {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -1889,14 +1888,6 @@ function saveNewTask() {
     document.getElementById('add-save-btn').disabled = false;
     setAddMsg('Failed: ' + e.message, 'error');
     toast('Create failed: ' + e.message, true);
-  });
-}
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0;
-    var v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
   });
 }
 
