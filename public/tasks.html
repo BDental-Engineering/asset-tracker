@@ -357,6 +357,7 @@ button:hover{opacity:0.87;}
       <p id="page-subtitle">Incomplete checklist tasks from ServiceM8.</p>
     </div>
     <div class="page-header-right">
+      <button class="btn-primary btn-sm" onclick="openAddTask()">&#10133; Add Task</button>
       <button class="btn-ghost btn-sm" id="completed-toggle-btn" onclick="toggleCompletedMode()">&#10003; Show Completed</button>
       <button class="btn-ghost btn-sm" onclick="toggleDebug()">&#128269; Debug</button>
       <button class="btn-ghost btn-sm" onclick="loadTasks(true)">&#8635; Refresh</button>
@@ -521,6 +522,55 @@ button:hover{opacity:0.87;}
       <button class="btn-ghost" onclick="closeModal()">Close</button>
       <button class="btn-ghost" id="m-save-btn" onclick="saveTaskEdits()">&#128190; Save Changes</button>
       <button class="btn-primary" id="m-complete-btn" onclick="completeFromModal()">&#10003; Mark Complete</button>
+    </div>
+  </div>
+</div>
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="add-modal" onclick="onAddOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddModal()">&#10005;</button>
+    <h3>&#10133; Add New Task</h3>
+
+    <div class="frow">
+      <label>Task Name *</label>
+      <input type="text" id="add-name" placeholder="Enter task name…" style="
+        width:100%;background:var(--surface2);border:1px solid var(--border);
+        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
+        outline:none;font-family:inherit;
+      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+
+    <div class="frow">
+      <label>Job Number <span style="color:var(--muted);font-weight:400;">(leave blank to use #1146)</span></label>
+      <input type="text" id="add-job-number" placeholder="e.g. 1234" style="
+        width:100%;background:var(--surface2);border:1px solid var(--border);
+        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
+        outline:none;font-family:inherit;
+      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      <div id="add-job-preview" style="margin-top:5px;font-size:0.75rem;color:var(--muted);min-height:16px;"></div>
+    </div>
+
+    <div class="frow">
+      <label>Assign To</label>
+      <select id="add-staff-select" class="reassign-select" style="width:100%;">
+        <option value="">— Unassigned —</option>
+      </select>
+    </div>
+
+    <div class="frow">
+      <label>Due Date</label>
+      <input type="date" id="add-due-date" style="
+        width:100%;background:var(--surface2);border:1px solid var(--border);
+        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
+        outline:none;font-family:inherit;color-scheme:dark;
+      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+
+    <div id="add-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" id="add-save-btn" onclick="saveNewTask()">&#10133; Create Task</button>
     </div>
   </div>
 </div>
@@ -1695,6 +1745,168 @@ function toast(msg,isError){
   if(toastTimer) clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){ el.classList.remove('show'); },3500);
 }
+// ── Add Task ───────────────────────────────────────────
+var DEFAULT_JOB_NUMBER = '1146';
+
+function openAddTask() {
+  // Reset form
+  document.getElementById('add-name').value        = '';
+  document.getElementById('add-job-number').value  = '';
+  document.getElementById('add-due-date').value    = '';
+  document.getElementById('add-job-preview').textContent = '';
+  document.getElementById('add-save-msg').textContent    = '';
+  document.getElementById('add-save-btn').disabled       = false;
+
+  // Populate staff dropdown
+  var sel = document.getElementById('add-staff-select');
+  sel.innerHTML = '<option value="">— Unassigned —</option>';
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid;
+    o.textContent = s.name;
+    // Pre-select current user
+    if (s.uuid === currentUserUuid) o.selected = true;
+    sel.appendChild(o);
+  });
+
+  // Wire up job number lookup
+  document.getElementById('add-job-number').oninput = function() {
+    lookupAddJobNumber(this.value.trim());
+  };
+
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('add-name').focus(); }, 100);
+}
+
+function lookupAddJobNumber(num) {
+  var preview = document.getElementById('add-job-preview');
+  if (!num) { preview.textContent = 'Will use default job #' + DEFAULT_JOB_NUMBER; preview.style.color = 'var(--muted)'; return; }
+  var found = null;
+  Object.values(jobMap).forEach(function(j) {
+    if (j.number === num) found = j;
+  });
+  if (found) {
+    preview.textContent = '\u2713 ' + (found.desc || 'Job found') + (found.status ? ' \u2014 ' + found.status : '');
+    preview.style.color = 'var(--green)';
+  } else {
+    preview.textContent = '\u26A0 Job #' + num + ' not found in loaded jobs';
+    preview.style.color = 'var(--amber)';
+  }
+}
+
+function resolveJobUuid(num) {
+  // Find job UUID by job number, fallback to default
+  var target = num || DEFAULT_JOB_NUMBER;
+  var found  = null;
+  Object.values(jobMap).forEach(function(j) {
+    if (j.number === target) found = j;
+  });
+  return found ? found.uuid : null;
+}
+
+function setAddMsg(msg, type) {
+  var el = document.getElementById('add-save-msg');
+  el.textContent = msg;
+  el.style.color = type === 'error'  ? 'var(--red)'
+                 : type === 'ok'     ? 'var(--green)'
+                 : type === 'saving' ? 'var(--amber)'
+                 : 'transparent';
+}
+
+function saveNewTask() {
+  var name       = (document.getElementById('add-name').value || '').trim();
+  var jobNum     = (document.getElementById('add-job-number').value || '').trim();
+  var staffUuid  = document.getElementById('add-staff-select').value;
+  var dueDate    = document.getElementById('add-due-date').value;
+
+  if (!name) { setAddMsg('Task name cannot be empty.', 'error'); return; }
+
+  var jobUuid = resolveJobUuid(jobNum);
+  if (!jobUuid) {
+    setAddMsg('\u26A0 Job #' + (jobNum || DEFAULT_JOB_NUMBER) + ' not found. Please check the job number.', 'error');
+    return;
+  }
+
+  setAddMsg('Creating\u2026', 'saving');
+  document.getElementById('add-save-btn').disabled = true;
+
+  // Build reminder fields
+  var reminderType = '';
+  var reminderData = null;
+  if (dueDate) {
+    reminderType = 'ABSOLUTE_DATETIME';
+    reminderData = { absoluteDateTime: dueDate + ' 08:00:00' };
+  }
+
+  // Generate a UUID for the new task
+  var newUuid = generateUUID();
+
+  var payload = {
+    uuid:        newUuid,
+    job_uuid:    jobUuid,
+    name:        name,
+    section_name: 'Comments',
+    item_type:   'Todo',
+    sort_order:  0,
+    completed_timestamp:          '',
+    completed_by_staff_uuid:      '',
+    completed_during_checkin_uuid:'',
+    reminder_type: reminderType,
+    reminder_data: reminderData,
+    regarding_object:      '',
+    regarding_object_uuid: '',
+    fulfilled_by_object_name: '',
+    fulfilled_by_object_uuid: '',
+    assigned_to_staff_uuids: staffUuid ? [staffUuid] : [],
+    is_locked: '0'
+  };
+
+  // POST to create new checklist item
+  fetch('/api/proxy?path=' + encodeURIComponent('/jobchecklist/' + newUuid + '.json'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept':       'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  }).then(function(r) {
+    document.getElementById('add-save-btn').disabled = false;
+    if (r.status === 200 || r.status === 201 || r.status === 204) {
+      setAddMsg('\u2713 Task created!', 'ok');
+      toast('Task "' + name + '" created successfully.');
+      setTimeout(function() {
+        closeAddModal();
+        loadTasks(true); // Refresh to show new task
+      }, 800);
+    } else {
+      r.text().then(function(txt) {
+        setAddMsg('Failed: ' + txt.substring(0, 100), 'error');
+        toast('Create failed: HTTP ' + r.status, true);
+      });
+    }
+  }).catch(function(e) {
+    document.getElementById('add-save-btn').disabled = false;
+    setAddMsg('Failed: ' + e.message, 'error');
+    toast('Create failed: ' + e.message, true);
+  });
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0;
+    var v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+}
+function onAddOverlayClick(e) {
+  if (e.target === document.getElementById('add-modal')) closeAddModal();
+}
+
 </script>
 </body>
 </html>
