@@ -102,7 +102,7 @@ button:hover{opacity:0.87;}
 }
 .job-booking.has-booking{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);color:var(--green);}
 .job-booking.no-booking{color:var(--muted);}
-.job-card-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.job-card-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 .open-sm8-btn{
   display:inline-flex;align-items:center;gap:4px;
   background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.25);
@@ -110,6 +110,15 @@ button:hover{opacity:0.87;}
   font-weight:600;text-decoration:none;white-space:nowrap;
 }
 .open-sm8-btn:hover{background:rgba(79,110,247,0.22);}
+.parts-link-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  border-radius:6px;padding:3px 8px;font-size:0.68rem;
+  font-weight:600;text-decoration:none;white-space:nowrap;
+}
+.parts-link-btn.all-received{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green);}
+.parts-link-btn.some-ordered{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--amber);}
+.parts-link-btn.needs-order{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);}
+.parts-link-btn.no-parts{background:rgba(136,146,176,0.08);border:1px solid rgba(136,146,176,0.15);color:var(--muted);}
 .no-jobs{color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
@@ -150,6 +159,9 @@ button:hover{opacity:0.87;}
 .mat-type{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px;}
 .mat-type.service{background:rgba(79,110,247,0.12);color:var(--accent);}
 .mat-type.material{background:rgba(34,197,94,0.12);color:var(--green);}
+.mat-status-pill{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle;}
+.mat-status-pill.ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
+.mat-status-pill.received{background:rgba(34,197,94,0.13);color:var(--green);}
 #auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:32px;}
 #auth-screen.show{display:flex;}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;text-align:center;}
@@ -176,6 +188,7 @@ button:hover{opacity:0.87;}
     <span class="user-badge" id="user-badge"></span>
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="tasks.html">&#10003; Tasks</a>
+    <a class="back-btn" href="parts.html">&#128230; Parts</a>
     <button class="btn-ghost btn-sm" onclick="loadJobs(true)">&#8635; Refresh</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
@@ -246,6 +259,7 @@ var bookingsMap  = {};
 var staffMap     = {};
 var clientMap    = {};
 var categoryMap  = {};
+var partsState   = {};   // key → { ordered, received }
 var jobsLoaded   = false;
 var statusFilter = 'both';
 var currentUser  = '';
@@ -313,7 +327,8 @@ function loadJobs(force) {
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobactivity.json'),
-    sm8Get('/jobmaterial.json')
+    sm8Get('/jobmaterial.json'),
+    fetch('/api/parts').then(function(r){ return r.json(); }).catch(function(){ return {}; })
   ]).then(function(res) {
     var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
     var rawStaff      = Array.isArray(res[1]) ? res[1] : [];
@@ -321,6 +336,7 @@ function loadJobs(force) {
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawActivities = Array.isArray(res[4]) ? res[4] : [];
     var rawMaterials  = Array.isArray(res[5]) ? res[5] : [];
+    partsState        = (res[6] && typeof res[6] === 'object' && !Array.isArray(res[6])) ? res[6] : {};
 
     // Staff map
     staffMap = {};
@@ -354,7 +370,7 @@ function loadJobs(force) {
       });
     });
 
-    // Materials map — active comes back as integer 1, not string '1'
+    // Materials map
     var materialsMap = {};
     rawMaterials.forEach(function(m) {
       if (!m.job_uuid) return;
@@ -362,9 +378,6 @@ function loadJobs(force) {
       if (!materialsMap[m.job_uuid]) materialsMap[m.job_uuid] = [];
       materialsMap[m.job_uuid].push(m);
     });
-
-    console.log('[jobs] rawMaterials count:', rawMaterials.length);
-    console.log('[jobs] materialsMap keys:', Object.keys(materialsMap).length);
 
     // Filter and map jobs
     var colKeys = COLUMNS.map(function(c){ return c.key.toLowerCase(); });
@@ -397,9 +410,6 @@ function loadJobs(force) {
       };
     });
 
-    console.log('[jobs] jobsData count:', jobsData.length);
-    console.log('[jobs] sample materials on first job:', jobsData[0] ? jobsData[0].materials.length : 'n/a');
-
     jobsLoaded = true;
     setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() + ' \u2014 ' + jobsData.length + ' active jobs');
     populateClientFilter();
@@ -422,6 +432,34 @@ function getNextBooking(bookings) {
     return !isNaN(d.getTime()) && d >= today;
   });
   return future.length ? future[0] : bookings[bookings.length - 1];
+}
+
+// ── Parts state helpers ────────────────────────────────
+// The parts key is: clientUuid + '__' + materialName.toLowerCase().trim()
+// On the job card we compute a summary across all materials for this job
+function getJobPartsSummary(j) {
+  if (!j.materials || !j.materials.length) return null;
+  // Only relevant for Work Orders
+  if (j.status !== 'Work Order') return null;
+
+  var total    = 0;
+  var ordered  = 0;
+  var received = 0;
+
+  // Deduplicate by normalised name (same logic as parts.html consolidation)
+  var seen = {};
+  j.materials.forEach(function(m) {
+    var normKey = (m.name || '').toLowerCase().trim();
+    if (seen[normKey]) return;
+    seen[normKey] = true;
+    var stateKey = j.clientUuid + '__' + normKey;
+    var st = partsState[stateKey] || { ordered: false, received: false };
+    total++;
+    if (st.received) received++;
+    else if (st.ordered) ordered++;
+  });
+
+  return { total: total, ordered: ordered, received: received };
 }
 
 // ── Filters ────────────────────────────────────────────
@@ -533,11 +571,27 @@ function jobCard(j) {
       })()
     : '<div class="job-booking no-booking">&#128197; No booking scheduled</div>';
 
-  var matCount = j.materials.length;
-  var matPill  = matCount
-    ? '<span style="font-size:0.68rem;color:var(--muted);margin-top:2px;display:block;">&#128230; '
-      + matCount + ' item' + (matCount===1?'':'s') + '</span>'
-    : '';
+  // Parts summary pill — only on Work Orders with materials
+  var partsPill = '';
+  var summary = getJobPartsSummary(j);
+  if (summary) {
+    var remaining = summary.total - summary.received;
+    if (summary.received === summary.total) {
+      // All received
+      partsPill = '<a class="parts-link-btn all-received" href="parts.html" onclick="event.stopPropagation()">'
+        + '&#10003; All ' + summary.total + ' parts received</a>';
+    } else if (summary.ordered > 0 || summary.received > 0) {
+      // Some progress
+      partsPill = '<a class="parts-link-btn some-ordered" href="parts.html" onclick="event.stopPropagation()">'
+        + '&#128230; ' + summary.received + '/' + summary.total + ' received'
+        + (summary.ordered > 0 ? ' &middot; ' + summary.ordered + ' ordered' : '')
+        + '</a>';
+    } else {
+      // Nothing ordered yet
+      partsPill = '<a class="parts-link-btn needs-order" href="parts.html" onclick="event.stopPropagation()">'
+        + '&#9888; ' + remaining + ' part' + (remaining === 1 ? '' : 's') + ' need ordering</a>';
+    }
+  }
 
   var sm8Btn = j.uuid
     ? '<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/'+esc(j.uuid)+'"'
@@ -556,7 +610,7 @@ function jobCard(j) {
     +   (j.date      ? '<span class="job-meta-item">&#128336; ' + fmtDate(j.date) + '</span>' : '')
     + '</div>'
     + bookingHTML
-    + matPill
+    + (partsPill ? '<div style="margin-bottom:8px">' + partsPill + '</div>' : '')
     + '<div class="job-card-actions" style="margin-top:8px">' + sm8Btn + '</div>'
     + '</div>';
 }
@@ -640,7 +694,7 @@ function openJobModal(uuid) {
     + '</div>'
     + '<div class="modal-section">'
     +   '<div class="modal-section-title">&#128230; Materials &amp; Services</div>'
-    +   buildMaterialsHTML(j.materials)
+    +   buildMaterialsHTML(j)
     + '</div>';
 
   document.getElementById('modal').classList.add('open');
@@ -656,8 +710,9 @@ function fieldRow(label, value) {
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
 function onOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
 
-// ── Materials ──────────────────────────────────────────
-function buildMaterialsHTML(materials) {
+// ── Materials (with parts status in modal) ─────────────
+function buildMaterialsHTML(j) {
+  var materials = j.materials;
   if (!materials || !materials.length) {
     return '<div style="color:var(--muted);font-size:0.85rem;padding:10px 0">No materials or services on this job.</div>';
   }
@@ -678,16 +733,31 @@ function buildMaterialsHTML(materials) {
   var materialCount = 0;
 
   var rows = sorted.map(function(m) {
-    var name    = (m.name || 'Unnamed Item').trim();
-    var qty     = parseFloat(m.quantity || 1);
-    var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
-    var type    = guessType(name);
+    var name     = (m.name || 'Unnamed Item').trim();
+    var qty      = parseFloat(m.quantity || 1);
+    var qtyStr   = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
+    var type     = guessType(name);
     if (type === 'service') serviceCount++; else materialCount++;
-    var typeCls = type === 'service' ? 'service' : 'material';
-    var typeLbl = type === 'service' ? 'Service'  : 'Material';
+    var typeCls  = type === 'service' ? 'service' : 'material';
+    var typeLbl  = type === 'service' ? 'Service'  : 'Material';
+
+    // Parts status badge (only for WO materials)
+    var statusBadge = '';
+    if (j.status === 'Work Order' && type === 'material') {
+      var stateKey = j.clientUuid + '__' + name.toLowerCase().trim();
+      var st = partsState[stateKey] || { ordered: false, received: false };
+      if (st.received) {
+        statusBadge = '<span class="mat-status-pill received">&#10003; Received</span>';
+      } else if (st.ordered) {
+        statusBadge = '<span class="mat-status-pill ordered">&#128230; Ordered</span>';
+      }
+    }
+
     return '<tr>'
-      + '<td><div class="mat-name">' + esc(name) + '</div>'
-      +     '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span></td>'
+      + '<td>'
+      +   '<div class="mat-name">' + esc(name) + statusBadge + '</div>'
+      +   '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span>'
+      + '</td>'
       + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
       + '</tr>';
   }).join('');
@@ -697,7 +767,12 @@ function buildMaterialsHTML(materials) {
   if (materialCount) summary += (summary ? ', ' : '') + materialCount + ' material' + (materialCount > 1 ? 's' : '');
   if (!summary)      summary = sorted.length + ' item' + (sorted.length > 1 ? 's' : '');
 
-  return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + '</div>'
+  // Parts link if WO
+  var partsLink = j.status === 'Work Order' && materialCount > 0
+    ? ' &nbsp;<a href="parts.html" style="font-size:0.72rem;color:var(--accent);text-decoration:none;">&#128230; Manage parts &rarr;</a>'
+    : '';
+
+  return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + partsLink + '</div>'
     + '<table class="materials-table">'
     + '<thead><tr><th>Name</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
