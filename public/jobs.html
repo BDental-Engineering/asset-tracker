@@ -32,6 +32,7 @@ button:hover{opacity:0.87;}
 .btn-primary{background:var(--accent);color:#fff;}
 .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-sm{padding:5px 12px;font-size:0.78rem;}
+.btn-danger{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
 .page{padding:28px 32px;max-width:100%;margin:0 auto;}
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
 .page-header-left h1{font-size:1.5rem;font-weight:800;margin-bottom:4px;}
@@ -120,6 +121,7 @@ button:hover{opacity:0.87;}
 .parts-link-btn.needs-order{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);}
 .parts-link-btn.no-parts{background:rgba(136,146,176,0.08);border:1px solid rgba(136,146,176,0.15);color:var(--muted);}
 .no-jobs{color:var(--muted);font-size:0.8rem;text-align:center;padding:20px 0;}
+/* ── Modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;position:relative;}
@@ -155,14 +157,43 @@ button:hover{opacity:0.87;}
 .materials-table tr:last-child td{border-bottom:none;}
 .materials-table tr:hover td{background:rgba(255,255,255,0.02);}
 .mat-name{font-weight:600;color:var(--text);}
+.mat-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
 .mat-qty{font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;}
 .mat-type{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px;}
 .mat-type.service{background:rgba(79,110,247,0.12);color:var(--accent);}
-.mat-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
 .mat-type.material{background:rgba(34,197,94,0.12);color:var(--green);}
 .mat-status-pill{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle;}
 .mat-status-pill.ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
 .mat-status-pill.received{background:rgba(34,197,94,0.13);color:var(--green);}
+/* ── Debug panel ── */
+.debug-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.debug-overlay.open{display:flex;}
+.debug-panel{background:#0d1117;border:1px solid #30363d;border-radius:12px;width:100%;max-width:1000px;overflow:hidden;}
+.debug-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#161b22;border-bottom:1px solid #30363d;}
+.debug-header h3{font-size:0.95rem;font-weight:700;color:#e6edf3;margin:0;}
+.debug-header-actions{display:flex;gap:8px;}
+.debug-close{background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:4px 12px;font-size:0.8rem;cursor:pointer;}
+.debug-close:hover{border-color:var(--accent);}
+.debug-tabs{display:flex;gap:2px;padding:10px 18px 0;background:#161b22;border-bottom:1px solid #30363d;flex-wrap:wrap;}
+.debug-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#8b949e;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;border-radius:0;}
+.debug-tab.active{color:#58a6ff;border-bottom-color:#58a6ff;}
+.debug-body{padding:16px 18px;max-height:70vh;overflow-y:auto;}
+.debug-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;}
+.debug-stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;}
+.debug-stat-val{font-size:1.3rem;font-weight:800;color:#58a6ff;}
+.debug-stat-lbl{font-size:0.7rem;color:#8b949e;margin-top:2px;}
+.debug-search{width:100%;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:7px 12px;color:#e6edf3;font-size:0.82rem;outline:none;margin-bottom:12px;}
+.debug-search:focus{border-color:#58a6ff;}
+.debug-table-wrap{overflow-x:auto;}
+.debug-table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+.debug-table th{text-align:left;padding:6px 10px;color:#8b949e;border-bottom:1px solid #30363d;white-space:nowrap;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;}
+.debug-table td{padding:6px 10px;border-bottom:1px solid #21262d;color:#e6edf3;vertical-align:top;word-break:break-word;max-width:260px;}
+.debug-table tr:hover td{background:#161b22;}
+.debug-table .uuid{font-family:monospace;font-size:0.65rem;color:#8b949e;}
+.debug-raw{font-family:monospace;font-size:0.72rem;color:#e6edf3;white-space:pre-wrap;word-break:break-all;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px;max-height:50vh;overflow-y:auto;}
+.copy-btn{background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;padding:3px 8px;font-size:0.7rem;cursor:pointer;}
+.copy-btn:hover{color:#e6edf3;}
+/* ── Auth ── */
 #auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:32px;}
 #auth-screen.show{display:flex;}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;text-align:center;}
@@ -190,6 +221,7 @@ button:hover{opacity:0.87;}
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="tasks.html">&#10003; Tasks</a>
     <a class="back-btn" href="parts.html">&#128230; Parts</a>
+    <button class="btn-ghost btn-sm" onclick="openDebug()">&#128027; Debug Materials</button>
     <button class="btn-ghost btn-sm" onclick="loadJobs(true)">&#8635; Refresh</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
@@ -236,10 +268,32 @@ button:hover{opacity:0.87;}
   </div>
 </div>
 
+<!-- Job modal -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
     <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Debug panel -->
+<div class="debug-overlay" id="debug-overlay" onclick="onDebugOverlayClick(event)">
+  <div class="debug-panel">
+    <div class="debug-header">
+      <h3>&#128027; Materials Debug — ServiceM8 Raw Data</h3>
+      <div class="debug-header-actions">
+        <button class="copy-btn" onclick="copyDebugData()">&#128203; Copy JSON</button>
+        <button class="debug-close" onclick="closeDebug()">&#10005; Close</button>
+      </div>
+    </div>
+    <div class="debug-tabs">
+      <button class="debug-tab active" onclick="switchDebugTab('table', this)">&#128203; Table View</button>
+      <button class="debug-tab"        onclick="switchDebugTab('fields', this)">&#128196; All Fields</button>
+      <button class="debug-tab"        onclick="switchDebugTab('raw', this)">&#123; Raw JSON</button>
+    </div>
+    <div class="debug-body" id="debug-body">
+      <p style="color:#8b949e">Load jobs first, then open debug.</p>
+    </div>
   </div>
 </div>
 
@@ -255,15 +309,17 @@ var COLUMNS = [
 ];
 
 // ── State ──────────────────────────────────────────────
-var jobsData     = [];
-var bookingsMap  = {};
-var staffMap     = {};
-var clientMap    = {};
-var categoryMap  = {};
-var partsState   = {};   // key → { ordered, received }
-var jobsLoaded   = false;
-var statusFilter = 'both';
-var currentUser  = '';
+var jobsData       = [];
+var bookingsMap    = {};
+var staffMap       = {};
+var clientMap      = {};
+var categoryMap    = {};
+var partsState     = {};
+var rawMaterialsAll = [];   // full raw jobmaterial array for debug
+var jobsLoaded     = false;
+var statusFilter   = 'both';
+var currentUser    = '';
+var debugTab       = 'table';
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
@@ -322,14 +378,13 @@ function loadJobs(force) {
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading jobs&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
-    Promise.all([
+  Promise.all([
     sm8Get('/job.json'),
     sm8Get('/staff.json'),
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobactivity.json'),
     sm8Get('/jobmaterial.json'),
-    sm8Get('/material.json'),
     fetch('/api/parts').then(function(r){ return r.json(); }).catch(function(){ return {}; })
   ]).then(function(res) {
     var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
@@ -338,14 +393,10 @@ function loadJobs(force) {
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawActivities = Array.isArray(res[4]) ? res[4] : [];
     var rawMaterials  = Array.isArray(res[5]) ? res[5] : [];
-    var rawCatalogue  = Array.isArray(res[6]) ? res[6] : [];
-    partsState        = (res[7] && typeof res[7] === 'object' && !Array.isArray(res[7])) ? res[7] : {};
+    partsState        = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
 
-    // Material catalogue map: uuid → short name
-    var catalogueMap = {};
-    rawCatalogue.forEach(function(c) {
-      if (c.uuid) catalogueMap[c.uuid] = c.name || '';
-    });
+    // Store full raw for debug
+    rawMaterialsAll = rawMaterials;
 
     // Staff map
     staffMap = {};
@@ -379,14 +430,12 @@ function loadJobs(force) {
       });
     });
 
-       // Materials map
+    // Materials map
     var materialsMap = {};
     rawMaterials.forEach(function(m) {
       if (!m.job_uuid) return;
       if (m.active !== 1 && String(m.active) !== '1') return;
       if (!materialsMap[m.job_uuid]) materialsMap[m.job_uuid] = [];
-      // Attach short catalogue name
-      m._catalogueName = catalogueMap[m.material_uuid] || '';
       materialsMap[m.job_uuid].push(m);
     });
 
@@ -446,18 +495,10 @@ function getNextBooking(bookings) {
 }
 
 // ── Parts state helpers ────────────────────────────────
-// The parts key is: clientUuid + '__' + materialName.toLowerCase().trim()
-// On the job card we compute a summary across all materials for this job
 function getJobPartsSummary(j) {
   if (!j.materials || !j.materials.length) return null;
-  // Only relevant for Work Orders
   if (j.status !== 'Work Order') return null;
-
-  var total    = 0;
-  var ordered  = 0;
-  var received = 0;
-
-  // Deduplicate by normalised name (same logic as parts.html consolidation)
+  var total = 0, ordered = 0, received = 0;
   var seen = {};
   j.materials.forEach(function(m) {
     var normKey = (m.name || '').toLowerCase().trim();
@@ -469,7 +510,6 @@ function getJobPartsSummary(j) {
     if (st.received) received++;
     else if (st.ordered) ordered++;
   });
-
   return { total: total, ordered: ordered, received: received };
 }
 
@@ -582,23 +622,19 @@ function jobCard(j) {
       })()
     : '<div class="job-booking no-booking">&#128197; No booking scheduled</div>';
 
-  // Parts summary pill — only on Work Orders with materials
   var partsPill = '';
   var summary = getJobPartsSummary(j);
   if (summary) {
-    var remaining = summary.total - summary.received;
     if (summary.received === summary.total) {
-      // All received
       partsPill = '<a class="parts-link-btn all-received" href="parts.html" onclick="event.stopPropagation()">'
         + '&#10003; All ' + summary.total + ' parts received</a>';
     } else if (summary.ordered > 0 || summary.received > 0) {
-      // Some progress
       partsPill = '<a class="parts-link-btn some-ordered" href="parts.html" onclick="event.stopPropagation()">'
         + '&#128230; ' + summary.received + '/' + summary.total + ' received'
         + (summary.ordered > 0 ? ' &middot; ' + summary.ordered + ' ordered' : '')
         + '</a>';
     } else {
-      // Nothing ordered yet
+      var remaining = summary.total - summary.received;
       partsPill = '<a class="parts-link-btn needs-order" href="parts.html" onclick="event.stopPropagation()">'
         + '&#9888; ' + remaining + ' part' + (remaining === 1 ? '' : 's') + ' need ordering</a>';
     }
@@ -632,10 +668,9 @@ function openJobModal(uuid) {
   if (!j) return;
 
   var isWO     = j.status === 'Work Order';
-  var badgeCls = isWO ? 'badge-wo'    : 'badge-quote';
+  var badgeCls = isWO ? 'badge-wo' : 'badge-quote';
   var badgeLbl = isWO ? '&#127959; Work Order' : '&#128203; Quote';
 
-  // Bookings HTML
   var bookingsHTML = '';
   if (j.bookings && j.bookings.length) {
     var today = new Date(); today.setHours(0,0,0,0);
@@ -721,7 +756,7 @@ function fieldRow(label, value) {
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
 function onOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
 
-// ── Materials (with parts status in modal) ─────────────
+// ── Materials ──────────────────────────────────────────
 function buildMaterialsHTML(j) {
   var materials = j.materials;
   if (!materials || !materials.length) {
@@ -740,23 +775,20 @@ function buildMaterialsHTML(j) {
     return 'material';
   }
 
-  var serviceCount  = 0;
-  var materialCount = 0;
+  var serviceCount = 0, materialCount = 0;
 
   var rows = sorted.map(function(m) {
-    var description = (m.name || 'Unnamed Item').trim();
-    var shortName   = (m._catalogueName || '').trim();
-    var qty         = parseFloat(m.quantity || 1);
-    var qtyStr      = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
-    var type        = guessType(description);
+    var name    = (m.name || 'Unnamed Item').trim();
+    var qty     = parseFloat(m.quantity || 1);
+    var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
+    var type    = guessType(name);
     if (type === 'service') serviceCount++; else materialCount++;
-    var typeCls     = type === 'service' ? 'service' : 'material';
-    var typeLbl     = type === 'service' ? 'Service'  : 'Material';
+    var typeCls = type === 'service' ? 'service' : 'material';
+    var typeLbl = type === 'service' ? 'Service'  : 'Material';
 
-    // Parts status badge (only for WO materials)
     var statusBadge = '';
     if (j.status === 'Work Order' && type === 'material') {
-      var stateKey = j.clientUuid + '__' + description.toLowerCase().trim();
+      var stateKey = j.clientUuid + '__' + name.toLowerCase().trim();
       var st = partsState[stateKey] || { ordered: false, received: false };
       if (st.received) {
         statusBadge = '<span class="mat-status-pill received">&#10003; Received</span>';
@@ -765,13 +797,17 @@ function buildMaterialsHTML(j) {
       }
     }
 
+    // Show material_uuid as a secondary reference if it looks like a product code (not a UUID)
+    var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    var matRef = (m.material_uuid && !uuidPattern.test(m.material_uuid)) ? m.material_uuid : '';
+
     return '<tr>'
       + '<td>'
-      +   (shortName
-            ? '<div class="mat-name">' + esc(shortName) + statusBadge + '</div>'
-            +   '<div class="mat-desc">' + esc(description) + '</div>'
-            : '<div class="mat-name">' + esc(description) + statusBadge + '</div>'
-          )
+      +   '<div class="mat-name">'
+      +     esc(name)
+      +     (matRef ? ' <span style="font-size:0.65rem;color:var(--accent);font-weight:600;margin-left:4px">[' + esc(matRef) + ']</span>' : '')
+      +     statusBadge
+      +   '</div>'
       +   '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span>'
       + '</td>'
       + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
@@ -789,11 +825,142 @@ function buildMaterialsHTML(j) {
 
   return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + partsLink + '</div>'
     + '<table class="materials-table">'
-    + '<thead><tr><th>Name / Description</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
+    + '<thead><tr><th>Name</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
 }
 
+// ── Debug panel ────────────────────────────────────────
+function openDebug() {
+  document.getElementById('debug-overlay').classList.add('open');
+  renderDebugTab(debugTab);
+}
+function closeDebug() {
+  document.getElementById('debug-overlay').classList.remove('open');
+}
+function onDebugOverlayClick(e) {
+  if (e.target === document.getElementById('debug-overlay')) closeDebug();
+}
+function switchDebugTab(tab, btn) {
+  debugTab = tab;
+  document.querySelectorAll('.debug-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderDebugTab(tab);
+}
+
+function renderDebugTab(tab) {
+  var body = document.getElementById('debug-body');
+  var data = rawMaterialsAll;
+
+  if (!data || !data.length) {
+    body.innerHTML = '<p style="color:#8b949e;padding:20px 0">No material data loaded yet. Refresh jobs first.</p>';
+    return;
+  }
+
+  if (tab === 'table') {
+    // Summary stats
+    var active   = data.filter(function(m){ return m.active===1||String(m.active)==='1'; }).length;
+    var withUuid = data.filter(function(m){ return !!m.material_uuid; }).length;
+    var uuidPat  = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    var realUuid = data.filter(function(m){ return m.material_uuid && uuidPat.test(m.material_uuid); }).length;
+    var codeRef  = data.filter(function(m){ return m.material_uuid && !uuidPat.test(m.material_uuid); }).length;
+
+    var html = '<div class="debug-summary">'
+      + debugStat(data.length,  'Total Records')
+      + debugStat(active,       'Active')
+      + debugStat(withUuid,     'Has material_uuid')
+      + debugStat(realUuid,     'UUID format')
+      + debugStat(codeRef,      'Non-UUID ref (product code?)')
+      + '</div>'
+      + '<input class="debug-search" type="text" placeholder="&#128269; Filter by name, uuid, job&hellip;" oninput="filterDebugTable(this.value)"/>'
+      + '<div class="debug-table-wrap"><table class="debug-table" id="debug-tbl">'
+      + '<thead><tr>'
+      + '<th>#</th>'
+      + '<th>name (description)</th>'
+      + '<th>material_uuid</th>'
+      + '<th>job_uuid</th>'
+      + '<th>qty</th>'
+      + '<th>price</th>'
+      + '<th>active</th>'
+      + '<th>sort</th>'
+      + '</tr></thead><tbody>';
+
+    data.forEach(function(m, i) {
+      var isUuid = m.material_uuid && uuidPat.test(m.material_uuid);
+      html += '<tr>'
+        + '<td style="color:#8b949e">' + (i+1) + '</td>'
+        + '<td><strong>' + esc(m.name || '—') + '</strong></td>'
+        + '<td class="uuid" style="color:' + (isUuid ? '#8b949e' : '#f0883e') + '">'
+        +   esc(m.material_uuid || '—') + '</td>'
+        + '<td class="uuid">' + esc(m.job_uuid || '—') + '</td>'
+        + '<td>' + esc(m.quantity || '—') + '</td>'
+        + '<td>' + esc(m.price || '—') + '</td>'
+        + '<td>' + esc(String(m.active)) + '</td>'
+        + '<td>' + esc(m.sort_order || '—') + '</td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    body.innerHTML = html;
+
+  } else if (tab === 'fields') {
+    // Show every unique field key found across all records
+    var allKeys = {};
+    data.forEach(function(m) {
+      Object.keys(m).forEach(function(k) { allKeys[k] = true; });
+    });
+    var keys = Object.keys(allKeys).sort();
+
+    var html = '<p style="color:#8b949e;font-size:0.78rem;margin-bottom:12px">'
+      + keys.length + ' unique fields found across ' + data.length + ' records. '
+      + 'Sample values shown from first record that has a non-empty value.</p>'
+      + '<div class="debug-table-wrap"><table class="debug-table">'
+      + '<thead><tr><th>Field</th><th>Sample Value</th><th>Present in</th></tr></thead><tbody>';
+
+    keys.forEach(function(k) {
+      var sample = '';
+      var count  = 0;
+      data.forEach(function(m) {
+        if (m[k] !== undefined && m[k] !== null && m[k] !== '') {
+          count++;
+          if (!sample) sample = String(m[k]);
+        }
+      });
+      html += '<tr>'
+        + '<td style="color:#f0883e;font-family:monospace">' + esc(k) + '</td>'
+        + '<td>' + esc(sample.substring(0, 120)) + '</td>'
+        + '<td style="color:#8b949e">' + count + ' / ' + data.length + '</td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    body.innerHTML = html;
+
+  } else if (tab === 'raw') {
+    body.innerHTML = '<div class="debug-raw">' + esc(JSON.stringify(data, null, 2)) + '</div>';
+  }
+}
+
+function filterDebugTable(q) {
+  q = q.toLowerCase();
+  var rows = document.querySelectorAll('#debug-tbl tbody tr');
+  rows.forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+  });
+}
+
+function debugStat(v, l) {
+  return '<div class="debug-stat"><div class="debug-stat-val">' + v + '</div><div class="debug-stat-lbl">' + l + '</div></div>';
+}
+
+function copyDebugData() {
+  var text = JSON.stringify(rawMaterialsAll, null, 2);
+  navigator.clipboard.writeText(text).then(function(){
+    toast('Copied to clipboard');
+  }).catch(function(){
+    toast('Copy failed', true);
+  });
+}
 
 // ── Helpers ────────────────────────────────────────────
 function fmtDate(str) {
