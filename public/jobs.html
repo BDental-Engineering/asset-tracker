@@ -158,6 +158,7 @@ button:hover{opacity:0.87;}
 .mat-qty{font-weight:700;color:var(--accent);text-align:right;white-space:nowrap;}
 .mat-type{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px;}
 .mat-type.service{background:rgba(79,110,247,0.12);color:var(--accent);}
+.mat-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
 .mat-type.material{background:rgba(34,197,94,0.12);color:var(--green);}
 .mat-status-pill{display:inline-block;font-size:0.65rem;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:middle;}
 .mat-status-pill.ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
@@ -321,13 +322,14 @@ function loadJobs(force) {
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading jobs&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
 
-  Promise.all([
+    Promise.all([
     sm8Get('/job.json'),
     sm8Get('/staff.json'),
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobactivity.json'),
     sm8Get('/jobmaterial.json'),
+    sm8Get('/material.json'),
     fetch('/api/parts').then(function(r){ return r.json(); }).catch(function(){ return {}; })
   ]).then(function(res) {
     var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
@@ -336,7 +338,14 @@ function loadJobs(force) {
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawActivities = Array.isArray(res[4]) ? res[4] : [];
     var rawMaterials  = Array.isArray(res[5]) ? res[5] : [];
-    partsState        = (res[6] && typeof res[6] === 'object' && !Array.isArray(res[6])) ? res[6] : {};
+    var rawCatalogue  = Array.isArray(res[6]) ? res[6] : [];
+    partsState        = (res[7] && typeof res[7] === 'object' && !Array.isArray(res[7])) ? res[7] : {};
+
+    // Material catalogue map: uuid → short name
+    var catalogueMap = {};
+    rawCatalogue.forEach(function(c) {
+      if (c.uuid) catalogueMap[c.uuid] = c.name || '';
+    });
 
     // Staff map
     staffMap = {};
@@ -370,12 +379,14 @@ function loadJobs(force) {
       });
     });
 
-    // Materials map
+       // Materials map
     var materialsMap = {};
     rawMaterials.forEach(function(m) {
       if (!m.job_uuid) return;
       if (m.active !== 1 && String(m.active) !== '1') return;
       if (!materialsMap[m.job_uuid]) materialsMap[m.job_uuid] = [];
+      // Attach short catalogue name
+      m._catalogueName = catalogueMap[m.material_uuid] || '';
       materialsMap[m.job_uuid].push(m);
     });
 
@@ -733,18 +744,19 @@ function buildMaterialsHTML(j) {
   var materialCount = 0;
 
   var rows = sorted.map(function(m) {
-    var name     = (m.name || 'Unnamed Item').trim();
-    var qty      = parseFloat(m.quantity || 1);
-    var qtyStr   = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
-    var type     = guessType(name);
+    var description = (m.name || 'Unnamed Item').trim();
+    var shortName   = (m._catalogueName || '').trim();
+    var qty         = parseFloat(m.quantity || 1);
+    var qtyStr      = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
+    var type        = guessType(description);
     if (type === 'service') serviceCount++; else materialCount++;
-    var typeCls  = type === 'service' ? 'service' : 'material';
-    var typeLbl  = type === 'service' ? 'Service'  : 'Material';
+    var typeCls     = type === 'service' ? 'service' : 'material';
+    var typeLbl     = type === 'service' ? 'Service'  : 'Material';
 
     // Parts status badge (only for WO materials)
     var statusBadge = '';
     if (j.status === 'Work Order' && type === 'material') {
-      var stateKey = j.clientUuid + '__' + name.toLowerCase().trim();
+      var stateKey = j.clientUuid + '__' + description.toLowerCase().trim();
       var st = partsState[stateKey] || { ordered: false, received: false };
       if (st.received) {
         statusBadge = '<span class="mat-status-pill received">&#10003; Received</span>';
@@ -755,7 +767,11 @@ function buildMaterialsHTML(j) {
 
     return '<tr>'
       + '<td>'
-      +   '<div class="mat-name">' + esc(name) + statusBadge + '</div>'
+      +   (shortName
+            ? '<div class="mat-name">' + esc(shortName) + statusBadge + '</div>'
+            +   '<div class="mat-desc">' + esc(description) + '</div>'
+            : '<div class="mat-name">' + esc(description) + statusBadge + '</div>'
+          )
       +   '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span>'
       + '</td>'
       + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
@@ -767,17 +783,17 @@ function buildMaterialsHTML(j) {
   if (materialCount) summary += (summary ? ', ' : '') + materialCount + ' material' + (materialCount > 1 ? 's' : '');
   if (!summary)      summary = sorted.length + ' item' + (sorted.length > 1 ? 's' : '');
 
-  // Parts link if WO
   var partsLink = j.status === 'Work Order' && materialCount > 0
     ? ' &nbsp;<a href="parts.html" style="font-size:0.72rem;color:var(--accent);text-decoration:none;">&#128230; Manage parts &rarr;</a>'
     : '';
 
   return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + partsLink + '</div>'
     + '<table class="materials-table">'
-    + '<thead><tr><th>Name</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
+    + '<thead><tr><th>Name / Description</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
 }
+
 
 // ── Helpers ────────────────────────────────────────────
 function fmtDate(str) {
