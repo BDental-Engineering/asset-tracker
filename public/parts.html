@@ -38,25 +38,22 @@ button:hover{opacity:0.87;}
 .loader{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty-wrap{text-align:center;padding:60px 20px;color:var(--muted);}
-/* ── Client group ── */
 .client-group{margin-bottom:28px;}
 .client-group-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;font-weight:700;font-size:0.9rem;}
 .client-name{flex:1;}
 .client-job-count{font-size:0.72rem;color:var(--muted);font-weight:400;}
-/* ── Parts table ── */
 .parts-table{width:100%;border-collapse:collapse;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
 .parts-table th{text-align:left;padding:9px 14px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--surface);border-bottom:2px solid var(--border);}
 .parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;}
 .parts-table tr:last-child td{border-bottom:none;}
 .parts-table tr.received-row td{opacity:0.5;}
 .part-name{font-weight:600;color:var(--text);}
-.part-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+.part-ref{font-size:0.68rem;color:var(--accent);font-weight:600;margin-top:2px;}
 .part-jobs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
 .supplier-tag{display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:5px;background:rgba(79,110,247,0.1);color:var(--accent);margin-top:3px;}
 .product-code{font-size:0.68rem;color:var(--muted);margin-left:4px;}
 .qty-cell{font-weight:700;color:var(--accent);text-align:center;width:50px;}
 .cb-cell{text-align:center;width:80px;}
-/* Custom checkbox */
 .cb-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
 .cb-wrap label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
 input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;}
@@ -65,7 +62,34 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
 .pill-none{background:rgba(136,146,176,0.12);color:var(--muted);}
 .pill-ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
 .pill-received{background:rgba(34,197,94,0.13);color:var(--green);}
-.saving-indicator{font-size:0.68rem;color:var(--muted);margin-left:4px;}
+/* ── Debug panel ── */
+.debug-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.debug-overlay.open{display:flex;}
+.debug-panel{background:#0d1117;border:1px solid #30363d;border-radius:12px;width:100%;max-width:1000px;overflow:hidden;}
+.debug-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#161b22;border-bottom:1px solid #30363d;}
+.debug-header h3{font-size:0.95rem;font-weight:700;color:#e6edf3;margin:0;}
+.debug-header-actions{display:flex;gap:8px;}
+.debug-close{background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;padding:4px 12px;font-size:0.8rem;cursor:pointer;}
+.debug-close:hover{border-color:var(--accent);}
+.debug-tabs{display:flex;gap:2px;padding:10px 18px 0;background:#161b22;border-bottom:1px solid #30363d;flex-wrap:wrap;}
+.debug-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#8b949e;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;border-radius:0;}
+.debug-tab.active{color:#58a6ff;border-bottom-color:#58a6ff;}
+.debug-body{padding:16px 18px;max-height:70vh;overflow-y:auto;}
+.debug-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;}
+.debug-stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 14px;}
+.debug-stat-val{font-size:1.3rem;font-weight:800;color:#58a6ff;}
+.debug-stat-lbl{font-size:0.7rem;color:#8b949e;margin-top:2px;}
+.debug-search{width:100%;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:7px 12px;color:#e6edf3;font-size:0.82rem;outline:none;margin-bottom:12px;}
+.debug-search:focus{border-color:#58a6ff;}
+.debug-table-wrap{overflow-x:auto;}
+.debug-table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+.debug-table th{text-align:left;padding:6px 10px;color:#8b949e;border-bottom:1px solid #30363d;white-space:nowrap;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;}
+.debug-table td{padding:6px 10px;border-bottom:1px solid #21262d;color:#e6edf3;vertical-align:top;word-break:break-word;max-width:260px;}
+.debug-table tr:hover td{background:#161b22;}
+.debug-table .uuid{font-family:monospace;font-size:0.65rem;color:#8b949e;}
+.debug-raw{font-family:monospace;font-size:0.72rem;color:#e6edf3;white-space:pre-wrap;word-break:break-all;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px;max-height:50vh;overflow-y:auto;}
+.copy-btn{background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;padding:3px 8px;font-size:0.7rem;cursor:pointer;}
+.copy-btn:hover{color:#e6edf3;}
 #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
 #toast.show{transform:translateY(0);opacity:1;}
 #auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:32px;}
@@ -91,6 +115,7 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="jobs.html">&#128188; Jobs</a>
     <a class="back-btn" href="suppliers.html">&#9881; Suppliers</a>
+    <button class="btn-ghost btn-sm" onclick="openDebug()">&#128027; Debug Materials</button>
     <button class="btn-ghost btn-sm" onclick="loadAll(true)">&#8635; Refresh</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
@@ -133,20 +158,39 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
   <div id="parts-list"></div>
 </div>
 
+<!-- Debug panel -->
+<div class="debug-overlay" id="debug-overlay" onclick="onDebugOverlayClick(event)">
+  <div class="debug-panel">
+    <div class="debug-header">
+      <h3>&#128027; Materials Debug — ServiceM8 Raw Data</h3>
+      <div class="debug-header-actions">
+        <button class="copy-btn" onclick="copyDebugData()">&#128203; Copy JSON</button>
+        <button class="debug-close" onclick="closeDebug()">&#10005; Close</button>
+      </div>
+    </div>
+    <div class="debug-tabs">
+      <button class="debug-tab active" onclick="switchDebugTab('table', this)">&#128203; Table View</button>
+      <button class="debug-tab"        onclick="switchDebugTab('fields', this)">&#128196; All Fields</button>
+      <button class="debug-tab"        onclick="switchDebugTab('raw', this)">&#123; Raw JSON</button>
+    </div>
+    <div class="debug-body" id="debug-body">
+      <p style="color:#8b949e">Load data first, then open debug.</p>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
-// ── State ──────────────────────────────────────────────
-var partsData     = [];   // consolidated rows
-var suppliersData = {};   // id → { name, contact, entries[] }
-var statesData    = {};   // key → { ordered, received }
-var clientMap     = {};
-var staffMap      = {};
-var categoryMap   = {};
-var currentUser   = '';
-var loaded        = false;
+var partsData       = [];
+var suppliersData   = {};
+var statesData      = {};
+var clientMap       = {};
+var rawMaterialsAll = [];
+var currentUser     = '';
+var loaded          = false;
+var debugTab        = 'table';
 
-// ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   var r = readCookies();
   currentUser = r.name || 'Unknown';
@@ -172,7 +216,6 @@ function checkSession() {
 function showAuth(){ document.getElementById('auth-screen').classList.add('show'); document.getElementById('main-page').style.display='none'; }
 function showMain(){ document.getElementById('auth-screen').classList.remove('show'); document.getElementById('main-page').style.display='block'; }
 
-// ── API ────────────────────────────────────────────────
 function sm8Get(path) {
   return fetch('/api/proxy?path=' + encodeURIComponent(path), {
     credentials:'include', headers:{'Accept':'application/json','Cache-Control':'no-cache'}
@@ -181,15 +224,12 @@ function sm8Get(path) {
     return r.json().then(function(d){ if (!r.ok) throw new Error(d.message||('HTTP '+r.status)); return d; });
   });
 }
-function apiGet(url) {
-  return fetch(url).then(function(r){ return r.json(); });
-}
+function apiGet(url) { return fetch(url).then(function(r){ return r.json(); }); }
 function apiPost(url, body) {
   return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
     .then(function(r){ return r.json(); });
 }
 
-// ── Load ───────────────────────────────────────────────
 function loadAll(force) {
   if (loaded && !force) return;
   loaded = false;
@@ -202,7 +242,6 @@ function loadAll(force) {
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobmaterial.json'),
-    sm8Get('/material.json'),
     apiGet('/api/suppliers'),
     apiGet('/api/parts')
   ]).then(function(res) {
@@ -211,22 +250,17 @@ function loadAll(force) {
     var rawCategories = Array.isArray(res[2]) ? res[2] : [];
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
-    var rawCatalogue  = Array.isArray(res[5]) ? res[5] : [];
-    suppliersData     = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
-    statesData        = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
+    suppliersData     = (res[5] && typeof res[5]==='object' && !Array.isArray(res[5])) ? res[5] : {};
+    statesData        = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
 
-    // Catalogue map: uuid → short name
-    var catalogueMap = {};
-    rawCatalogue.forEach(function(c) {
-      if (c.uuid) catalogueMap[c.uuid] = c.name || '';
-    });
+    // Store full raw for debug
+    rawMaterialsAll = rawMaterials;
 
-    // Build maps
-    staffMap = {};
+    var staffMap = {};
     rawStaff.filter(function(s){ return String(s.active)==='1'; }).forEach(function(s){
       staffMap[s.uuid] = ((s.first||'')+' '+(s.last||'')).trim() || s.uuid;
     });
-    categoryMap = {};
+    var categoryMap = {};
     rawCategories.filter(function(c){ return String(c.active)==='1'; }).forEach(function(c){
       categoryMap[c.uuid] = c.name || '';
     });
@@ -235,14 +269,12 @@ function loadAll(force) {
       clientMap[c.uuid] = c.name || '';
     });
 
-    // Only active Work Orders
     var woJobs = rawJobs.filter(function(j){
       return String(j.active)==='1' && j.status==='Work Order';
     });
     var woUuids = {};
     woJobs.forEach(function(j){ woUuids[j.uuid] = j; });
 
-    // Materials map per job
     var matsByJob = {};
     rawMaterials.forEach(function(m){
       if (!m.job_uuid || !woUuids[m.job_uuid]) return;
@@ -251,11 +283,9 @@ function loadAll(force) {
       matsByJob[m.job_uuid].push(m);
     });
 
-    // Consolidate: group by material name (case-insensitive) within each client
-    // Row: { name, totalQty, jobs: [{jobUuid, jobNumber, jobDesc, qty, matUuid}], clientUuid, clientName, supplier, productCode, key }
-    // Key for state: clientUuid + '__' + normalised name
-    var clientGroups = {}; // clientUuid → { name: { ... } }
+    var uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+    var clientGroups = {};
     Object.keys(matsByJob).forEach(function(jobUuid) {
       var job = woUuids[jobUuid];
       var clientUuid = job.company_uuid || '';
@@ -268,14 +298,15 @@ function loadAll(force) {
       matsByJob[jobUuid].forEach(function(m) {
         var normName = (m.name || 'Unnamed').trim();
         var normKey  = normName.toLowerCase();
+        // material_uuid as product ref if it's not a real UUID
+        var matRef   = (m.material_uuid && !uuidPat.test(m.material_uuid)) ? m.material_uuid : '';
 
         if (!clientGroups[clientUuid].parts[normKey]) {
-          // Look up supplier
           var supplierInfo = lookupSupplier(normName);
           var stateKey = clientUuid + '__' + normKey;
           clientGroups[clientUuid].parts[normKey] = {
-            shortName:    catalogueName,
             name:         normName,
+            matRef:       matRef,
             totalQty:     0,
             jobs:         [],
             clientUuid:   clientUuid,
@@ -299,7 +330,6 @@ function loadAll(force) {
       });
     });
 
-    // Flatten to array
     partsData = [];
     Object.keys(clientGroups).sort(function(a,b){
       return clientGroups[a].clientName.localeCompare(clientGroups[b].clientName);
@@ -312,7 +342,7 @@ function loadAll(force) {
 
     loaded = true;
     populateFilters();
-    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() + ' \u2014 ' + partsData.length + ' part lines across ' + Object.keys(clientGroups).length + ' clients');
+    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() + ' \u2014 ' + partsData.length + ' part lines');
     render();
 
   }).catch(function(e) {
@@ -337,9 +367,7 @@ function lookupSupplier(name) {
   return null;
 }
 
-// ── Filters ────────────────────────────────────────────
 function populateFilters() {
-  // Clients
   var clientSel = document.getElementById('q-client');
   var curClient = clientSel.value;
   clientSel.innerHTML = '<option value="">All Clients</option>';
@@ -352,7 +380,6 @@ function populateFilters() {
     clientSel.appendChild(o);
   });
 
-  // Suppliers
   var supSel = document.getElementById('q-supplier');
   var curSup = supSel.value;
   supSel.innerHTML = '<option value="">All Suppliers</option>';
@@ -364,31 +391,27 @@ function populateFilters() {
   });
 }
 
-function getState(key) {
-  return statesData[key] || { ordered: false, received: false };
-}
+function getState(key) { return statesData[key] || { ordered: false, received: false }; }
 
 function getFiltered() {
-  var q        = (document.getElementById('q-search').value   || '').toLowerCase();
-  var clientF  = document.getElementById('q-client').value;
-  var supF     = document.getElementById('q-supplier').value;
-  var statusF  = document.getElementById('q-status').value;
-
+  var q       = (document.getElementById('q-search').value   || '').toLowerCase();
+  var clientF = document.getElementById('q-client').value;
+  var supF    = document.getElementById('q-supplier').value;
+  var statusF = document.getElementById('q-status').value;
   return partsData.filter(function(p) {
     if (clientF && p.clientUuid !== clientF) return false;
     if (supF    && p.supplierId !== supF)    return false;
-    if (q && p.name.toLowerCase().indexOf(q) === -1 && p.clientName.toLowerCase().indexOf(q) === -1) return false;
+    if (q && p.name.toLowerCase().indexOf(q)===-1 && p.clientName.toLowerCase().indexOf(q)===-1) return false;
     if (statusF) {
       var st = getState(p.key);
-      if (statusF === 'none'     && (st.ordered || st.received))  return false;
-      if (statusF === 'ordered'  && (!st.ordered || st.received)) return false;
-      if (statusF === 'received' && !st.received)                 return false;
+      if (statusF==='none'     && (st.ordered||st.received))  return false;
+      if (statusF==='ordered'  && (!st.ordered||st.received)) return false;
+      if (statusF==='received' && !st.received)               return false;
     }
     return true;
   });
 }
 
-// ── Render ─────────────────────────────────────────────
 function render() {
   if (!loaded) return;
   var filtered = getFiltered();
@@ -399,7 +422,6 @@ function render() {
     return;
   }
 
-  // Group by client
   var byClient = {};
   filtered.forEach(function(p) {
     if (!byClient[p.clientUuid]) byClient[p.clientUuid] = { name: p.clientName, parts: [] };
@@ -446,31 +468,23 @@ function render() {
           ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
           : '<span class="status-pill pill-none">Needs Order</span>';
 
-      var safeKey = esc(p.key);
+      var safeKey = p.key;
 
-            html += '<tr' + rowCls + ' id="row-' + safeKey + '">'
+      html += '<tr' + rowCls + ' id="row-' + esc(safeKey) + '">'
         + '<td>'
-        +   (p.shortName
-              ? '<div class="part-name">' + esc(p.shortName) + '</div>'
-              +   '<div class="part-desc">' + esc(p.name) + '</div>'
-              : '<div class="part-name">' + esc(p.name) + '</div>'
-            )
+        +   '<div class="part-name">' + esc(p.name) + '</div>'
+        +   (p.matRef ? '<div class="part-ref">&#128230; ' + esc(p.matRef) + '</div>' : '')
         + '</td>'
-
         + '<td class="qty-cell">' + qtyStr + '</td>'
         + '<td><div class="part-jobs">' + jobList + '</div></td>'
         + '<td>' + supplierHTML + '</td>'
         + '<td class="cb-cell">'
-        +   '<div class="cb-wrap">'
-        +     '<input type="checkbox" id="ord-' + safeKey + '" ' + (st.ordered ? 'checked' : '') + ' onchange="toggleState(\'' + p.key + '\',\'ordered\',this.checked)"/>'
-        +   '</div>'
+        +   '<input type="checkbox" id="ord-' + esc(safeKey) + '" ' + (st.ordered ? 'checked' : '') + ' onchange="toggleState(\'' + esc(safeKey) + '\',\'ordered\',this.checked)"/>'
         + '</td>'
         + '<td class="cb-cell">'
-        +   '<div class="cb-wrap">'
-        +     '<input type="checkbox" class="cb-received" id="rec-' + safeKey + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + p.key + '\',\'received\',this.checked)"/>'
-        +   '</div>'
+        +   '<input type="checkbox" class="cb-received" id="rec-' + esc(safeKey) + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + esc(safeKey) + '\',\'received\',this.checked)"/>'
         + '</td>'
-        + '<td id="pill-' + safeKey + '">' + statusPill + '</td>'
+        + '<td id="pill-' + esc(safeKey) + '">' + statusPill + '</td>'
         + '</tr>';
     });
 
@@ -482,33 +496,28 @@ function render() {
 
 function renderStats(filtered) {
   var total    = filtered.length;
-  var needs    = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered && !s.received; }).length;
-  var ordered  = filtered.filter(function(p){ var s=getState(p.key); return s.ordered && !s.received; }).length;
+  var needs    = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered&&!s.received; }).length;
+  var ordered  = filtered.filter(function(p){ var s=getState(p.key); return s.ordered&&!s.received; }).length;
   var received = filtered.filter(function(p){ var s=getState(p.key); return s.received; }).length;
   document.getElementById('stats-bar').innerHTML =
-    stat(total,    'Total Parts',    'var(--text)')   +
-    stat(needs,    'Needs Order',    'var(--red)')    +
-    stat(ordered,  'Ordered',        'var(--amber)')  +
-    stat(received, 'Received',       'var(--green)');
+    stat(total,    'Total Parts',  'var(--text)')  +
+    stat(needs,    'Needs Order',  'var(--red)')   +
+    stat(ordered,  'Ordered',      'var(--amber)') +
+    stat(received, 'Received',     'var(--green)');
 }
 function stat(v,l,c){ return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
 
-// ── Checkbox toggle ────────────────────────────────────
 function toggleState(key, field, value) {
-  // Optimistic update
   if (!statesData[key]) statesData[key] = { ordered: false, received: false };
   statesData[key][field] = value;
-  if (field==='received' && value)  statesData[key].ordered = true;
+  if (field==='received' && value)  statesData[key].ordered  = true;
   if (field==='ordered'  && !value) statesData[key].received = false;
 
-  // Update sibling checkbox
-  var safeKey = key.replace(/[^a-z0-9\-_]/gi,'_');
   var ordCb = document.getElementById('ord-' + key);
   var recCb = document.getElementById('rec-' + key);
   if (ordCb) ordCb.checked = statesData[key].ordered;
   if (recCb) recCb.checked = statesData[key].received;
 
-  // Update pill and row class
   var st = statesData[key];
   var pill = document.getElementById('pill-' + key);
   if (pill) {
@@ -521,24 +530,132 @@ function toggleState(key, field, value) {
   var row = document.getElementById('row-' + key);
   if (row) row.className = st.received ? 'received-row' : '';
 
-  // Persist
   apiPost('/api/parts', { key: key, field: field, value: value, updatedBy: currentUser })
     .then(function(r){ if (!r.ok) toast('Save failed', true); })
     .catch(function(){ toast('Save failed', true); });
 }
 
-// ── Helpers ────────────────────────────────────────────
+// ── Debug panel ────────────────────────────────────────
+function openDebug() {
+  document.getElementById('debug-overlay').classList.add('open');
+  renderDebugTab(debugTab);
+}
+function closeDebug() {
+  document.getElementById('debug-overlay').classList.remove('open');
+}
+function onDebugOverlayClick(e) {
+  if (e.target === document.getElementById('debug-overlay')) closeDebug();
+}
+function switchDebugTab(tab, btn) {
+  debugTab = tab;
+  document.querySelectorAll('.debug-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderDebugTab(tab);
+}
+
+function renderDebugTab(tab) {
+  var body = document.getElementById('debug-body');
+  var data = rawMaterialsAll;
+
+  if (!data || !data.length) {
+    body.innerHTML = '<p style="color:#8b949e;padding:20px 0">No material data loaded yet. Refresh first.</p>';
+    return;
+  }
+
+  var uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (tab === 'table') {
+    var active   = data.filter(function(m){ return m.active===1||String(m.active)==='1'; }).length;
+    var withUuid = data.filter(function(m){ return !!m.material_uuid; }).length;
+    var realUuid = data.filter(function(m){ return m.material_uuid && uuidPat.test(m.material_uuid); }).length;
+    var codeRef  = data.filter(function(m){ return m.material_uuid && !uuidPat.test(m.material_uuid); }).length;
+
+    var html = '<div class="debug-summary">'
+      + debugStat(data.length, 'Total Records')
+      + debugStat(active,      'Active')
+      + debugStat(withUuid,    'Has material_uuid')
+      + debugStat(realUuid,    'UUID format')
+      + debugStat(codeRef,     'Non-UUID ref')
+      + '</div>'
+      + '<input class="debug-search" type="text" placeholder="&#128269; Filter rows&hellip;" oninput="filterDebugTable(this.value)"/>'
+      + '<div class="debug-table-wrap"><table class="debug-table" id="debug-tbl">'
+      + '<thead><tr>'
+      + '<th>#</th><th>name</th><th>material_uuid</th><th>job_uuid</th>'
+      + '<th>qty</th><th>price</th><th>active</th><th>sort</th>'
+      + '</tr></thead><tbody>';
+
+    data.forEach(function(m, i) {
+      var isUuid = m.material_uuid && uuidPat.test(m.material_uuid);
+      html += '<tr>'
+        + '<td style="color:#8b949e">' + (i+1) + '</td>'
+        + '<td><strong>' + esc(m.name||'—') + '</strong></td>'
+        + '<td class="uuid" style="color:' + (isUuid?'#8b949e':'#f0883e') + '">' + esc(m.material_uuid||'—') + '</td>'
+        + '<td class="uuid">' + esc(m.job_uuid||'—') + '</td>'
+        + '<td>' + esc(m.quantity||'—') + '</td>'
+        + '<td>' + esc(m.price||'—') + '</td>'
+        + '<td>' + esc(String(m.active)) + '</td>'
+        + '<td>' + esc(m.sort_order||'—') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    body.innerHTML = html;
+
+  } else if (tab === 'fields') {
+    var allKeys = {};
+    data.forEach(function(m){ Object.keys(m).forEach(function(k){ allKeys[k]=true; }); });
+    var keys = Object.keys(allKeys).sort();
+
+    var html = '<p style="color:#8b949e;font-size:0.78rem;margin-bottom:12px">'
+      + keys.length + ' unique fields across ' + data.length + ' records.</p>'
+      + '<div class="debug-table-wrap"><table class="debug-table">'
+      + '<thead><tr><th>Field</th><th>Sample Value</th><th>Present in</th></tr></thead><tbody>';
+
+    keys.forEach(function(k) {
+      var sample = ''; var count = 0;
+      data.forEach(function(m){
+        if (m[k]!==undefined&&m[k]!==null&&m[k]!==''){
+          count++;
+          if (!sample) sample = String(m[k]);
+        }
+      });
+      html += '<tr>'
+        + '<td style="color:#f0883e;font-family:monospace">' + esc(k) + '</td>'
+        + '<td>' + esc(sample.substring(0,120)) + '</td>'
+        + '<td style="color:#8b949e">' + count + ' / ' + data.length + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    body.innerHTML = html;
+
+  } else if (tab === 'raw') {
+    body.innerHTML = '<div class="debug-raw">' + esc(JSON.stringify(data, null, 2)) + '</div>';
+  }
+}
+
+function filterDebugTable(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#debug-tbl tbody tr').forEach(function(row){
+    row.style.display = row.textContent.toLowerCase().indexOf(q)!==-1 ? '' : 'none';
+  });
+}
+function debugStat(v,l){ return '<div class="debug-stat"><div class="debug-stat-val">'+v+'</div><div class="debug-stat-lbl">'+l+'</div></div>'; }
+function copyDebugData(){
+  navigator.clipboard.writeText(JSON.stringify(rawMaterialsAll,null,2))
+    .then(function(){ toast('Copied to clipboard'); })
+    .catch(function(){ toast('Copy failed',true); });
+}
+
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML = html; }
-var toastTimer = null;
-function toast(msg, isError) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
-  el.style.color       = isError ? 'var(--red)' : 'var(--text)';
+function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML=html; }
+var toastTimer=null;
+function toast(msg,isError){
+  var el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.borderColor=isError?'var(--red)':'var(--green)';
+  el.style.color=isError?'var(--red)':'var(--text)';
   el.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},3500);
 }
 </script>
 </body>
