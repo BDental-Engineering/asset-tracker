@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parts — Asset Tracker</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
+  --accent:#4f6ef7;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --text:#e2e8f0;--muted:#8892b0;--radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;text-decoration:none;color:var(--text);}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);text-decoration:none;transition:border-color 0.15s;}
+.back-btn:hover{border-color:var(--accent);}
+button{cursor:pointer;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;padding:8px 16px;transition:opacity 0.15s;}
+button:hover{opacity:0.87;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-sm{padding:5px 12px;font-size:0.78rem;}
+.page{padding:28px 32px;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
+.page-header-left h1{font-size:1.5rem;font-weight:800;margin-bottom:4px;}
+.page-header-left p{color:var(--muted);font-size:0.85rem;}
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.stat-val{font-size:1.7rem;font-weight:800;line-height:1;}
+.stat-lbl{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:20px;}
+.toolbar input,.toolbar select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 13px;color:var(--text);font-size:0.85rem;outline:none;}
+.toolbar input{min-width:200px;}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--accent);}
+.sync-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;font-size:0.8rem;color:var(--muted);padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+.sync-bar span{flex:1;}
+.loader{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-wrap{text-align:center;padding:60px 20px;color:var(--muted);}
+/* ── Client group ── */
+.client-group{margin-bottom:28px;}
+.client-group-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;font-weight:700;font-size:0.9rem;}
+.client-name{flex:1;}
+.client-job-count{font-size:0.72rem;color:var(--muted);font-weight:400;}
+/* ── Parts table ── */
+.parts-table{width:100%;border-collapse:collapse;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
+.parts-table th{text-align:left;padding:9px 14px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--surface);border-bottom:2px solid var(--border);}
+.parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+.parts-table tr:last-child td{border-bottom:none;}
+.parts-table tr.received-row td{opacity:0.5;}
+.part-name{font-weight:600;color:var(--text);}
+.part-jobs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
+.supplier-tag{display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:5px;background:rgba(79,110,247,0.1);color:var(--accent);margin-top:3px;}
+.product-code{font-size:0.68rem;color:var(--muted);margin-left:4px;}
+.qty-cell{font-weight:700;color:var(--accent);text-align:center;width:50px;}
+.cb-cell{text-align:center;width:80px;}
+/* Custom checkbox */
+.cb-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cb-wrap label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;}
+input[type=checkbox].cb-received{accent-color:var(--green);}
+.status-pill{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.pill-none{background:rgba(136,146,176,0.12);color:var(--muted);}
+.pill-ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
+.pill-received{background:rgba(34,197,94,0.13);color:var(--green);}
+.saving-indicator{font-size:0.68rem;color:var(--muted);margin-left:4px;}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+#auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:32px;}
+#auth-screen.show{display:flex;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;text-align:center;}
+.auth-card h2{margin-bottom:8px;}
+.auth-card p{color:var(--muted);font-size:0.9rem;margin-bottom:24px;}
+.auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 24px;background:var(--accent);color:#fff;border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;border:none;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#4f6ef7"/>
+      <path d="M8 22 L16 10 L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="22" r="2.5" fill="white"/>
+    </svg>
+    Asset Tracker
+  </a>
+  <div class="header-right">
+    <a class="back-btn" href="index.html">&#8592; Dashboard</a>
+    <a class="back-btn" href="jobs.html">&#128188; Jobs</a>
+    <a class="back-btn" href="suppliers.html">&#9881; Suppliers</a>
+    <button class="btn-ghost btn-sm" onclick="loadAll(true)">&#8635; Refresh</button>
+    <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
+  </div>
+</header>
+
+<div id="auth-screen">
+  <div class="auth-card">
+    <h2>Session Expired</h2>
+    <p>Please sign in again to continue.</p>
+    <a class="auth-btn" href="index.html">&#8594; Sign In</a>
+  </div>
+</div>
+
+<div class="page" id="main-page" style="display:none">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>&#128230; Parts &amp; Materials</h1>
+      <p>Consolidated parts list from active Work Orders.</p>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="sync-bar">
+    <span id="sync-detail">Loading&hellip;</span>
+  </div>
+
+  <div class="toolbar">
+    <input type="text"  id="q-search"   placeholder="&#128269; Search parts&hellip;" oninput="render()"/>
+    <select id="q-client"   onchange="render()"><option value="">All Clients</option></select>
+    <select id="q-supplier" onchange="render()"><option value="">All Suppliers</option></select>
+    <select id="q-status"   onchange="render()">
+      <option value="">All Statuses</option>
+      <option value="none">Needs Ordering</option>
+      <option value="ordered">Ordered</option>
+      <option value="received">Received</option>
+    </select>
+  </div>
+
+  <div id="parts-list"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+var partsData     = [];   // consolidated rows
+var suppliersData = {};   // id → { name, contact, entries[] }
+var statesData    = {};   // key → { ordered, received }
+var clientMap     = {};
+var staffMap      = {};
+var categoryMap   = {};
+var currentUser   = '';
+var loaded        = false;
+
+// ── Boot ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  var r = readCookies();
+  currentUser = r.name || 'Unknown';
+  checkSession();
+});
+
+function readCookies() {
+  var r = { name:'', uuid:'' };
+  document.cookie.split(';').forEach(function(c) {
+    var p = c.trim().split('=');
+    if (p[0]==='sm8_user_name') r.name = decodeURIComponent(p.slice(1).join('='));
+    if (p[0]==='sm8_user_uuid') r.uuid = decodeURIComponent(p.slice(1).join('='));
+  });
+  return r;
+}
+
+function checkSession() {
+  fetch('/api/proxy?path=' + encodeURIComponent('/staff.json'), { credentials:'include' })
+    .then(function(r){ if (r.status===401){ showAuth(); return null; } return r.json(); })
+    .then(function(d){ if (d){ showMain(); loadAll(false); } })
+    .catch(function(){ showAuth(); });
+}
+function showAuth(){ document.getElementById('auth-screen').classList.add('show'); document.getElementById('main-page').style.display='none'; }
+function showMain(){ document.getElementById('auth-screen').classList.remove('show'); document.getElementById('main-page').style.display='block'; }
+
+// ── API ────────────────────────────────────────────────
+function sm8Get(path) {
+  return fetch('/api/proxy?path=' + encodeURIComponent(path), {
+    credentials:'include', headers:{'Accept':'application/json','Cache-Control':'no-cache'}
+  }).then(function(r){
+    if (r.status===401) throw new Error('SESSION_EXPIRED');
+    return r.json().then(function(d){ if (!r.ok) throw new Error(d.message||('HTTP '+r.status)); return d; });
+  });
+}
+function apiGet(url) {
+  return fetch(url).then(function(r){ return r.json(); });
+}
+function apiPost(url, body) {
+  return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+    .then(function(r){ return r.json(); });
+}
+
+// ── Load ───────────────────────────────────────────────
+function loadAll(force) {
+  if (loaded && !force) return;
+  loaded = false;
+  document.getElementById('parts-list').innerHTML = '<div class="empty-wrap"><span class="loader"></span><p style="margin-top:14px">Loading&hellip;</p></div>';
+  setSyncMsg('Loading&hellip;');
+
+  Promise.all([
+    sm8Get('/job.json'),
+    sm8Get('/staff.json'),
+    sm8Get('/category.json'),
+    sm8Get('/company.json'),
+    sm8Get('/jobmaterial.json'),
+    apiGet('/api/suppliers'),
+    apiGet('/api/parts')
+  ]).then(function(res) {
+    var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
+    var rawStaff      = Array.isArray(res[1]) ? res[1] : [];
+    var rawCategories = Array.isArray(res[2]) ? res[2] : [];
+    var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
+    var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
+    suppliersData     = (res[5] && typeof res[5]==='object' && !Array.isArray(res[5])) ? res[5] : {};
+    statesData        = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+
+    // Build maps
+    staffMap = {};
+    rawStaff.filter(function(s){ return String(s.active)==='1'; }).forEach(function(s){
+      staffMap[s.uuid] = ((s.first||'')+' '+(s.last||'')).trim() || s.uuid;
+    });
+    categoryMap = {};
+    rawCategories.filter(function(c){ return String(c.active)==='1'; }).forEach(function(c){
+      categoryMap[c.uuid] = c.name || '';
+    });
+    clientMap = {};
+    rawCompanies.filter(function(c){ return String(c.active)==='1'; }).forEach(function(c){
+      clientMap[c.uuid] = c.name || '';
+    });
+
+    // Only active Work Orders
+    var woJobs = rawJobs.filter(function(j){
+      return String(j.active)==='1' && j.status==='Work Order';
+    });
+    var woUuids = {};
+    woJobs.forEach(function(j){ woUuids[j.uuid] = j; });
+
+    // Materials map per job
+    var matsByJob = {};
+    rawMaterials.forEach(function(m){
+      if (!m.job_uuid || !woUuids[m.job_uuid]) return;
+      if (m.active !== 1 && String(m.active) !== '1') return;
+      if (!matsByJob[m.job_uuid]) matsByJob[m.job_uuid] = [];
+      matsByJob[m.job_uuid].push(m);
+    });
+
+    // Consolidate: group by material name (case-insensitive) within each client
+    // Row: { name, totalQty, jobs: [{jobUuid, jobNumber, jobDesc, qty, matUuid}], clientUuid, clientName, supplier, productCode, key }
+    // Key for state: clientUuid + '__' + normalised name
+    var clientGroups = {}; // clientUuid → { name: { ... } }
+
+    Object.keys(matsByJob).forEach(function(jobUuid) {
+      var job = woUuids[jobUuid];
+      var clientUuid = job.company_uuid || '';
+      var clientName = clientMap[clientUuid] || 'Unknown Client';
+      var jobNumber  = job.generated_job_id || '';
+      var jobDesc    = job.job_description  || '';
+
+      if (!clientGroups[clientUuid]) clientGroups[clientUuid] = { clientName: clientName, parts: {} };
+
+      matsByJob[jobUuid].forEach(function(m) {
+        var normName = (m.name || 'Unnamed').trim();
+        var normKey  = normName.toLowerCase();
+
+        if (!clientGroups[clientUuid].parts[normKey]) {
+          // Look up supplier
+          var supplierInfo = lookupSupplier(normName);
+          var stateKey = clientUuid + '__' + normKey;
+          clientGroups[clientUuid].parts[normKey] = {
+            name:         normName,
+            totalQty:     0,
+            jobs:         [],
+            clientUuid:   clientUuid,
+            clientName:   clientName,
+            supplierName: supplierInfo ? supplierInfo.supplierName : '',
+            supplierId:   supplierInfo ? supplierInfo.supplierId   : '',
+            productCode:  supplierInfo ? supplierInfo.productCode  : '',
+            key:          stateKey
+          };
+        }
+
+        var qty = parseFloat(m.quantity || 1);
+        clientGroups[clientUuid].parts[normKey].totalQty += qty;
+        clientGroups[clientUuid].parts[normKey].jobs.push({
+          jobUuid:   jobUuid,
+          jobNumber: jobNumber,
+          jobDesc:   jobDesc,
+          qty:       qty,
+          matUuid:   m.uuid
+        });
+      });
+    });
+
+    // Flatten to array
+    partsData = [];
+    Object.keys(clientGroups).sort(function(a,b){
+      return clientGroups[a].clientName.localeCompare(clientGroups[b].clientName);
+    }).forEach(function(cUuid) {
+      var cg = clientGroups[cUuid];
+      Object.keys(cg.parts).sort(function(a,b){ return a.localeCompare(b); }).forEach(function(pKey) {
+        partsData.push(cg.parts[pKey]);
+      });
+    });
+
+    loaded = true;
+    populateFilters();
+    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() + ' \u2014 ' + partsData.length + ' part lines across ' + Object.keys(clientGroups).length + ' clients');
+    render();
+
+  }).catch(function(e) {
+    if (e.message==='SESSION_EXPIRED') { showAuth(); return; }
+    document.getElementById('parts-list').innerHTML = '<div class="empty-wrap"><p>&#9888; Failed to load: ' + esc(e.message) + '</p></div>';
+    toast('Load failed: ' + e.message, true);
+  });
+}
+
+function lookupSupplier(name) {
+  var n = (name || '').toLowerCase().trim();
+  var ids = Object.keys(suppliersData);
+  for (var i = 0; i < ids.length; i++) {
+    var sup = suppliersData[ids[i]];
+    var entries = sup.entries || [];
+    for (var j = 0; j < entries.length; j++) {
+      if (entries[j].materialName.toLowerCase().trim() === n) {
+        return { supplierId: ids[i], supplierName: sup.name, productCode: entries[j].productCode };
+      }
+    }
+  }
+  return null;
+}
+
+// ── Filters ────────────────────────────────────────────
+function populateFilters() {
+  // Clients
+  var clientSel = document.getElementById('q-client');
+  var curClient = clientSel.value;
+  clientSel.innerHTML = '<option value="">All Clients</option>';
+  var seenClients = {};
+  partsData.forEach(function(p){ seenClients[p.clientUuid] = p.clientName; });
+  Object.keys(seenClients).sort(function(a,b){ return seenClients[a].localeCompare(seenClients[b]); }).forEach(function(u){
+    var o = document.createElement('option');
+    o.value = u; o.textContent = seenClients[u];
+    if (u===curClient) o.selected=true;
+    clientSel.appendChild(o);
+  });
+
+  // Suppliers
+  var supSel = document.getElementById('q-supplier');
+  var curSup = supSel.value;
+  supSel.innerHTML = '<option value="">All Suppliers</option>';
+  Object.keys(suppliersData).sort(function(a,b){ return suppliersData[a].name.localeCompare(suppliersData[b].name); }).forEach(function(id){
+    var o = document.createElement('option');
+    o.value = id; o.textContent = suppliersData[id].name;
+    if (id===curSup) o.selected=true;
+    supSel.appendChild(o);
+  });
+}
+
+function getState(key) {
+  return statesData[key] || { ordered: false, received: false };
+}
+
+function getFiltered() {
+  var q        = (document.getElementById('q-search').value   || '').toLowerCase();
+  var clientF  = document.getElementById('q-client').value;
+  var supF     = document.getElementById('q-supplier').value;
+  var statusF  = document.getElementById('q-status').value;
+
+  return partsData.filter(function(p) {
+    if (clientF && p.clientUuid !== clientF) return false;
+    if (supF    && p.supplierId !== supF)    return false;
+    if (q && p.name.toLowerCase().indexOf(q) === -1 && p.clientName.toLowerCase().indexOf(q) === -1) return false;
+    if (statusF) {
+      var st = getState(p.key);
+      if (statusF === 'none'     && (st.ordered || st.received))  return false;
+      if (statusF === 'ordered'  && (!st.ordered || st.received)) return false;
+      if (statusF === 'received' && !st.received)                 return false;
+    }
+    return true;
+  });
+}
+
+// ── Render ─────────────────────────────────────────────
+function render() {
+  if (!loaded) return;
+  var filtered = getFiltered();
+  renderStats(filtered);
+
+  if (!filtered.length) {
+    document.getElementById('parts-list').innerHTML = '<div class="empty-wrap"><p>No parts match your filters.</p></div>';
+    return;
+  }
+
+  // Group by client
+  var byClient = {};
+  filtered.forEach(function(p) {
+    if (!byClient[p.clientUuid]) byClient[p.clientUuid] = { name: p.clientName, parts: [] };
+    byClient[p.clientUuid].parts.push(p);
+  });
+
+  var html = '';
+  Object.keys(byClient).sort(function(a,b){ return byClient[a].name.localeCompare(byClient[b].name); }).forEach(function(cUuid) {
+    var cg = byClient[cUuid];
+    html += '<div class="client-group">'
+      + '<div class="client-group-header">'
+      + '&#128205; <span class="client-name">' + esc(cg.name) + '</span>'
+      + '<span class="client-job-count">' + cg.parts.length + ' part line' + (cg.parts.length===1?'':'s') + '</span>'
+      + '</div>'
+      + '<table class="parts-table">'
+      + '<thead><tr>'
+      + '<th>Part / Material</th>'
+      + '<th style="text-align:center;width:50px">Qty</th>'
+      + '<th>Jobs</th>'
+      + '<th>Supplier</th>'
+      + '<th style="text-align:center;width:80px">Order</th>'
+      + '<th style="text-align:center;width:80px">Received</th>'
+      + '<th style="width:100px">Status</th>'
+      + '</tr></thead><tbody>';
+
+    cg.parts.forEach(function(p) {
+      var st      = getState(p.key);
+      var rowCls  = st.received ? ' class="received-row"' : '';
+      var jobList = p.jobs.map(function(j){ return 'Job #' + esc(j.jobNumber) + (j.jobDesc ? ' — ' + esc(j.jobDesc.substring(0,40)) : ''); }).join('<br>');
+      var qtyStr  = Number.isInteger(p.totalQty) ? String(p.totalQty) : p.totalQty.toFixed(2).replace(/\.?0+$/,'');
+
+      var supplierHTML = '';
+      if (p.supplierName) {
+        supplierHTML = '<div class="supplier-tag">&#128230; ' + esc(p.supplierName)
+          + (p.productCode ? '<span class="product-code">' + esc(p.productCode) + '</span>' : '')
+          + '</div>';
+      } else {
+        supplierHTML = '<span style="color:var(--muted);font-size:0.72rem">—</span>';
+      }
+
+      var statusPill = st.received
+        ? '<span class="status-pill pill-received">&#10003; Received</span>'
+        : st.ordered
+          ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+          : '<span class="status-pill pill-none">Needs Order</span>';
+
+      var safeKey = esc(p.key);
+
+      html += '<tr' + rowCls + ' id="row-' + safeKey + '">'
+        + '<td><div class="part-name">' + esc(p.name) + '</div></td>'
+        + '<td class="qty-cell">' + qtyStr + '</td>'
+        + '<td><div class="part-jobs">' + jobList + '</div></td>'
+        + '<td>' + supplierHTML + '</td>'
+        + '<td class="cb-cell">'
+        +   '<div class="cb-wrap">'
+        +     '<input type="checkbox" id="ord-' + safeKey + '" ' + (st.ordered ? 'checked' : '') + ' onchange="toggleState(\'' + p.key + '\',\'ordered\',this.checked)"/>'
+        +   '</div>'
+        + '</td>'
+        + '<td class="cb-cell">'
+        +   '<div class="cb-wrap">'
+        +     '<input type="checkbox" class="cb-received" id="rec-' + safeKey + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + p.key + '\',\'received\',this.checked)"/>'
+        +   '</div>'
+        + '</td>'
+        + '<td id="pill-' + safeKey + '">' + statusPill + '</td>'
+        + '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+  });
+
+  document.getElementById('parts-list').innerHTML = html;
+}
+
+function renderStats(filtered) {
+  var total    = filtered.length;
+  var needs    = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered && !s.received; }).length;
+  var ordered  = filtered.filter(function(p){ var s=getState(p.key); return s.ordered && !s.received; }).length;
+  var received = filtered.filter(function(p){ var s=getState(p.key); return s.received; }).length;
+  document.getElementById('stats-bar').innerHTML =
+    stat(total,    'Total Parts',    'var(--text)')   +
+    stat(needs,    'Needs Order',    'var(--red)')    +
+    stat(ordered,  'Ordered',        'var(--amber)')  +
+    stat(received, 'Received',       'var(--green)');
+}
+function stat(v,l,c){ return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
+
+// ── Checkbox toggle ────────────────────────────────────
+function toggleState(key, field, value) {
+  // Optimistic update
+  if (!statesData[key]) statesData[key] = { ordered: false, received: false };
+  statesData[key][field] = value;
+  if (field==='received' && value)  statesData[key].ordered = true;
+  if (field==='ordered'  && !value) statesData[key].received = false;
+
+  // Update sibling checkbox
+  var safeKey = key.replace(/[^a-z0-9\-_]/gi,'_');
+  var ordCb = document.getElementById('ord-' + key);
+  var recCb = document.getElementById('rec-' + key);
+  if (ordCb) ordCb.checked = statesData[key].ordered;
+  if (recCb) recCb.checked = statesData[key].received;
+
+  // Update pill and row class
+  var st = statesData[key];
+  var pill = document.getElementById('pill-' + key);
+  if (pill) {
+    pill.innerHTML = st.received
+      ? '<span class="status-pill pill-received">&#10003; Received</span>'
+      : st.ordered
+        ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+        : '<span class="status-pill pill-none">Needs Order</span>';
+  }
+  var row = document.getElementById('row-' + key);
+  if (row) row.className = st.received ? 'received-row' : '';
+
+  // Persist
+  apiPost('/api/parts', { key: key, field: field, value: value, updatedBy: currentUser })
+    .then(function(r){ if (!r.ok) toast('Save failed', true); })
+    .catch(function(){ toast('Save failed', true); });
+}
+
+// ── Helpers ────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML = html; }
+var toastTimer = null;
+function toast(msg, isError) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+  el.style.color       = isError ? 'var(--red)' : 'var(--text)';
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
+}
+</script>
+</body>
+</html>
