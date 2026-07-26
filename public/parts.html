@@ -50,6 +50,7 @@ button:hover{opacity:0.87;}
 .parts-table tr:last-child td{border-bottom:none;}
 .parts-table tr.received-row td{opacity:0.5;}
 .part-name{font-weight:600;color:var(--text);}
+.part-desc{font-size:0.72rem;color:var(--muted);margin-top:2px;}
 .part-jobs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
 .supplier-tag{display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:5px;background:rgba(79,110,247,0.1);color:var(--accent);margin-top:3px;}
 .product-code{font-size:0.68rem;color:var(--muted);margin-left:4px;}
@@ -201,6 +202,7 @@ function loadAll(force) {
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobmaterial.json'),
+    sm8Get('/material.json'),
     apiGet('/api/suppliers'),
     apiGet('/api/parts')
   ]).then(function(res) {
@@ -209,8 +211,15 @@ function loadAll(force) {
     var rawCategories = Array.isArray(res[2]) ? res[2] : [];
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
-    suppliersData     = (res[5] && typeof res[5]==='object' && !Array.isArray(res[5])) ? res[5] : {};
-    statesData        = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    var rawCatalogue  = Array.isArray(res[5]) ? res[5] : [];
+    suppliersData     = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    statesData        = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
+
+    // Catalogue map: uuid → short name
+    var catalogueMap = {};
+    rawCatalogue.forEach(function(c) {
+      if (c.uuid) catalogueMap[c.uuid] = c.name || '';
+    });
 
     // Build maps
     staffMap = {};
@@ -265,6 +274,7 @@ function loadAll(force) {
           var supplierInfo = lookupSupplier(normName);
           var stateKey = clientUuid + '__' + normKey;
           clientGroups[clientUuid].parts[normKey] = {
+            shortName:    catalogueName,
             name:         normName,
             totalQty:     0,
             jobs:         [],
@@ -438,8 +448,15 @@ function render() {
 
       var safeKey = esc(p.key);
 
-      html += '<tr' + rowCls + ' id="row-' + safeKey + '">'
-        + '<td><div class="part-name">' + esc(p.name) + '</div></td>'
+            html += '<tr' + rowCls + ' id="row-' + safeKey + '">'
+        + '<td>'
+        +   (p.shortName
+              ? '<div class="part-name">' + esc(p.shortName) + '</div>'
+              +   '<div class="part-desc">' + esc(p.name) + '</div>'
+              : '<div class="part-name">' + esc(p.name) + '</div>'
+            )
+        + '</td>'
+
         + '<td class="qty-cell">' + qtyStr + '</td>'
         + '<td><div class="part-jobs">' + jobList + '</div></td>'
         + '<td>' + supplierHTML + '</td>'
