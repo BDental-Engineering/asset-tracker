@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Suppliers — Asset Tracker</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;
+  --accent:#4f6ef7;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --text:#e2e8f0;--muted:#8892b0;--radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;text-decoration:none;color:var(--text);}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);text-decoration:none;transition:border-color 0.15s;}
+.back-btn:hover{border-color:var(--accent);}
+button{cursor:pointer;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;padding:8px 16px;transition:opacity 0.15s;}
+button:hover{opacity:0.87;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-danger{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.btn-sm{padding:5px 12px;font-size:0.78rem;}
+.page{padding:28px 32px;max-width:1100px;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px;}
+.page-header-left h1{font-size:1.5rem;font-weight:800;margin-bottom:4px;}
+.page-header-left p{color:var(--muted);font-size:0.85rem;}
+.suppliers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
+.supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.supplier-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:10px;}
+.supplier-card-name{font-weight:700;font-size:0.95rem;}
+.supplier-card-contact{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+.supplier-card-actions{display:flex;gap:6px;flex-shrink:0;}
+.entries-list{padding:10px 0;}
+.entry-row{display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);font-size:0.82rem;}
+.entry-row:last-child{border-bottom:none;}
+.entry-mat{flex:1;font-weight:500;}
+.entry-code{color:var(--accent);font-size:0.75rem;font-weight:600;background:rgba(79,110,247,0.1);padding:2px 7px;border-radius:5px;}
+.entry-del{background:none;border:none;color:var(--muted);font-size:0.9rem;padding:2px 6px;cursor:pointer;border-radius:4px;}
+.entry-del:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+.add-entry-row{display:flex;gap:6px;padding:10px 16px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.add-entry-row input{flex:1;min-width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:0.8rem;outline:none;}
+.add-entry-row input:focus{border-color:var(--accent);}
+.no-entries{padding:14px 16px;color:var(--muted);font-size:0.8rem;}
+/* ── Add supplier form ── */
+.add-supplier-card{background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px;}
+.add-supplier-card h3{font-size:0.9rem;font-weight:700;color:var(--muted);}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;}
+.form-row input{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;}
+.form-row input:focus{border-color:var(--accent);}
+.loader{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#4f6ef7"/>
+      <path d="M8 22 L16 10 L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="16" cy="22" r="2.5" fill="white"/>
+    </svg>
+    Asset Tracker
+  </a>
+  <div class="header-right">
+    <a class="back-btn" href="parts.html">&#8592; Parts</a>
+    <a class="back-btn" href="index.html">&#8962; Dashboard</a>
+    <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
+  </div>
+</header>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>&#9881; Suppliers</h1>
+      <p>Map material names to suppliers and product codes.</p>
+    </div>
+  </div>
+
+  <div class="suppliers-grid" id="suppliers-grid">
+    <div style="color:var(--muted);padding:20px"><span class="loader"></span> Loading&hellip;</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var suppliersData = {};
+
+window.addEventListener('DOMContentLoaded', loadSuppliers);
+
+function loadSuppliers() {
+  fetch('/api/suppliers').then(function(r){ return r.json(); }).then(function(d) {
+    suppliersData = (d && typeof d==='object' && !Array.isArray(d)) ? d : {};
+    renderSuppliers();
+  }).catch(function(e){ toast('Failed to load suppliers: ' + e.message, true); });
+}
+
+function renderSuppliers() {
+  var ids = Object.keys(suppliersData).sort(function(a,b){
+    return suppliersData[a].name.localeCompare(suppliersData[b].name);
+  });
+
+  var html = '';
+
+  // Existing supplier cards
+  ids.forEach(function(id) {
+    var sup = suppliersData[id];
+    var entries = (sup.entries || []);
+
+    html += '<div class="supplier-card" id="sup-' + esc(id) + '">'
+      + '<div class="supplier-card-header">'
+      +   '<div>'
+      +     '<div class="supplier-card-name">&#128230; ' + esc(sup.name) + '</div>'
+      +     (sup.contact ? '<div class="supplier-card-contact">' + esc(sup.contact) + '</div>' : '')
+      +   '</div>'
+      +   '<div class="supplier-card-actions">'
+      +     '<button class="btn-ghost btn-sm" onclick="editSupplier(\'' + esc(id) + '\')">&#9998; Edit</button>'
+      +     '<button class="btn-danger btn-sm" onclick="deleteSupplier(\'' + esc(id) + '\')">&#128465;</button>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="entries-list">';
+
+    if (!entries.length) {
+      html += '<div class="no-entries">No product mappings yet.</div>';
+    } else {
+      entries.forEach(function(e) {
+        html += '<div class="entry-row">'
+          + '<span class="entry-mat">' + esc(e.materialName) + '</span>'
+          + (e.productCode ? '<span class="entry-code">' + esc(e.productCode) + '</span>' : '')
+          + '<button class="entry-del" onclick="deleteEntry(\'' + esc(id) + '\',\'' + esc(e.materialName) + '\')" title="Remove">&#10005;</button>'
+          + '</div>';
+      });
+    }
+
+    html += '</div>'
+      + '<div class="add-entry-row">'
+      +   '<input type="text" id="mat-' + esc(id) + '" placeholder="Material name&hellip;" />'
+      +   '<input type="text" id="code-' + esc(id) + '" placeholder="Product code&hellip;" style="max-width:130px"/>'
+      +   '<button class="btn-primary btn-sm" onclick="addEntry(\'' + esc(id) + '\')">+ Add</button>'
+      + '</div>'
+      + '</div>';
+  });
+
+  // Add new supplier card
+  html += '<div class="add-supplier-card">'
+    + '<h3>+ New Supplier</h3>'
+    + '<div class="form-row">'
+    +   '<input type="text" id="new-sup-name"    placeholder="Supplier name *" />'
+    +   '<input type="text" id="new-sup-contact" placeholder="Contact / phone (optional)" />'
+    + '</div>'
+    + '<button class="btn-primary" onclick="addSupplier()">Add Supplier</button>'
+    + '</div>';
+
+  document.getElementById('suppliers-grid').innerHTML = html;
+}
+
+// ── Supplier CRUD ──────────────────────────────────────
+function addSupplier() {
+  var name    = (document.getElementById('new-sup-name').value    || '').trim();
+  var contact = (document.getElementById('new-sup-contact').value || '').trim();
+  if (!name) { toast('Supplier name is required', true); return; }
+
+  apiPost('/api/suppliers', { name: name, contact: contact }).then(function(r) {
+    if (r.ok) { toast('Supplier added'); loadSuppliers(); }
+    else toast('Error: ' + (r.error || 'unknown'), true);
+  }).catch(function(e){ toast(e.message, true); });
+}
+
+function editSupplier(id) {
+  var sup  = suppliersData[id];
+  var name = prompt('Supplier name:', sup.name);
+  if (name === null) return;
+  name = name.trim();
+  if (!name) { toast('Name cannot be empty', true); return; }
+  var contact = prompt('Contact / phone:', sup.contact || '');
+  if (contact === null) return;
+
+  apiPost('/api/suppliers', { id: id, name: name, contact: contact.trim() }).then(function(r) {
+    if (r.ok) { toast('Supplier updated'); loadSuppliers(); }
+    else toast('Error: ' + (r.error || 'unknown'), true);
+  }).catch(function(e){ toast(e.message, true); });
+}
+
+function deleteSupplier(id) {
+  var sup = suppliersData[id];
+  if (!confirm('Delete supplier "' + sup.name + '" and all its mappings?')) return;
+  apiDelete('/api/suppliers', { id: id }).then(function(r) {
+    if (r.ok) { toast('Supplier deleted'); loadSuppliers(); }
+    else toast('Error: ' + (r.error || 'unknown'), true);
+  }).catch(function(e){ toast(e.message, true); });
+}
+
+// ── Entry CRUD ─────────────────────────────────────────
+function addEntry(supplierId) {
+  var matName  = (document.getElementById('mat-'  + supplierId).value  || '').trim();
+  var prodCode = (document.getElementById('code-' + supplierId).value || '').trim();
+  if (!matName) { toast('Material name is required', true); return; }
+
+  apiPost('/api/suppliers/entry', { supplierId: supplierId, materialName: matName, productCode: prodCode })
+    .then(function(r) {
+      if (r.ok) { toast('Mapping saved'); loadSuppliers(); }
+      else toast('Error: ' + (r.error || 'unknown'), true);
+    }).catch(function(e){ toast(e.message, true); });
+}
+
+function deleteEntry(supplierId, materialName) {
+  if (!confirm('Remove mapping for "' + materialName + '"?')) return;
+  apiDelete('/api/suppliers/entry', { supplierId: supplierId, materialName: materialName })
+    .then(function(r) {
+      if (r.ok) { toast('Mapping removed'); loadSuppliers(); }
+      else toast('Error: ' + (r.error || 'unknown'), true);
+    }).catch(function(e){ toast(e.message, true); });
+}
+
+// ── API helpers ────────────────────────────────────────
+function apiPost(url, body) {
+  return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+    .then(function(r){ return r.json(); });
+}
+function apiDelete(url, body) {
+  return fetch(url, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+    .then(function(r){ return r.json(); });
+}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+var toastTimer = null;
+function toast(msg, isError) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+  el.style.color       = isError ? 'var(--red)' : 'var(--text)';
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
+}
+</script>
+</body>
+</html>
