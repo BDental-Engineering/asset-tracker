@@ -10,9 +10,13 @@
     { "src": "api/history.js",     "use": "@vercel/node" },
     { "src": "api/flaggedtasks.js", "use": "@vercel/node" },
     { "src": "api/taskcomments.js", "use": "@vercel/node" },
+    { "src": "api/parts.js", "use": "@vercel/node" },
+    { "src": "api/suppliers.js", "use": "@vercel/node" },
     { "src": "public/index.html",  "use": "@vercel/static" },
     { "src": "public/jobs.html",  "use": "@vercel/static" },
     { "src": "public/tasks.html",  "use": "@vercel/static" }
+    { "src": "public/parts.html",  "use": "@vercel/static" }
+    { "src": "public/suppliers.html",  "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/auth",      "dest": "/api/auth.js" },
@@ -22,9 +26,13 @@
     { "src": "/api/history",   "dest": "/api/history.js" },
     { "src": "/api/flaggedtasks", "dest": "/api/flaggedtasks.js" },
     { "src": "/api/taskcomments", "dest": "/api/taskcomments.js" },
+    { "src": "/api/parts", "dest": "/api/parts.js" },
+    { "src": "/api/suppliers", "dest": "/api/suppliers.js" },
     { "src": "/api/(.*)",      "dest": "/api/proxy.js" },
     { "src": "/tasks.html",    "dest": "/public/tasks.html" },
     { "src": "/jobs.html",    "dest": "/public/jobs.html" },
+    { "src": "/parts.html",    "dest": "/public/parts.html" },
+    { "src": "/suppliers.html",    "dest": "/public/suppliers.html" },
     { "src": "/(.*)",          "dest": "/public/index.html" }
   ]
 }
