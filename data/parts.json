@@ -42,9 +42,9 @@
     "updatedBy": "Rosie Buckingham"
   },
   "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__metherm 55 c citric acid based neutralizer": {
-    "ordered": true,
-    "received": true,
-    "updatedAt": "2026-07-27T19:14:09.666Z",
+    "ordered": false,
+    "received": false,
+    "updatedAt": "2026-07-27T19:14:11.450Z",
     "updatedBy": "Richard Buckingham"
   },
   "75e0b92d-0b11-45c6-a082-214e0144fc7b__travel": {
