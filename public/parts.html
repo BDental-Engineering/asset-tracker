@@ -98,6 +98,13 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
 .auth-card h2{margin-bottom:8px;}
 .auth-card p{color:var(--muted);font-size:0.9rem;margin-bottom:24px;}
 .auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 24px;background:var(--accent);color:#fff;border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;border:none;cursor:pointer;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;position:relative;}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;font-size:1rem;cursor:pointer;}
+.modal-close:hover{border-color:var(--accent);}
+.po-badge{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);margin-top:3px;font-family:monospace;}
+
 </style>
 </head>
 <body>
@@ -191,6 +198,10 @@ var currentUser     = '';
 var loaded          = false;
 var debugTab        = 'table';
 
+// PO modal state
+var pendingPoKey    = null;
+var pendingPoChecked = false;
+
 window.addEventListener('DOMContentLoaded', function() {
   var r = readCookies();
   currentUser = r.name || 'Unknown';
@@ -255,10 +266,8 @@ function loadAll(force) {
     suppliersData     = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
     statesData        = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
 
-    // Store full raw for debug
     rawMaterialsAll = rawMaterials;
 
-    // Catalogue map: uuid → item_number
     var catalogueMap = {};
     rawCatalogue.forEach(function(c) {
       if (c.uuid) catalogueMap[c.uuid] = c.item_number || '';
@@ -357,9 +366,7 @@ function loadAll(force) {
   });
 }
 
-
 function lookupSupplier(normName, itemNumber) {
-  // 1. Try prefix match on item_number first
   if (itemNumber) {
     var prefix = itemNumber.substring(0, 10).toUpperCase();
     var ids = Object.keys(suppliersData);
@@ -371,8 +378,6 @@ function lookupSupplier(normName, itemNumber) {
       }
     }
   }
-
-  // 2. Fall back to manual material name mapping
   var n = (normName || '').toLowerCase().trim();
   var ids = Object.keys(suppliersData);
   for (var i = 0; i < ids.length; i++) {
@@ -386,7 +391,6 @@ function lookupSupplier(normName, itemNumber) {
   }
   return null;
 }
-
 
 function populateFilters() {
   var clientSel = document.getElementById('q-client');
@@ -412,7 +416,7 @@ function populateFilters() {
   });
 }
 
-function getState(key) { return statesData[key] || { ordered: false, received: false }; }
+function getState(key) { return statesData[key] || { ordered: false, received: false, poNumber: '' }; }
 
 function getFiltered() {
   var q       = (document.getElementById('q-search').value   || '').toLowerCase();
@@ -465,7 +469,7 @@ function render() {
       + '<th>Supplier</th>'
       + '<th style="text-align:center;width:80px">Order</th>'
       + '<th style="text-align:center;width:80px">Received</th>'
-      + '<th style="width:100px">Status</th>'
+      + '<th style="width:140px">Status / PO</th>'
       + '</tr></thead><tbody>';
 
     cg.parts.forEach(function(p) {
@@ -489,24 +493,30 @@ function render() {
           ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
           : '<span class="status-pill pill-none">Needs Order</span>';
 
-      var safeKey = p.key;
+      var poHTML = (st.ordered && st.poNumber)
+        ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
+        : (st.ordered && !st.poNumber)
+          ? '<div style="margin-top:3px"><button class="btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px;" onclick="openPoEdit(\'' + esc(p.key) + '\')">+ Add PO#</button></div>'
+          : '';
 
-      html += '<tr' + rowCls + ' id="row-' + esc(safeKey) + '">'
-                + '<td>'
+      html += '<tr' + rowCls + ' id="row-' + esc(p.key) + '">'
+        + '<td>'
         +   '<div class="part-name">' + esc(p.name) + '</div>'
         +   (p.itemNumber ? '<div class="part-ref">&#128230; ' + esc(p.itemNumber) + '</div>' : '')
         + '</td>'
-
         + '<td class="qty-cell">' + qtyStr + '</td>'
         + '<td><div class="part-jobs">' + jobList + '</div></td>'
         + '<td>' + supplierHTML + '</td>'
         + '<td class="cb-cell">'
-        +   '<input type="checkbox" id="ord-' + esc(safeKey) + '" ' + (st.ordered ? 'checked' : '') + ' onchange="toggleState(\'' + esc(safeKey) + '\',\'ordered\',this.checked)"/>'
+        +   '<input type="checkbox" id="ord-' + esc(p.key) + '" ' + (st.ordered ? 'checked' : '') + ' onchange="onOrderedChange(\'' + esc(p.key) + '\',this.checked)"/>'
         + '</td>'
         + '<td class="cb-cell">'
-        +   '<input type="checkbox" class="cb-received" id="rec-' + esc(safeKey) + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + esc(safeKey) + '\',\'received\',this.checked)"/>'
+        +   '<input type="checkbox" class="cb-received" id="rec-' + esc(p.key) + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'received\',this.checked)"/>'
         + '</td>'
-        + '<td id="pill-' + esc(safeKey) + '">' + statusPill + '</td>'
+        + '<td id="pill-' + esc(p.key) + '">'
+        +   statusPill
+        +   poHTML
+        + '</td>'
         + '</tr>';
     });
 
@@ -529,32 +539,134 @@ function renderStats(filtered) {
 }
 function stat(v,l,c){ return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
 
+// ── Ordered checkbox — opens PO modal ──────────────────
+function onOrderedChange(key, checked) {
+  if (checked) {
+    // Uncheck visually until confirmed
+    var cb = document.getElementById('ord-' + key);
+    if (cb) cb.checked = false;
+    openPoModal(key);
+  } else {
+    // Unchecking ordered — clear PO and ordered state
+    toggleState(key, 'ordered', false);
+  }
+}
+
+// ── PO Modal ───────────────────────────────────────────
+function openPoModal(key) {
+  pendingPoKey     = key;
+  pendingPoChecked = true;
+  var st = getState(key);
+  document.getElementById('po-input').value = st.poNumber || '';
+  document.getElementById('po-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('po-input').focus(); }, 80);
+}
+
+function openPoEdit(key) {
+  pendingPoKey     = key;
+  pendingPoChecked = null; // editing only, don't change ordered state
+  var st = getState(key);
+  document.getElementById('po-input').value = st.poNumber || '';
+  document.getElementById('po-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('po-input').focus(); }, 80);
+}
+
+function closePoModal() {
+  document.getElementById('po-modal').classList.remove('open');
+  pendingPoKey     = null;
+  pendingPoChecked = null;
+}
+
+function cancelPoModal() {
+  // If cancelling a new order tick, leave checkbox unchecked
+  closePoModal();
+}
+
+function confirmPoModal() {
+  if (!pendingPoKey) { closePoModal(); return; }
+  var poNumber = (document.getElementById('po-input').value || '').trim();
+  var key      = pendingPoKey;
+  var isNew    = pendingPoChecked === true;
+
+  closePoModal();
+
+  if (!statesData[key]) statesData[key] = { ordered: false, received: false, poNumber: '' };
+
+  if (isNew) {
+    statesData[key].ordered  = true;
+    statesData[key].poNumber = poNumber;
+    var cb = document.getElementById('ord-' + key);
+    if (cb) cb.checked = true;
+  } else {
+    // Just updating PO number
+    statesData[key].poNumber = poNumber;
+  }
+
+  updateRowUI(key);
+  saveState(key);
+}
+
+function onPoOverlayClick(e) {
+  if (e.target === document.getElementById('po-modal')) cancelPoModal();
+}
+
+// ── State helpers ──────────────────────────────────────
 function toggleState(key, field, value) {
-  if (!statesData[key]) statesData[key] = { ordered: false, received: false };
+  if (!statesData[key]) statesData[key] = { ordered: false, received: false, poNumber: '' };
   statesData[key][field] = value;
-  if (field==='received' && value)  statesData[key].ordered  = true;
-  if (field==='ordered'  && !value) statesData[key].received = false;
+
+  if (field === 'received' && value)  statesData[key].ordered  = true;
+  if (field === 'ordered'  && !value) {
+    statesData[key].received = false;
+    statesData[key].poNumber = '';
+  }
 
   var ordCb = document.getElementById('ord-' + key);
   var recCb = document.getElementById('rec-' + key);
   if (ordCb) ordCb.checked = statesData[key].ordered;
   if (recCb) recCb.checked = statesData[key].received;
 
-  var st = statesData[key];
+  updateRowUI(key);
+  saveState(key);
+}
+
+function updateRowUI(key) {
+  var st = statesData[key] || { ordered: false, received: false, poNumber: '' };
+
+  var statusPill = st.received
+    ? '<span class="status-pill pill-received">&#10003; Received</span>'
+    : st.ordered
+      ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+      : '<span class="status-pill pill-none">Needs Order</span>';
+
+  var poHTML = (st.ordered && st.poNumber)
+    ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
+    : (st.ordered && !st.poNumber)
+      ? '<div style="margin-top:3px"><button class="btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px;" onclick="openPoEdit(\'' + esc(key) + '\')">+ Add PO#</button></div>'
+      : '';
+
   var pill = document.getElementById('pill-' + key);
-  if (pill) {
-    pill.innerHTML = st.received
-      ? '<span class="status-pill pill-received">&#10003; Received</span>'
-      : st.ordered
-        ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
-        : '<span class="status-pill pill-none">Needs Order</span>';
-  }
+  if (pill) pill.innerHTML = statusPill + poHTML;
+
   var row = document.getElementById('row-' + key);
   if (row) row.className = st.received ? 'received-row' : '';
 
-  apiPost('/api/parts', { key: key, field: field, value: value, updatedBy: currentUser })
-    .then(function(r){ if (!r.ok) toast('Save failed', true); })
-    .catch(function(){ toast('Save failed', true); });
+  var ordCb = document.getElementById('ord-' + key);
+  var recCb = document.getElementById('rec-' + key);
+  if (ordCb) ordCb.checked = st.ordered;
+  if (recCb) recCb.checked = st.received;
+}
+
+function saveState(key) {
+  var st = statesData[key];
+  apiPost('/api/parts', {
+    key:       key,
+    field:     'ordered',
+    value:     st.ordered,
+    received:  st.received,
+    poNumber:  st.poNumber || '',
+    updatedBy: currentUser
+  }).catch(function(){ toast('Save failed', true); });
 }
 
 // ── Debug panel ────────────────────────────────────────
@@ -680,5 +792,27 @@ function toast(msg,isError){
   toastTimer=setTimeout(function(){el.classList.remove('show');},3500);
 }
 </script>
+
+  <!-- PO Number Modal -->
+<div class="modal-overlay" id="po-modal" onclick="onPoOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closePoModal()">&#10005;</button>
+    <h3 style="margin-bottom:8px">&#128203; Purchase Order</h3>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Enter the PO number for this order. You can leave it blank and add it later.</p>
+    <div style="margin-bottom:16px">
+      <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:6px">PO Number</label>
+      <input type="text" id="po-input" placeholder="e.g. PO-2026-001"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.95rem;outline:none;"
+        onkeydown="if(event.key==='Enter')confirmPoModal()"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'"/>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-ghost" onclick="cancelPoModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmPoModal()">&#10003; Confirm Order</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
