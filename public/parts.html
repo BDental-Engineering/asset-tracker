@@ -242,6 +242,7 @@ function loadAll(force) {
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobmaterial.json'),
+    sm8Get('/material.json').catch(function(){ return []; }),
     apiGet('/api/suppliers'),
     apiGet('/api/parts')
   ]).then(function(res) {
@@ -250,11 +251,18 @@ function loadAll(force) {
     var rawCategories = Array.isArray(res[2]) ? res[2] : [];
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
-    suppliersData     = (res[5] && typeof res[5]==='object' && !Array.isArray(res[5])) ? res[5] : {};
-    statesData        = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    var rawCatalogue  = Array.isArray(res[5]) ? res[5] : [];
+    suppliersData     = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    statesData        = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
 
     // Store full raw for debug
     rawMaterialsAll = rawMaterials;
+
+    // Catalogue map: uuid → item_number
+    var catalogueMap = {};
+    rawCatalogue.forEach(function(c) {
+      if (c.uuid) catalogueMap[c.uuid] = c.item_number || '';
+    });
 
     var staffMap = {};
     rawStaff.filter(function(s){ return String(s.active)==='1'; }).forEach(function(s){
@@ -283,11 +291,9 @@ function loadAll(force) {
       matsByJob[m.job_uuid].push(m);
     });
 
-    var uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
     var clientGroups = {};
     Object.keys(matsByJob).forEach(function(jobUuid) {
-      var job = woUuids[jobUuid];
+      var job        = woUuids[jobUuid];
       var clientUuid = job.company_uuid || '';
       var clientName = clientMap[clientUuid] || 'Unknown Client';
       var jobNumber  = job.generated_job_id || '';
@@ -296,17 +302,16 @@ function loadAll(force) {
       if (!clientGroups[clientUuid]) clientGroups[clientUuid] = { clientName: clientName, parts: {} };
 
       matsByJob[jobUuid].forEach(function(m) {
-        var normName = (m.name || 'Unnamed').trim();
-        var normKey  = normName.toLowerCase();
-        // material_uuid as product ref if it's not a real UUID
-        var matRef   = (m.material_uuid && !uuidPat.test(m.material_uuid)) ? m.material_uuid : '';
+        var normName   = (m.name || 'Unnamed').trim();
+        var normKey    = normName.toLowerCase();
+        var itemNumber = catalogueMap[m.material_uuid] || '';
 
         if (!clientGroups[clientUuid].parts[normKey]) {
           var supplierInfo = lookupSupplier(normName);
           var stateKey = clientUuid + '__' + normKey;
           clientGroups[clientUuid].parts[normKey] = {
             name:         normName,
-            matRef:       matRef,
+            itemNumber:   itemNumber,
             totalQty:     0,
             jobs:         [],
             clientUuid:   clientUuid,
@@ -351,6 +356,7 @@ function loadAll(force) {
     toast('Load failed: ' + e.message, true);
   });
 }
+
 
 function lookupSupplier(name) {
   var n = (name || '').toLowerCase().trim();
@@ -471,10 +477,11 @@ function render() {
       var safeKey = p.key;
 
       html += '<tr' + rowCls + ' id="row-' + esc(safeKey) + '">'
-        + '<td>'
+                + '<td>'
         +   '<div class="part-name">' + esc(p.name) + '</div>'
-        +   (p.matRef ? '<div class="part-ref">&#128230; ' + esc(p.matRef) + '</div>' : '')
+        +   (p.itemNumber ? '<div class="part-ref">&#128230; ' + esc(p.itemNumber) + '</div>' : '')
         + '</td>'
+
         + '<td class="qty-cell">' + qtyStr + '</td>'
         + '<td><div class="part-jobs">' + jobList + '</div></td>'
         + '<td>' + supplierHTML + '</td>'
