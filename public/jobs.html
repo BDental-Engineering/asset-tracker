@@ -371,6 +371,17 @@ function sm8Get(path) {
   });
 }
 
+function getNextBooking(bookings) {
+  if (!bookings || !bookings.length) return null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var future = bookings.filter(function(b) {
+    var d = new Date((b.start_date || b.date || '').substring(0,10) + 'T00:00:00');
+    return !isNaN(d.getTime()) && d >= today;
+  });
+  return future.length ? future[0] : bookings[bookings.length - 1];
+}
+
+
 // ── Load ───────────────────────────────────────────────
 function loadJobs(force) {
   if (jobsLoaded && !force) return;
