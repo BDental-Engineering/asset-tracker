@@ -1,9 +1,9 @@
 // api/suppliers.js
 // Stores supplier definitions in data/suppliers.json on GitHub
-// Structure: { "supplier_uuid": { name, contact, entries: [ { materialName, productCode } ] } }
+// Structure: { "supplier_uuid": { name, contact, prefix, entries: [ { materialName, productCode } ] } }
 //
 // GET    /api/suppliers              → entire suppliers map
-// POST   /api/suppliers              → create/update supplier  body: { id?, name, contact? }
+// POST   /api/suppliers              → create/update supplier  body: { id?, name, contact?, prefix? }
 // DELETE /api/suppliers              → body: { id }
 //
 // GET    /api/suppliers?lookup=name  → find supplier + productCode for a material name
@@ -81,7 +81,6 @@ const handler = async (req, res) => {
       const { content } = await getFile();
       const lookup = req.query && req.query.lookup;
       if (lookup) {
-        // Find which supplier has this material name and return productCode
         const name = lookup.toLowerCase().trim();
         for (const id of Object.keys(content)) {
           const sup = content[id];
@@ -90,7 +89,7 @@ const handler = async (req, res) => {
           });
           if (entry) return res.status(200).json({ supplierId: id, supplierName: sup.name, productCode: entry.productCode });
         }
-        return res.status(200).json(null); // not found
+        return res.status(200).json(null);
       }
       return res.status(200).json(content);
     } catch(e) {
@@ -109,7 +108,6 @@ const handler = async (req, res) => {
       const { content, sha } = await getFile();
 
       if (isEntry) {
-        // Add/update a material→productCode entry on a supplier
         const supplierId   = String(body.supplierId   || '').trim();
         const materialName = String(body.materialName || '').trim();
         const productCode  = String(body.productCode  || '').trim();
@@ -132,23 +130,22 @@ const handler = async (req, res) => {
         });
 
         await putFile(content, sha);
-        console.log('[suppliers] entry saved:', materialName, '->', supplierId);
         return res.status(200).json({ ok: true });
 
       } else {
-        // Create or update a supplier
         const id      = String(body.id      || '').trim() || Date.now() + '-' + Math.random().toString(36).slice(2,7);
         const name    = String(body.name    || '').trim();
         const contact = String(body.contact || '').trim();
+        const prefix  = String(body.prefix  || '').trim().toUpperCase().substring(0, 10);
 
         if (!name) return res.status(400).json({ error: 'name is required' });
 
         if (!content[id]) content[id] = { entries: [] };
         content[id].name    = name;
         content[id].contact = contact;
+        content[id].prefix  = prefix;
 
         await putFile(content, sha);
-        console.log('[suppliers] saved supplier:', id, name);
         return res.status(200).json({ ok: true, id });
       }
 
