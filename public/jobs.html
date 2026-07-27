@@ -385,6 +385,7 @@ function loadJobs(force) {
     sm8Get('/company.json'),
     sm8Get('/jobactivity.json'),
     sm8Get('/jobmaterial.json'),
+    sm8Get('/material.json').catch(function(){ return []; }),
     fetch('/api/parts').then(function(r){ return r.json(); }).catch(function(){ return {}; })
   ]).then(function(res) {
     var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
@@ -393,10 +394,17 @@ function loadJobs(force) {
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawActivities = Array.isArray(res[4]) ? res[4] : [];
     var rawMaterials  = Array.isArray(res[5]) ? res[5] : [];
-    partsState        = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    var rawCatalogue  = Array.isArray(res[6]) ? res[6] : [];
+    partsState        = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
 
     // Store full raw for debug
     rawMaterialsAll = rawMaterials;
+
+    // Catalogue map: material uuid → item_number
+    var catalogueMap = {};
+    rawCatalogue.forEach(function(c) {
+      if (c.uuid) catalogueMap[c.uuid] = c.item_number || '';
+    });
 
     // Staff map
     staffMap = {};
@@ -430,12 +438,13 @@ function loadJobs(force) {
       });
     });
 
-    // Materials map
+    // Materials map — attach item_number from catalogue
     var materialsMap = {};
     rawMaterials.forEach(function(m) {
       if (!m.job_uuid) return;
       if (m.active !== 1 && String(m.active) !== '1') return;
       if (!materialsMap[m.job_uuid]) materialsMap[m.job_uuid] = [];
+      m._itemNumber = catalogueMap[m.material_uuid] || '';
       materialsMap[m.job_uuid].push(m);
     });
 
@@ -484,15 +493,6 @@ function loadJobs(force) {
   });
 }
 
-function getNextBooking(bookings) {
-  if (!bookings || !bookings.length) return null;
-  var today = new Date(); today.setHours(0,0,0,0);
-  var future = bookings.filter(function(b) {
-    var d = new Date((b.start_date || b.date || '').substring(0,10) + 'T00:00:00');
-    return !isNaN(d.getTime()) && d >= today;
-  });
-  return future.length ? future[0] : bookings[bookings.length - 1];
-}
 
 // ── Parts state helpers ────────────────────────────────
 function getJobPartsSummary(j) {
@@ -778,13 +778,14 @@ function buildMaterialsHTML(j) {
   var serviceCount = 0, materialCount = 0;
 
   var rows = sorted.map(function(m) {
-    var name    = (m.name || 'Unnamed Item').trim();
-    var qty     = parseFloat(m.quantity || 1);
-    var qtyStr  = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
-    var type    = guessType(name);
+    var name       = (m.name || 'Unnamed Item').trim();
+    var itemNumber = (m._itemNumber || '').trim();
+    var qty        = parseFloat(m.quantity || 1);
+    var qtyStr     = Number.isInteger(qty) ? String(qty) : qty.toFixed(2).replace(/\.?0+$/, '');
+    var type       = guessType(name);
     if (type === 'service') serviceCount++; else materialCount++;
-    var typeCls = type === 'service' ? 'service' : 'material';
-    var typeLbl = type === 'service' ? 'Service'  : 'Material';
+    var typeCls    = type === 'service' ? 'service' : 'material';
+    var typeLbl    = type === 'service' ? 'Service'  : 'Material';
 
     var statusBadge = '';
     if (j.status === 'Work Order' && type === 'material') {
@@ -797,17 +798,10 @@ function buildMaterialsHTML(j) {
       }
     }
 
-    // Show material_uuid as a secondary reference if it looks like a product code (not a UUID)
-    var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    var matRef = (m.material_uuid && !uuidPattern.test(m.material_uuid)) ? m.material_uuid : '';
-
     return '<tr>'
       + '<td>'
-      +   '<div class="mat-name">'
-      +     esc(name)
-      +     (matRef ? ' <span style="font-size:0.65rem;color:var(--accent);font-weight:600;margin-left:4px">[' + esc(matRef) + ']</span>' : '')
-      +     statusBadge
-      +   '</div>'
+      +   '<div class="mat-name">' + esc(name) + statusBadge + '</div>'
+      +   (itemNumber ? '<div class="mat-desc">&#128230; ' + esc(itemNumber) + '</div>' : '')
       +   '<span class="mat-type ' + typeCls + '">' + typeLbl + '</span>'
       + '</td>'
       + '<td class="mat-qty">' + esc(qtyStr) + '</td>'
@@ -825,10 +819,11 @@ function buildMaterialsHTML(j) {
 
   return '<div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">' + summary + partsLink + '</div>'
     + '<table class="materials-table">'
-    + '<thead><tr><th>Name</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
+    + '<thead><tr><th>Name / Product Code</th><th style="text-align:right;width:60px">Qty</th></tr></thead>'
     + '<tbody>' + rows + '</tbody>'
     + '</table>';
 }
+
 
 // ── Debug panel ────────────────────────────────────────
 function openDebug() {
