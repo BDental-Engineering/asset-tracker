@@ -307,7 +307,7 @@ function loadAll(force) {
         var itemNumber = catalogueMap[m.material_uuid] || '';
 
         if (!clientGroups[clientUuid].parts[normKey]) {
-          var supplierInfo = lookupSupplier(normName);
+          var supplierInfo = lookupSupplier(normName, itemNumber);
           var stateKey = clientUuid + '__' + normKey;
           clientGroups[clientUuid].parts[normKey] = {
             name:         normName,
@@ -358,8 +358,22 @@ function loadAll(force) {
 }
 
 
-function lookupSupplier(name) {
-  var n = (name || '').toLowerCase().trim();
+function lookupSupplier(normName, itemNumber) {
+  // 1. Try prefix match on item_number first
+  if (itemNumber) {
+    var prefix = itemNumber.substring(0, 10).toUpperCase();
+    var ids = Object.keys(suppliersData);
+    for (var i = 0; i < ids.length; i++) {
+      var sup = suppliersData[ids[i]];
+      var supPrefix = (sup.prefix || '').toUpperCase().trim();
+      if (supPrefix && prefix.indexOf(supPrefix) === 0) {
+        return { supplierId: ids[i], supplierName: sup.name, productCode: itemNumber };
+      }
+    }
+  }
+
+  // 2. Fall back to manual material name mapping
+  var n = (normName || '').toLowerCase().trim();
   var ids = Object.keys(suppliersData);
   for (var i = 0; i < ids.length; i++) {
     var sup = suppliersData[ids[i]];
@@ -372,6 +386,7 @@ function lookupSupplier(name) {
   }
   return null;
 }
+
 
 function populateFilters() {
   var clientSel = document.getElementById('q-client');
