@@ -1,10 +1,10 @@
 // api/parts.js
 // Stores part checkbox states in data/parts.json on GitHub
-// Structure: { "[job_uuid]__[material_uuid]": { ordered: bool, received: bool, updatedAt, updatedBy } }
+// Structure: { "[clientUuid]__[materialName]": { ordered: bool, received: bool, poNumber: string, updatedAt, updatedBy } }
 //
-// GET  /api/parts              → entire map
-// POST /api/parts              → body: { key, field, value, updatedBy }
-// DELETE /api/parts            → body: { key }
+// GET    /api/parts  → entire map
+// POST   /api/parts  → body: { key, field, value, poNumber?, received?, updatedBy }
+// DELETE /api/parts  → body: { key }
 
 const https = require('https');
 
@@ -81,7 +81,6 @@ const handler = async (req, res) => {
   }
 
   // ── POST ──────────────────────────────────────────────────────────────────
-  // body: { key: "job_uuid__mat_uuid", field: "ordered"|"received", value: bool, updatedBy: string }
   if (req.method === 'POST') {
     try {
       let body = req.body;
@@ -91,23 +90,39 @@ const handler = async (req, res) => {
       const key       = String(body.key       || '').trim();
       const field     = String(body.field     || '').trim();
       const value     = !!body.value;
+      const poNumber  = body.poNumber !== undefined ? String(body.poNumber).trim() : null;
+      const received  = body.received !== undefined ? !!body.received : null;
       const updatedBy = String(body.updatedBy || 'Unknown').trim();
 
-      if (!key)                              return res.status(400).json({ error: 'key is required' });
-      if (field !== 'ordered' && field !== 'received') return res.status(400).json({ error: 'field must be ordered or received' });
+      if (!key) return res.status(400).json({ error: 'key is required' });
+      if (field !== 'ordered' && field !== 'received') {
+        return res.status(400).json({ error: 'field must be ordered or received' });
+      }
 
-      console.log('[parts] POST key:', key, 'field:', field, 'value:', value);
+      console.log('[parts] POST key:', key, 'field:', field, 'value:', value, 'poNumber:', poNumber);
 
       const { content, sha } = await getFile();
-      if (!content[key]) content[key] = { ordered: false, received: false };
-      content[key][field]     = value;
-      content[key].updatedAt  = new Date().toISOString();
-      content[key].updatedBy  = updatedBy;
+
+      if (!content[key]) content[key] = { ordered: false, received: false, poNumber: '' };
+
+      content[key][field]    = value;
+      content[key].updatedAt = new Date().toISOString();
+      content[key].updatedBy = updatedBy;
+
+      // Sync poNumber if provided
+      if (poNumber !== null) content[key].poNumber = poNumber;
+
+      // Sync received if provided alongside ordered
+      if (received !== null) content[key].received = received;
 
       // If received, also mark ordered
       if (field === 'received' && value) content[key].ordered = true;
-      // If un-ordering, also un-receive
-      if (field === 'ordered' && !value) content[key].received = false;
+
+      // If un-ordering, also clear received and PO number
+      if (field === 'ordered' && !value) {
+        content[key].received = false;
+        content[key].poNumber = '';
+      }
 
       await putFile(content, sha);
       return res.status(200).json({ ok: true, state: content[key] });
@@ -144,4 +159,3 @@ const handler = async (req, res) => {
 
 handler.config = { api: { bodyParser: { sizeLimit: '1mb' } } };
 module.exports = handler;
-
