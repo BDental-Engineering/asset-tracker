@@ -30,9 +30,16 @@ button:hover{opacity:0.87;}
 .suppliers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
 .supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .supplier-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:10px;}
-.supplier-card-name{font-weight:700;font-size:0.95rem;}
+.supplier-card-name{font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:8px;}
 .supplier-card-contact{font-size:0.75rem;color:var(--muted);margin-top:2px;}
 .supplier-card-actions{display:flex;gap:6px;flex-shrink:0;}
+.prefix-badge{
+  display:inline-block;font-size:0.7rem;font-weight:800;
+  padding:2px 8px;border-radius:6px;letter-spacing:0.06em;
+  background:rgba(79,110,247,0.15);color:var(--accent);
+  border:1px solid rgba(79,110,247,0.3);font-family:monospace;
+}
+.prefix-none{background:rgba(136,146,176,0.1);color:var(--muted);border-color:rgba(136,146,176,0.2);}
 .entries-list{padding:10px 0;}
 .entry-row{display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);font-size:0.82rem;}
 .entry-row:last-child{border-bottom:none;}
@@ -44,12 +51,15 @@ button:hover{opacity:0.87;}
 .add-entry-row input{flex:1;min-width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:0.8rem;outline:none;}
 .add-entry-row input:focus{border-color:var(--accent);}
 .no-entries{padding:14px 16px;color:var(--muted);font-size:0.8rem;}
+.prefix-hint{font-size:0.72rem;color:var(--muted);padding:8px 16px;background:rgba(79,110,247,0.05);border-bottom:1px solid var(--border);}
+.prefix-hint strong{color:var(--accent);}
 /* ── Add supplier form ── */
 .add-supplier-card{background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:10px;}
 .add-supplier-card h3{font-size:0.9rem;font-weight:700;color:var(--muted);}
 .form-row{display:flex;gap:8px;flex-wrap:wrap;}
 .form-row input{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;outline:none;}
 .form-row input:focus{border-color:var(--accent);}
+.form-hint{font-size:0.75rem;color:var(--muted);}
 .loader{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
@@ -78,7 +88,7 @@ button:hover{opacity:0.87;}
   <div class="page-header">
     <div class="page-header-left">
       <h1>&#9881; Suppliers</h1>
-      <p>Map material names to suppliers and product codes.</p>
+      <p>Set an item number prefix to auto-match parts. Manual name mappings are also supported.</p>
     </div>
   </div>
 
@@ -108,26 +118,35 @@ function renderSuppliers() {
 
   var html = '';
 
-  // Existing supplier cards
   ids.forEach(function(id) {
-    var sup = suppliersData[id];
+    var sup     = suppliersData[id];
     var entries = (sup.entries || []);
+    var prefix  = (sup.prefix  || '').toUpperCase();
 
     html += '<div class="supplier-card" id="sup-' + esc(id) + '">'
       + '<div class="supplier-card-header">'
       +   '<div>'
-      +     '<div class="supplier-card-name">&#128230; ' + esc(sup.name) + '</div>'
+      +     '<div class="supplier-card-name">'
+      +       '&#128230; ' + esc(sup.name)
+      +       '<span class="prefix-badge' + (prefix ? '' : ' prefix-none') + '">'
+      +         (prefix ? prefix : 'No prefix')
+      +       '</span>'
+      +     '</div>'
       +     (sup.contact ? '<div class="supplier-card-contact">' + esc(sup.contact) + '</div>' : '')
       +   '</div>'
       +   '<div class="supplier-card-actions">'
       +     '<button class="btn-ghost btn-sm" onclick="editSupplier(\'' + esc(id) + '\')">&#9998; Edit</button>'
       +     '<button class="btn-danger btn-sm" onclick="deleteSupplier(\'' + esc(id) + '\')">&#128465;</button>'
       +   '</div>'
-      + '</div>'
-      + '<div class="entries-list">';
+      + '</div>';
 
+    if (prefix) {
+      html += '<div class="prefix-hint">&#128279; Auto-matches item numbers starting with <strong>' + esc(prefix) + '</strong></div>';
+    }
+
+    html += '<div class="entries-list">';
     if (!entries.length) {
-      html += '<div class="no-entries">No product mappings yet.</div>';
+      html += '<div class="no-entries">No manual product mappings.</div>';
     } else {
       entries.forEach(function(e) {
         html += '<div class="entry-row">'
@@ -140,7 +159,7 @@ function renderSuppliers() {
 
     html += '</div>'
       + '<div class="add-entry-row">'
-      +   '<input type="text" id="mat-' + esc(id) + '" placeholder="Material name&hellip;" />'
+      +   '<input type="text" id="mat-'  + esc(id) + '" placeholder="Material name&hellip;" />'
       +   '<input type="text" id="code-' + esc(id) + '" placeholder="Product code&hellip;" style="max-width:130px"/>'
       +   '<button class="btn-primary btn-sm" onclick="addEntry(\'' + esc(id) + '\')">+ Add</button>'
       + '</div>'
@@ -154,6 +173,10 @@ function renderSuppliers() {
     +   '<input type="text" id="new-sup-name"    placeholder="Supplier name *" />'
     +   '<input type="text" id="new-sup-contact" placeholder="Contact / phone (optional)" />'
     + '</div>'
+    + '<div class="form-row">'
+    +   '<input type="text" id="new-sup-prefix" placeholder="Item number prefix (e.g. MEL, CAT)" maxlength="10" style="text-transform:uppercase;max-width:220px"/>'
+    + '</div>'
+    + '<p class="form-hint">&#128161; The prefix is the first 3&ndash;5 characters of the item number (e.g. <strong>MEL</strong>AG-001 &rarr; MEL). Parts with matching item numbers will be auto-assigned to this supplier.</p>'
     + '<button class="btn-primary" onclick="addSupplier()">Add Supplier</button>'
     + '</div>';
 
@@ -164,24 +187,27 @@ function renderSuppliers() {
 function addSupplier() {
   var name    = (document.getElementById('new-sup-name').value    || '').trim();
   var contact = (document.getElementById('new-sup-contact').value || '').trim();
+  var prefix  = (document.getElementById('new-sup-prefix').value  || '').trim().toUpperCase();
   if (!name) { toast('Supplier name is required', true); return; }
 
-  apiPost('/api/suppliers', { name: name, contact: contact }).then(function(r) {
+  apiPost('/api/suppliers', { name: name, contact: contact, prefix: prefix }).then(function(r) {
     if (r.ok) { toast('Supplier added'); loadSuppliers(); }
     else toast('Error: ' + (r.error || 'unknown'), true);
   }).catch(function(e){ toast(e.message, true); });
 }
 
 function editSupplier(id) {
-  var sup  = suppliersData[id];
+  var sup = suppliersData[id];
   var name = prompt('Supplier name:', sup.name);
   if (name === null) return;
   name = name.trim();
   if (!name) { toast('Name cannot be empty', true); return; }
   var contact = prompt('Contact / phone:', sup.contact || '');
   if (contact === null) return;
+  var prefix = prompt('Item number prefix (e.g. MEL, CAT):', sup.prefix || '');
+  if (prefix === null) return;
 
-  apiPost('/api/suppliers', { id: id, name: name, contact: contact.trim() }).then(function(r) {
+  apiPost('/api/suppliers', { id: id, name: name, contact: contact.trim(), prefix: prefix.trim().toUpperCase() }).then(function(r) {
     if (r.ok) { toast('Supplier updated'); loadSuppliers(); }
     else toast('Error: ' + (r.error || 'unknown'), true);
   }).catch(function(e){ toast(e.message, true); });
@@ -198,7 +224,7 @@ function deleteSupplier(id) {
 
 // ── Entry CRUD ─────────────────────────────────────────
 function addEntry(supplierId) {
-  var matName  = (document.getElementById('mat-'  + supplierId).value  || '').trim();
+  var matName  = (document.getElementById('mat-'  + supplierId).value || '').trim();
   var prodCode = (document.getElementById('code-' + supplierId).value || '').trim();
   if (!matName) { toast('Material name is required', true); return; }
 
