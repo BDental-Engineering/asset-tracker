@@ -431,10 +431,19 @@ button:hover{opacity:0.87;}
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
-    <h3>Task Detail</h3>
+        <h3>Task Detail</h3>
+
+    <div id="m-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
+    <div class="modal-actions" style="margin-top:0;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+      <button class="btn-ghost" onclick="closeModal()">Close</button>
+      <button class="btn-ghost" id="m-save-btn" onclick="saveTaskEdits()">&#128190; Save Changes</button>
+      <button class="btn-primary" id="m-complete-btn" onclick="completeFromModal()">&#10003; Mark Complete</button>
+    </div>
+
     <a class="modal-sm8-link" id="m-sm8-link" href="#" target="_blank" rel="noopener" style="display:none">
       &#128279; Open Job in ServiceM8
     </a>
+
 
     <div class="frow">
       <label>Task Name</label>
@@ -518,11 +527,7 @@ button:hover{opacity:0.87;}
 
     <div id="m-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
 
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Close</button>
-      <button class="btn-ghost" id="m-save-btn" onclick="saveTaskEdits()">&#128190; Save Changes</button>
-      <button class="btn-primary" id="m-complete-btn" onclick="completeFromModal()">&#10003; Mark Complete</button>
-    </div>
+    
   </div>
 </div>
 <!-- Add Task Modal -->
