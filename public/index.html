@@ -1123,11 +1123,28 @@ function getAnyFieldValue(asset,fieldName){
   return m?(m.fieldValue||null):null;
 }
 function setAnyFieldValueLocal(asset,fieldName,value){
-  if(!Array.isArray(asset.field_data))return;
+  if(!Array.isArray(asset.field_data)){asset.field_data=[];}
   var lower=fieldName.toLowerCase();
   var m=asset.field_data.find(function(f){return String(f.fieldName||'').toLowerCase()===lower;});
-  if(m)m.fieldValue=value;
+  if(m){
+    m.fieldValue=value;
+  } else {
+    // Field didn't exist yet — add it so re-renders pick up the new value
+    var typeFields=(assetTypes[asset.asset_type_uuid]&&assetTypes[asset.asset_type_uuid].fields)||[];
+    var tf=typeFields.find(function(f){return String(f.name||'').toLowerCase()===lower;});
+    asset.field_data.push({
+      uuid:'',
+      active:'1',
+      fieldName:fieldName,
+      fieldValue:value,
+      fieldType:'Multiple Choice',
+      sortOrder:0,
+      asset_uuid:asset.uuid,
+      asset_type_field_uuid:tf?tf.uuid:''
+    });
+  }
 }
+
 function getFieldValue(asset,fieldName){
   if(!Array.isArray(asset.field_data))return null;
   var m=asset.field_data.find(function(f){return f.fieldName===fieldName;});
