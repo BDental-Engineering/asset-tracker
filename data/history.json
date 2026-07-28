@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "fff432b2-4e17-408b-84a1-2421eed2c65a",
+    "asset_name": "Surgery 1 - XAOC0293",
+    "client_name": "Just Smile Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T19:26:45.118Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "9bcdd454-372f-4006-925d-22df64c3861a",
     "asset_name": "Cupboard - CH102617",
     "client_name": "Great Cornard Dental Practice",
