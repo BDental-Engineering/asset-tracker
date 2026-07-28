@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "9b52954c-3c55-4e5f-a508-22c47a5cb1da",
+    "asset_name": "Decon - 201641-B1054",
+    "client_name": "Dental Smiles Flagstaff Colchester",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Decommissioned",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T19:26:13.164Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "ef5f6874-da5c-4298-805a-22d3e017971a",
     "asset_name": "Surgery 1 - K378361172",
     "client_name": "Church Street Dental Practice - Somersham",
