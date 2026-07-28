@@ -1391,6 +1391,18 @@ function assetCard(a){
   var wcss=wc==='purple'?'var(--purple)':'var(--'+wc+')';
   var pct=progressPct(a.urgentDays);
   var isSel=selectedUuids.has(a.uuid);
+
+  // Compliance-based card highlight
+  var compVal=(a.compliance||'').toLowerCase().trim();
+  var compCardStyle='';
+  if(compVal==='scheduled'){
+    compCardStyle='border-color:#4f6ef7;background:#1a1f35;';
+  } else if(compVal==='quoted'){
+    compCardStyle='border-color:#f59e0b;background:#1e1a0f;';
+  } else if(compVal==='gone with third party'){
+    compCardStyle='border-color:#ef4444;background:#1f1215;';
+  }
+
   var checkRows=CHECK_TYPES.map(function(ct){
     var c=a.checks[ct.key];if(!c||c.date===null)return '';
     var col=statusColor(c.status);var hrs=getCheckHours(a.hours,ct.key);
@@ -1402,7 +1414,7 @@ function assetCard(a){
   var cardClick=bulkMode
     ?'toggleAssetSelection(\''+esc(a.uuid)+'\',!selectedUuids.has(\''+esc(a.uuid)+'\'));renderAssets()'
     :'openModal(\''+esc(a.uuid)+'\')';
-  return '<div class="asset-card '+wc+(a.suppressed?' is-suppressed':'')+(isSel?' bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+cardClick+'">'
+  return '<div class="asset-card '+wc+(a.suppressed?' is-suppressed':'')+(isSel?' bulk-selected':'')+'" data-uuid="'+esc(a.uuid)+'" onclick="'+cardClick+'" '+(compCardStyle?'style="'+compCardStyle+'"':'')+'>'
     +'<div class="asset-card-top">'
     +(bulkMode?'<input type="checkbox" class="asset-cb" '+(isSel?'checked':'')+' onclick="event.stopPropagation()" onchange="toggleAssetSelection(\''+esc(a.uuid)+'\',this.checked);renderAssets()"/>':'')
     +'<div class="asset-card-top-content">'
