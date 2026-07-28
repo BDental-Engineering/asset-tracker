@@ -497,7 +497,7 @@ function render() {
 
     cg.parts.forEach(function(p) {
       var st      = getState(p.key);
-      var rowCls  = st.received ? ' class="received-row"' : '';
+     var rowCls  = st.allocated ? ' class="received-row"' : '';
       var jobList = p.jobs.map(function(j){ return 'Job #' + esc(j.jobNumber) + (j.jobDesc ? ' — ' + esc(j.jobDesc.substring(0,40)) : ''); }).join('<br>');
       var qtyStr  = Number.isInteger(p.totalQty) ? String(p.totalQty) : p.totalQty.toFixed(2).replace(/\.?0+$/,'');
 
@@ -652,14 +652,27 @@ function onPoOverlayClick(e) {
 
 // ── State helpers ──────────────────────────────────────
 function toggleState(key, field, value) {
-  if (!statesData[key]) statesData[key] = { ordered: false, received: false, poNumber: '' };
+  if (!statesData[key]) statesData[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
   statesData[key][field] = value;
 
-  if (field === 'received' && value)  statesData[key].ordered  = true;
-  if (field === 'ordered'  && !value) {
-    statesData[key].received = false;
-    statesData[key].poNumber = '';
+  // Allocated = final step: ticks ordered + received, greys out row
+  if (field === 'allocated' && value) {
+    statesData[key].ordered  = true;
+    statesData[key].received = true;
   }
+  // Unticking allocated only unticks itself
+  // Received only ticks itself — no cascade up
+  // Unticking ordered clears everything below it
+  if (field === 'ordered' && !value) {
+    statesData[key].received  = false;
+    statesData[key].allocated = false;
+    statesData[key].poNumber  = '';
+  }
+  // Unticking received clears allocated too
+  if (field === 'received' && !value) {
+    statesData[key].allocated = false;
+  }
+
 
   var ordCb   = document.getElementById('ord-'   + key);
   var allocCb = document.getElementById('alloc-' + key);
@@ -694,8 +707,9 @@ function updateRowUI(key) {
   var pill = document.getElementById('pill-' + key);
   if (pill) pill.innerHTML = statusPill + poHTML;
 
-  var row = document.getElementById('row-' + key);
-  if (row) row.className = st.received ? 'received-row' : '';
+  v  var row = document.getElementById('row-' + key);
+  if (row) row.className = st.allocated ? 'received-row' : '';
+
 
   var ordCb = document.getElementById('ord-' + key);
   var recCb = document.getElementById('rec-' + key);
