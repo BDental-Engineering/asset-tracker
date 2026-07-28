@@ -20,6 +20,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:16p
 button{cursor:pointer;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;padding:8px 16px;transition:opacity 0.15s;}
 button:hover{opacity:0.87;}
 .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-primary{background:var(--accent);color:#fff;}
 .btn-sm{padding:5px 12px;font-size:0.78rem;}
 .page{padding:28px 32px;}
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
@@ -46,7 +47,7 @@ button:hover{opacity:0.87;}
 .parts-table th{text-align:left;padding:9px 14px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--surface);border-bottom:2px solid var(--border);}
 .parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;}
 .parts-table tr:last-child td{border-bottom:none;}
-.parts-table tr.received-row td{opacity:0.5;}
+.parts-table tr.allocated-row td{opacity:0.5;}
 .part-name{font-weight:600;color:var(--text);}
 .part-ref{font-size:0.68rem;color:var(--accent);font-weight:600;margin-top:2px;}
 .part-jobs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
@@ -54,18 +55,32 @@ button:hover{opacity:0.87;}
 .product-code{font-size:0.68rem;color:var(--muted);margin-left:4px;}
 .qty-cell{font-weight:700;color:var(--accent);text-align:center;width:50px;}
 .cb-cell{text-align:center;width:80px;}
-.cb-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.cb-wrap label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
 input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;}
-input[type=checkbox].cb-received{accent-color:var(--green);}
+input[type=checkbox].cb-green{accent-color:var(--green);}
 .status-pill{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;}
 .pill-none{background:rgba(136,146,176,0.12);color:var(--muted);}
 .pill-ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
-.pill-received{background:rgba(34,197,94,0.13);color:var(--green);}
-  .pill-allocated{background:rgba(79,110,247,0.13);color:var(--accent);}
+.pill-received{background:rgba(79,110,247,0.13);color:var(--accent);}
+.pill-allocated{background:rgba(34,197,94,0.13);color:var(--green);}
 .stock-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:var(--green);margin-top:3px;white-space:nowrap;}
 .stock-badge.low{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:var(--amber);}
 .stock-badge.none{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:var(--red);}
+.po-badge{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);margin-top:3px;font-family:monospace;}
+
+/* ── Modals ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;position:relative;}
+.modal-wide{max-width:560px;}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;font-size:1rem;cursor:pointer;}
+.modal-close:hover{border-color:var(--accent);}
+.modal-field-label{font-size:0.78rem;color:var(--muted);display:block;margin-bottom:6px;}
+.modal-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.95rem;outline:none;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.88rem;outline:none;font-family:monospace;resize:vertical;}
+.modal-textarea:focus{border-color:var(--accent);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-msg{font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:10px;}
 
 /* ── Debug panel ── */
 .debug-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
@@ -95,25 +110,23 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
 .debug-raw{font-family:monospace;font-size:0.72rem;color:#e6edf3;white-space:pre-wrap;word-break:break-all;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px;max-height:50vh;overflow-y:auto;}
 .copy-btn{background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;padding:3px 8px;font-size:0.7rem;cursor:pointer;}
 .copy-btn:hover{color:#e6edf3;}
+
+/* ── Toast ── */
 #toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:0.88rem;z-index:400;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:320px;pointer-events:none;}
 #toast.show{transform:translateY(0);opacity:1;}
+
+/* ── Auth screen ── */
 #auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 70px);padding:32px;}
 #auth-screen.show{display:flex;}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;text-align:center;}
 .auth-card h2{margin-bottom:8px;}
 .auth-card p{color:var(--muted);font-size:0.9rem;margin-bottom:24px;}
 .auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 24px;background:var(--accent);color:#fff;border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;border:none;cursor:pointer;}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;position:relative;}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 10px;font-size:1rem;cursor:pointer;}
-.modal-close:hover{border-color:var(--accent);}
-.po-badge{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);margin-top:3px;font-family:monospace;}
-
 </style>
 </head>
 <body>
 
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
 <header>
   <a class="logo" href="index.html">
     <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
@@ -127,13 +140,14 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="jobs.html">&#128188; Jobs</a>
     <a class="back-btn" href="suppliers.html">&#9881; Suppliers</a>
-       <button class="btn-ghost btn-sm" onclick="openExclude()">&#128683; Exclusions</button>
+    <button class="btn-ghost btn-sm" onclick="openExclude()">&#128683; Exclusions</button>
     <button class="btn-ghost btn-sm" onclick="openDebug()">&#128027; Debug Materials</button>
     <button class="btn-ghost btn-sm" onclick="loadAll(true)">&#8635; Refresh</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
 </header>
 
+<!-- ══ AUTH SCREEN ═════════════════════════════════════════════════════════ -->
 <div id="auth-screen">
   <div class="auth-card">
     <h2>Session Expired</h2>
@@ -142,6 +156,7 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
   </div>
 </div>
 
+<!-- ══ MAIN PAGE ═══════════════════════════════════════════════════════════ -->
 <div class="page" id="main-page" style="display:none">
   <div class="page-header">
     <div class="page-header-left">
@@ -157,23 +172,22 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
   </div>
 
   <div class="toolbar">
-    <input type="text"  id="q-search"   placeholder="&#128269; Search parts&hellip;" oninput="render()"/>
-    <select id="q-client"   onchange="render()"><option value="">All Clients</option></select>
+    <input type="text" id="q-search" placeholder="&#128269; Search parts&hellip;" oninput="render()"/>
+    <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
     <select id="q-supplier" onchange="render()"><option value="">All Suppliers</option></select>
-        <select id="q-status"   onchange="render()">
+    <select id="q-status" onchange="render()">
       <option value="">All Statuses</option>
       <option value="none">Needs Ordering</option>
       <option value="ordered">Ordered</option>
-      <option value="allocated">Allocated</option>
       <option value="received">Received</option>
+      <option value="allocated">Allocated</option>
     </select>
-
   </div>
 
   <div id="parts-list"></div>
 </div>
 
-<!-- Debug panel -->
+<!-- ══ DEBUG PANEL ═════════════════════════════════════════════════════════ -->
 <div class="debug-overlay" id="debug-overlay" onclick="onDebugOverlayClick(event)">
   <div class="debug-panel">
     <div class="debug-header">
@@ -194,9 +208,54 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
   </div>
 </div>
 
+<!-- ══ PO MODAL ════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="po-modal" onclick="onPoOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closePoModal()">&#10005;</button>
+    <h3 style="margin-bottom:8px">&#128203; Purchase Order</h3>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">
+      Enter the PO number for this order. You can leave it blank and add it later.
+    </p>
+    <div style="margin-bottom:16px">
+      <label class="modal-field-label">PO Number</label>
+      <input type="text" id="po-input" class="modal-input" placeholder="e.g. PO-2026-001"
+        onkeydown="if(event.key==='Enter')confirmPoModal()"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="cancelPoModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmPoModal()">&#10003; Confirm Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXCLUSIONS MODAL ════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="exclude-modal" onclick="onExcludeOverlayClick(event)">
+  <div class="modal modal-wide">
+    <button class="modal-close" onclick="closeExclude()">&#10005;</button>
+    <h3 style="margin-bottom:6px">&#128683; Excluded Item Numbers</h3>
+    <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px">
+      Enter item numbers to exclude from the parts list, one per line.<br/>
+      Matched against the <strong>item_number</strong> field from the ServiceM8 catalogue.
+    </p>
+    <div style="margin-bottom:14px">
+      <label class="modal-field-label" style="text-transform:uppercase;letter-spacing:0.05em;">Item Numbers (one per line)</label>
+      <textarea id="exclude-input" class="modal-textarea" rows="10"
+        placeholder="e.g.&#10;LABOUR-01&#10;SERVICE-CALL&#10;TRAVEL-FEE"></textarea>
+    </div>
+    <div class="modal-msg" id="exclude-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeExclude()">Cancel</button>
+      <button class="btn-primary" id="exclude-save-btn" onclick="saveExclusions()">&#128190; Save Exclusions</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ═══════════════════════════════════════════════════════════════ -->
 <div id="toast"></div>
 
+<!-- ══ SCRIPT ══════════════════════════════════════════════════════════════ -->
 <script>
+// ── Globals ────────────────────────────────────────────
 var partsData           = [];
 var suppliersData       = {};
 var statesData          = {};
@@ -207,37 +266,11 @@ var currentUser         = '';
 var loaded              = false;
 var debugTab            = 'table';
 
-<!-- Exclusions Modal -->
-<div class="modal-overlay" id="exclude-modal" onclick="onExcludeOverlayClick(event)">
-  <div class="modal" style="max-width:560px;">
-    <button class="modal-close" onclick="closeExclude()">&#10005;</button>
-    <h3 style="margin-bottom:6px">&#128683; Excluded Item Numbers</h3>
-    <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px">
-      Enter item numbers to exclude from the parts list, one per line.<br/>
-      These are matched against the <strong>item_number</strong> field from the ServiceM8 catalogue.
-    </p>
-    <div style="margin-bottom:14px;">
-      <label style="font-size:0.72rem;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Item Numbers (one per line)</label>
-      <textarea id="exclude-input" rows="10" placeholder="e.g.&#10;LABOUR-01&#10;SERVICE-CALL&#10;TRAVEL-FEE"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-               padding:10px 14px;color:var(--text);font-size:0.88rem;outline:none;
-               font-family:monospace;resize:vertical;"
-        onfocus="this.style.borderColor='var(--accent)'"
-        onblur="this.style.borderColor='var(--border)'"></textarea>
-    </div>
-    <div id="exclude-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:10px;"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn-ghost" onclick="closeExclude()">Cancel</button>
-      <button class="btn-primary" id="exclude-save-btn" onclick="saveExclusions()">&#128190; Save Exclusions</button>
-    </div>
-  </div>
-</div>
-  
-  
-//  state PO modal
-var pendingPoKey    = null;
+// PO modal state
+var pendingPoKey     = null;
 var pendingPoChecked = false;
 
+// ── Init ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   var r = readCookies();
   currentUser = r.name || 'Unknown';
@@ -263,6 +296,7 @@ function checkSession() {
 function showAuth(){ document.getElementById('auth-screen').classList.add('show'); document.getElementById('main-page').style.display='none'; }
 function showMain(){ document.getElementById('auth-screen').classList.remove('show'); document.getElementById('main-page').style.display='block'; }
 
+// ── API helpers ────────────────────────────────────────
 function sm8Get(path) {
   return fetch('/api/proxy?path=' + encodeURIComponent(path), {
     credentials:'include', headers:{'Accept':'application/json','Cache-Control':'no-cache'}
@@ -277,6 +311,7 @@ function apiPost(url, body) {
     .then(function(r){ return r.json(); });
 }
 
+// ── Load all data ──────────────────────────────────────
 function loadAll(force) {
   if (loaded && !force) return;
   loaded = false;
@@ -290,7 +325,7 @@ function loadAll(force) {
     sm8Get('/company.json'),
     sm8Get('/jobmaterial.json'),
     sm8Get('/material.json').catch(function(){ return []; }),
-       apiGet('/api/suppliers'),
+    apiGet('/api/suppliers'),
     apiGet('/api/parts'),
     apiGet('/api/materials-exclude').catch(function(){ return { excludedItemNumbers: [] }; })
   ]).then(function(res) {
@@ -300,7 +335,7 @@ function loadAll(force) {
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
     var rawCatalogue  = Array.isArray(res[5]) ? res[5] : [];
-      suppliersData       = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    suppliersData       = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
     statesData          = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
     var excludeData     = (res[8] && typeof res[8]==='object') ? res[8] : {};
     excludedItemNumbers = Array.isArray(excludeData.excludedItemNumbers)
@@ -309,7 +344,8 @@ function loadAll(force) {
 
     rawMaterialsAll = rawMaterials;
 
-        var catalogueMap = {};
+    // Build catalogue + inventory maps
+    var catalogueMap = {};
     var inventoryMap = {};
     rawCatalogue.forEach(function(c) {
       if (c.uuid) {
@@ -320,7 +356,6 @@ function loadAll(force) {
         };
       }
     });
-
 
     var staffMap = {};
     rawStaff.filter(function(s){ return String(s.active)==='1'; }).forEach(function(s){
@@ -335,25 +370,25 @@ function loadAll(force) {
       clientMap[c.uuid] = c.name || '';
     });
 
+    // Only Work Order jobs
     var woJobs = rawJobs.filter(function(j){
       return String(j.active)==='1' && j.status==='Work Order';
     });
     var woUuids = {};
     woJobs.forEach(function(j){ woUuids[j.uuid] = j; });
 
+    // Group materials by job, applying exclusion filter
     var matsByJob = {};
-            rawMaterials.forEach(function(m){
+    rawMaterials.forEach(function(m){
       if (!m.job_uuid || !woUuids[m.job_uuid]) return;
       if (m.active !== 1 && String(m.active) !== '1') return;
-      // Exclude by item_number
       var itemNum = (catalogueMap[m.material_uuid] || '').toUpperCase().trim();
       if (itemNum && excludedItemNumbers.indexOf(itemNum) !== -1) return;
       if (!matsByJob[m.job_uuid]) matsByJob[m.job_uuid] = [];
       matsByJob[m.job_uuid].push(m);
     });
 
-
-
+    // Build client groups
     var clientGroups = {};
     Object.keys(matsByJob).forEach(function(jobUuid) {
       var job        = woUuids[jobUuid];
@@ -371,8 +406,8 @@ function loadAll(force) {
 
         if (!clientGroups[clientUuid].parts[normKey]) {
           var supplierInfo = lookupSupplier(normName, itemNumber);
-          var stateKey = clientUuid + '__' + normKey;
-                    var invInfo = m.material_uuid ? (inventoryMap[m.material_uuid] || null) : null;
+          var stateKey     = clientUuid + '__' + normKey;
+          var invInfo      = m.material_uuid ? (inventoryMap[m.material_uuid] || null) : null;
           clientGroups[clientUuid].parts[normKey] = {
             name:          normName,
             itemNumber:    itemNumber,
@@ -387,7 +422,6 @@ function loadAll(force) {
             isInventoried: invInfo ? invInfo.isInventoried : false,
             qtyInStock:    invInfo ? invInfo.qtyInStock    : 0
           };
-
         }
 
         var qty = parseFloat(m.quantity || 1);
@@ -424,6 +458,7 @@ function loadAll(force) {
   });
 }
 
+// ── Supplier lookup ────────────────────────────────────
 function lookupSupplier(normName, itemNumber) {
   if (itemNumber) {
     var prefix = itemNumber.substring(0, 10).toUpperCase();
@@ -450,6 +485,7 @@ function lookupSupplier(normName, itemNumber) {
   return null;
 }
 
+// ── Filters ────────────────────────────────────────────
 function populateFilters() {
   var clientSel = document.getElementById('q-client');
   var curClient = clientSel.value;
@@ -459,7 +495,7 @@ function populateFilters() {
   Object.keys(seenClients).sort(function(a,b){ return seenClients[a].localeCompare(seenClients[b]); }).forEach(function(u){
     var o = document.createElement('option');
     o.value = u; o.textContent = seenClients[u];
-    if (u===curClient) o.selected=true;
+    if (u===curClient) o.selected = true;
     clientSel.appendChild(o);
   });
 
@@ -469,15 +505,17 @@ function populateFilters() {
   Object.keys(suppliersData).sort(function(a,b){ return suppliersData[a].name.localeCompare(suppliersData[b].name); }).forEach(function(id){
     var o = document.createElement('option');
     o.value = id; o.textContent = suppliersData[id].name;
-    if (id===curSup) o.selected=true;
+    if (id===curSup) o.selected = true;
     supSel.appendChild(o);
   });
 }
 
-function getState(key) { return statesData[key] || { ordered: false, received: false, allocated: false, poNumber: '' }; }
+function getState(key) {
+  return statesData[key] || { ordered: false, received: false, allocated: false, poNumber: '' };
+}
 
 function getFiltered() {
-  var q       = (document.getElementById('q-search').value   || '').toLowerCase();
+  var q       = (document.getElementById('q-search').value || '').toLowerCase();
   var clientF = document.getElementById('q-client').value;
   var supF    = document.getElementById('q-supplier').value;
   var statusF = document.getElementById('q-status').value;
@@ -485,18 +523,18 @@ function getFiltered() {
     if (clientF && p.clientUuid !== clientF) return false;
     if (supF    && p.supplierId !== supF)    return false;
     if (q && p.name.toLowerCase().indexOf(q)===-1 && p.clientName.toLowerCase().indexOf(q)===-1) return false;
-        if (statusF) {
+    if (statusF) {
       var st = getState(p.key);
-      if (statusF==='none'      && (st.ordered||st.received))           return false;
-      if (statusF==='ordered'   && (!st.ordered||st.allocated||st.received)) return false;
-      if (statusF==='allocated' && (!st.allocated||st.received))        return false;
-      if (statusF==='received'  && !st.received)                        return false;
+      if (statusF==='none'      && (st.ordered || st.received || st.allocated))          return false;
+      if (statusF==='ordered'   && (!st.ordered || st.received || st.allocated))         return false;
+      if (statusF==='received'  && (!st.received || st.allocated))                       return false;
+      if (statusF==='allocated' && !st.allocated)                                        return false;
     }
-
     return true;
   });
 }
 
+// ── Render ─────────────────────────────────────────────
 function render() {
   if (!loaded) return;
   var filtered = getFiltered();
@@ -527,36 +565,33 @@ function render() {
       + '<th style="text-align:center;width:50px">Qty</th>'
       + '<th>Jobs</th>'
       + '<th>Supplier</th>'
-      + '<th style="text-align:center;width:80px">Order</th>'
+      + '<th style="text-align:center;width:80px">Ordered</th>'
       + '<th style="text-align:center;width:80px">Received</th>'
       + '<th style="text-align:center;width:80px">Allocated</th>'
-
       + '<th style="width:140px">Status / PO</th>'
       + '</tr></thead><tbody>';
 
     cg.parts.forEach(function(p) {
-      var st      = getState(p.key);
-     var rowCls  = st.allocated ? ' class="received-row"' : '';
-      var jobList = p.jobs.map(function(j){ return 'Job #' + esc(j.jobNumber) + (j.jobDesc ? ' — ' + esc(j.jobDesc.substring(0,40)) : ''); }).join('<br>');
-      var qtyStr  = Number.isInteger(p.totalQty) ? String(p.totalQty) : p.totalQty.toFixed(2).replace(/\.?0+$/,'');
+      var st     = getState(p.key);
+      var rowCls = st.allocated ? ' class="allocated-row"' : '';
+      var jobList = p.jobs.map(function(j){
+        return 'Job #' + esc(j.jobNumber) + (j.jobDesc ? ' \u2014 ' + esc(j.jobDesc.substring(0,40)) : '');
+      }).join('<br>');
+      var qtyStr = Number.isInteger(p.totalQty) ? String(p.totalQty) : p.totalQty.toFixed(2).replace(/\.?0+$/,'');
 
-      var supplierHTML = '';
-      if (p.supplierName) {
-        supplierHTML = '<div class="supplier-tag">&#128230; ' + esc(p.supplierName)
-          + (p.productCode ? '<span class="product-code">' + esc(p.productCode) + '</span>' : '')
-          + '</div>';
-      } else {
-        supplierHTML = '<span style="color:var(--muted);font-size:0.72rem">—</span>';
-      }
+      var supplierHTML = p.supplierName
+        ? '<div class="supplier-tag">&#128230; ' + esc(p.supplierName)
+            + (p.productCode ? '<span class="product-code">' + esc(p.productCode) + '</span>' : '')
+            + '</div>'
+        : '<span style="color:var(--muted);font-size:0.72rem">\u2014</span>';
 
-      var statusPill = st.received
-        ? '<span class="status-pill pill-received">&#10003; Received</span>'
-        : st.allocated
-          ? '<span class="status-pill pill-allocated">&#128230; Allocated</span>'
+      var statusPill = st.allocated
+        ? '<span class="status-pill pill-allocated">&#10003; Allocated</span>'
+        : st.received
+          ? '<span class="status-pill pill-received">&#128230; Received</span>'
           : st.ordered
             ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
             : '<span class="status-pill pill-none">Needs Order</span>';
-
 
       var poHTML = (st.ordered && st.poNumber)
         ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
@@ -564,36 +599,37 @@ function render() {
           ? '<div style="margin-top:3px"><button class="btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px;" onclick="openPoEdit(\'' + esc(p.key) + '\')">+ Add PO#</button></div>'
           : '';
 
-           var stockHTML = '';
+      var stockHTML = '';
       if (p.isInventoried) {
         var stockCls = p.qtyInStock <= 0 ? 'none' : p.qtyInStock < p.totalQty ? 'low' : '';
         stockHTML = '<span class="stock-badge ' + stockCls + '">&#128200; In stock: ' + p.qtyInStock + '</span>';
       }
+
       html += '<tr' + rowCls + ' id="row-' + esc(p.key) + '">'
         + '<td>'
         +   '<div class="part-name">' + esc(p.name) + '</div>'
         +   (p.itemNumber ? '<div class="part-ref">&#128230; ' + esc(p.itemNumber) + '</div>' : '')
         +   (stockHTML ? '<div>' + stockHTML + '</div>' : '')
         + '</td>'
-
         + '<td class="qty-cell">' + qtyStr + '</td>'
         + '<td><div class="part-jobs">' + jobList + '</div></td>'
         + '<td>' + supplierHTML + '</td>'
-               + '<td class="cb-cell">'
-        +   '<input type="checkbox" id="ord-' + esc(p.key) + '" ' + (st.ordered ? 'checked' : '') + ' onchange="onOrderedChange(\'' + esc(p.key) + '\',this.checked)"/>'
-        + '</td>'
-                + '<td class="cb-cell">'
-        +   '<input type="checkbox" class="cb-received" id="rec-' + esc(p.key) + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'received\',this.checked)"/>'
+        + '<td class="cb-cell">'
+        +   '<input type="checkbox" id="ord-' + esc(p.key) + '"'
+        +   (st.ordered ? ' checked' : '')
+        +   ' onchange="onOrderedChange(\'' + esc(p.key) + '\',this.checked)"/>'
         + '</td>'
         + '<td class="cb-cell">'
-        +   '<input type="checkbox" class="cb-received" id="alloc-' + esc(p.key) + '" ' + (st.allocated ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'allocated\',this.checked)"/>'
+        +   '<input type="checkbox" class="cb-green" id="rec-' + esc(p.key) + '"'
+        +   (st.received ? ' checked' : '')
+        +   ' onchange="toggleState(\'' + esc(p.key) + '\',\'received\',this.checked)"/>'
         + '</td>'
-
-
-        + '<td id="pill-' + esc(p.key) + '">'
-        +   statusPill
-        +   poHTML
+        + '<td class="cb-cell">'
+        +   '<input type="checkbox" class="cb-green" id="alloc-' + esc(p.key) + '"'
+        +   (st.allocated ? ' checked' : '')
+        +   ' onchange="toggleState(\'' + esc(p.key) + '\',\'allocated\',this.checked)"/>'
         + '</td>'
+        + '<td id="pill-' + esc(p.key) + '">' + statusPill + poHTML + '</td>'
         + '</tr>';
     });
 
@@ -604,138 +640,63 @@ function render() {
 }
 
 function renderStats(filtered) {
-    var total     = filtered.length;
-  var needs     = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered&&!s.received; }).length;
-  var ordered   = filtered.filter(function(p){ var s=getState(p.key); return s.ordered&&!s.allocated&&!s.received; }).length;
-  var allocated = filtered.filter(function(p){ var s=getState(p.key); return s.allocated&&!s.received; }).length;
-  var received  = filtered.filter(function(p){ var s=getState(p.key); return s.received; }).length;
+  var total     = filtered.length;
+  var needs     = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered && !s.received && !s.allocated; }).length;
+  var ordered   = filtered.filter(function(p){ var s=getState(p.key); return s.ordered && !s.received && !s.allocated; }).length;
+  var received  = filtered.filter(function(p){ var s=getState(p.key); return s.received && !s.allocated; }).length;
+  var allocated = filtered.filter(function(p){ var s=getState(p.key); return s.allocated; }).length;
   document.getElementById('stats-bar').innerHTML =
     stat(total,     'Total Parts',  'var(--text)')   +
     stat(needs,     'Needs Order',  'var(--red)')    +
     stat(ordered,   'Ordered',      'var(--amber)')  +
-    stat(allocated, 'Allocated',    'var(--accent)') +
-    stat(received,  'Received',     'var(--green)');
+    stat(received,  'Received',     'var(--accent)') +
+    stat(allocated, 'Allocated',    'var(--green)');
 }
 function stat(v,l,c){ return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
 
-// ── Ordered checkbox — opens PO modal ──────────────────
-function onOrderedChange(key, checked) {
-  if (checked) {
-    // Uncheck visually until confirmed
-    var cb = document.getElementById('ord-' + key);
-    if (cb) cb.checked = false;
-    openPoModal(key);
-  } else {
-    // Unchecking ordered — clear PO and ordered state
-    toggleState(key, 'ordered', false);
-  }
-}
-
-// ── PO Modal ───────────────────────────────────────────
-function openPoModal(key) {
-  pendingPoKey     = key;
-  pendingPoChecked = true;
-  var st = getState(key);
-  document.getElementById('po-input').value = st.poNumber || '';
-  document.getElementById('po-modal').classList.add('open');
-  setTimeout(function(){ document.getElementById('po-input').focus(); }, 80);
-}
-
-function openPoEdit(key) {
-  pendingPoKey     = key;
-  pendingPoChecked = null; // editing only, don't change ordered state
-  var st = getState(key);
-  document.getElementById('po-input').value = st.poNumber || '';
-  document.getElementById('po-modal').classList.add('open');
-  setTimeout(function(){ document.getElementById('po-input').focus(); }, 80);
-}
-
-function closePoModal() {
-  document.getElementById('po-modal').classList.remove('open');
-  pendingPoKey     = null;
-  pendingPoChecked = null;
-}
-
-function cancelPoModal() {
-  // If cancelling a new order tick, leave checkbox unchecked
-  closePoModal();
-}
-
-function confirmPoModal() {
-  if (!pendingPoKey) { closePoModal(); return; }
-  var poNumber = (document.getElementById('po-input').value || '').trim();
-  var key      = pendingPoKey;
-  var isNew    = pendingPoChecked === true;
-
-  closePoModal();
-
-  if (!statesData[key]) statesData[key] = { ordered: false, received: false, poNumber: '' };
-
-  if (isNew) {
-    statesData[key].ordered  = true;
-    statesData[key].poNumber = poNumber;
-    var cb = document.getElementById('ord-' + key);
-    if (cb) cb.checked = true;
-  } else {
-    // Just updating PO number
-    statesData[key].poNumber = poNumber;
-  }
-
-  updateRowUI(key);
-  saveState(key);
-}
-
-function onPoOverlayClick(e) {
-  if (e.target === document.getElementById('po-modal')) cancelPoModal();
-}
-
-// ── State helpers ──────────────────────────────────────
+// ── State ──────────────────────────────────────────────
 function toggleState(key, field, value) {
   if (!statesData[key]) statesData[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
   statesData[key][field] = value;
 
-  // Allocated = final step: ticks ordered + received, greys out row
+  // Allocated is the final step — ticks ordered + received too
   if (field === 'allocated' && value) {
     statesData[key].ordered  = true;
     statesData[key].received = true;
   }
-  // Unticking allocated only unticks itself
-  // Received only ticks itself — no cascade up
-  // Unticking ordered clears everything below it
+  // Unticking ordered clears everything below
   if (field === 'ordered' && !value) {
     statesData[key].received  = false;
     statesData[key].allocated = false;
     statesData[key].poNumber  = '';
   }
-  // Unticking received clears allocated too
+  // Unticking received clears allocated
   if (field === 'received' && !value) {
     statesData[key].allocated = false;
   }
 
-
+  // Sync all checkboxes
   var ordCb   = document.getElementById('ord-'   + key);
-  var allocCb = document.getElementById('alloc-' + key);
   var recCb   = document.getElementById('rec-'   + key);
+  var allocCb = document.getElementById('alloc-' + key);
   if (ordCb)   ordCb.checked   = statesData[key].ordered;
-  if (allocCb) allocCb.checked = statesData[key].allocated;
   if (recCb)   recCb.checked   = statesData[key].received;
-
+  if (allocCb) allocCb.checked = statesData[key].allocated;
 
   updateRowUI(key);
   saveState(key);
 }
 
 function updateRowUI(key) {
-  var st = statesData[key] || { ordered: false, received: false, poNumber: '' };
+  var st = statesData[key] || { ordered: false, received: false, allocated: false, poNumber: '' };
 
-         var statusPill = st.allocated
-        ? '<span class="status-pill pill-received">&#10003; Allocated</span>'
-        : st.received
-          ? '<span class="status-pill pill-ordered">&#128230; Received</span>'
-          : st.ordered
-            ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
-            : '<span class="status-pill pill-none">Needs Order</span>';
-
+  var statusPill = st.allocated
+    ? '<span class="status-pill pill-allocated">&#10003; Allocated</span>'
+    : st.received
+      ? '<span class="status-pill pill-received">&#128230; Received</span>'
+      : st.ordered
+        ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+        : '<span class="status-pill pill-none">Needs Order</span>';
 
   var poHTML = (st.ordered && st.poNumber)
     ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
@@ -747,26 +708,127 @@ function updateRowUI(key) {
   if (pill) pill.innerHTML = statusPill + poHTML;
 
   var row = document.getElementById('row-' + key);
-  if (row) row.className = st.allocated ? 'received-row' : '';
+  if (row) row.className = st.allocated ? 'allocated-row' : '';
 
-
-  var ordCb = document.getElementById('ord-' + key);
-  var recCb = document.getElementById('rec-' + key);
-  if (ordCb) ordCb.checked = st.ordered;
-  if (recCb) recCb.checked = st.received;
+  var ordCb   = document.getElementById('ord-'   + key);
+  var recCb   = document.getElementById('rec-'   + key);
+  var allocCb = document.getElementById('alloc-' + key);
+  if (ordCb)   ordCb.checked   = st.ordered;
+  if (recCb)   recCb.checked   = st.received;
+  if (allocCb) allocCb.checked = st.allocated;
 }
 
 function saveState(key) {
   var st = statesData[key];
-   apiPost('/api/parts', {
+  apiPost('/api/parts', {
     key:       key,
     field:     'ordered',
     value:     st.ordered,
     received:  st.received,
     allocated: st.allocated || false,
-    poNumber:  st.poNumber || '',
+    poNumber:  st.poNumber  || '',
     updatedBy: currentUser
   }).catch(function(){ toast('Save failed', true); });
+}
+
+// ── Ordered checkbox (opens PO modal) ──────────────────
+function onOrderedChange(key, checked) {
+  if (checked) {
+    var cb = document.getElementById('ord-' + key);
+    if (cb) cb.checked = false;
+    openPoModal(key);
+  } else {
+    toggleState(key, 'ordered', false);
+  }
+}
+
+// ── PO modal ───────────────────────────────────────────
+function openPoModal(key) {
+  pendingPoKey     = key;
+  pendingPoChecked = true;
+  var st = getState(key);
+  document.getElementById('po-input').value = st.poNumber || '';
+  document.getElementById('po-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('po-input').focus(); }, 80);
+}
+function openPoEdit(key) {
+  pendingPoKey     = key;
+  pendingPoChecked = null;
+  var st = getState(key);
+  document.getElementById('po-input').value = st.poNumber || '';
+  document.getElementById('po-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('po-input').focus(); }, 80);
+}
+function closePoModal() {
+  document.getElementById('po-modal').classList.remove('open');
+  pendingPoKey     = null;
+  pendingPoChecked = null;
+}
+function cancelPoModal() { closePoModal(); }
+function confirmPoModal() {
+  if (!pendingPoKey) { closePoModal(); return; }
+  var poNumber = (document.getElementById('po-input').value || '').trim();
+  var key      = pendingPoKey;
+  var isNew    = pendingPoChecked === true;
+  closePoModal();
+
+  if (!statesData[key]) statesData[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
+  if (isNew) {
+    statesData[key].ordered  = true;
+    statesData[key].poNumber = poNumber;
+    var cb = document.getElementById('ord-' + key);
+    if (cb) cb.checked = true;
+  } else {
+    statesData[key].poNumber = poNumber;
+  }
+  updateRowUI(key);
+  saveState(key);
+}
+function onPoOverlayClick(e) {
+  if (e.target === document.getElementById('po-modal')) cancelPoModal();
+}
+
+// ── Exclusions modal ───────────────────────────────────
+function openExclude() {
+  document.getElementById('exclude-input').value = excludedItemNumbers.join('\n');
+  document.getElementById('exclude-msg').textContent = '';
+  document.getElementById('exclude-save-btn').disabled = false;
+  document.getElementById('exclude-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('exclude-input').focus(); }, 80);
+}
+function closeExclude() {
+  document.getElementById('exclude-modal').classList.remove('open');
+}
+function onExcludeOverlayClick(e) {
+  if (e.target === document.getElementById('exclude-modal')) closeExclude();
+}
+function saveExclusions() {
+  var raw   = document.getElementById('exclude-input').value || '';
+  var items = raw.split('\n').map(function(l){ return l.trim().toUpperCase(); }).filter(Boolean);
+  var msg   = document.getElementById('exclude-msg');
+  var btn   = document.getElementById('exclude-save-btn');
+  msg.style.color  = 'var(--amber)';
+  msg.textContent  = 'Saving\u2026';
+  btn.disabled     = true;
+
+  apiPost('/api/materials-exclude', { itemNumbers: items, updatedBy: currentUser })
+    .then(function(data) {
+      btn.disabled = false;
+      if (data.error) {
+        msg.style.color = 'var(--red)';
+        msg.textContent = 'Error: ' + data.error;
+        return;
+      }
+      excludedItemNumbers = items;
+      msg.style.color = 'var(--green)';
+      msg.textContent = '\u2713 Saved ' + items.length + ' exclusion' + (items.length===1?'':'s') + '. Refreshing\u2026';
+      setTimeout(function(){ closeExclude(); loadAll(true); }, 900);
+    })
+    .catch(function(e) {
+      btn.disabled    = false;
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Failed: ' + e.message;
+    });
 }
 
 // ── Debug panel ────────────────────────────────────────
@@ -786,16 +848,13 @@ function switchDebugTab(tab, btn) {
   btn.classList.add('active');
   renderDebugTab(tab);
 }
-
 function renderDebugTab(tab) {
   var body = document.getElementById('debug-body');
   var data = rawMaterialsAll;
-
   if (!data || !data.length) {
     body.innerHTML = '<p style="color:#8b949e;padding:20px 0">No material data loaded yet. Refresh first.</p>';
     return;
   }
-
   var uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   if (tab === 'table') {
@@ -803,32 +862,24 @@ function renderDebugTab(tab) {
     var withUuid = data.filter(function(m){ return !!m.material_uuid; }).length;
     var realUuid = data.filter(function(m){ return m.material_uuid && uuidPat.test(m.material_uuid); }).length;
     var codeRef  = data.filter(function(m){ return m.material_uuid && !uuidPat.test(m.material_uuid); }).length;
-
     var html = '<div class="debug-summary">'
-      + debugStat(data.length, 'Total Records')
-      + debugStat(active,      'Active')
-      + debugStat(withUuid,    'Has material_uuid')
-      + debugStat(realUuid,    'UUID format')
-      + debugStat(codeRef,     'Non-UUID ref')
+      + debugStat(data.length,'Total Records') + debugStat(active,'Active')
+      + debugStat(withUuid,'Has material_uuid') + debugStat(realUuid,'UUID format') + debugStat(codeRef,'Non-UUID ref')
       + '</div>'
       + '<input class="debug-search" type="text" placeholder="&#128269; Filter rows&hellip;" oninput="filterDebugTable(this.value)"/>'
       + '<div class="debug-table-wrap"><table class="debug-table" id="debug-tbl">'
-      + '<thead><tr>'
-      + '<th>#</th><th>name</th><th>material_uuid</th><th>job_uuid</th>'
-      + '<th>qty</th><th>price</th><th>active</th><th>sort</th>'
-      + '</tr></thead><tbody>';
-
-    data.forEach(function(m, i) {
+      + '<thead><tr><th>#</th><th>name</th><th>material_uuid</th><th>job_uuid</th><th>qty</th><th>price</th><th>active</th><th>sort</th></tr></thead><tbody>';
+    data.forEach(function(m,i){
       var isUuid = m.material_uuid && uuidPat.test(m.material_uuid);
       html += '<tr>'
-        + '<td style="color:#8b949e">' + (i+1) + '</td>'
-        + '<td><strong>' + esc(m.name||'—') + '</strong></td>'
-        + '<td class="uuid" style="color:' + (isUuid?'#8b949e':'#f0883e') + '">' + esc(m.material_uuid||'—') + '</td>'
-        + '<td class="uuid">' + esc(m.job_uuid||'—') + '</td>'
-        + '<td>' + esc(m.quantity||'—') + '</td>'
-        + '<td>' + esc(m.price||'—') + '</td>'
-        + '<td>' + esc(String(m.active)) + '</td>'
-        + '<td>' + esc(m.sort_order||'—') + '</td>'
+        + '<td style="color:#8b949e">'+(i+1)+'</td>'
+        + '<td><strong>'+esc(m.name||'—')+'</strong></td>'
+        + '<td class="uuid" style="color:'+(isUuid?'#8b949e':'#f0883e')+'">'+esc(m.material_uuid||'—')+'</td>'
+        + '<td class="uuid">'+esc(m.job_uuid||'—')+'</td>'
+        + '<td>'+esc(m.quantity||'—')+'</td>'
+        + '<td>'+esc(m.price||'—')+'</td>'
+        + '<td>'+esc(String(m.active))+'</td>'
+        + '<td>'+esc(m.sort_order||'—')+'</td>'
         + '</tr>';
     });
     html += '</tbody></table></div>';
@@ -838,34 +889,28 @@ function renderDebugTab(tab) {
     var allKeys = {};
     data.forEach(function(m){ Object.keys(m).forEach(function(k){ allKeys[k]=true; }); });
     var keys = Object.keys(allKeys).sort();
-
     var html = '<p style="color:#8b949e;font-size:0.78rem;margin-bottom:12px">'
       + keys.length + ' unique fields across ' + data.length + ' records.</p>'
       + '<div class="debug-table-wrap"><table class="debug-table">'
       + '<thead><tr><th>Field</th><th>Sample Value</th><th>Present in</th></tr></thead><tbody>';
-
-    keys.forEach(function(k) {
-      var sample = ''; var count = 0;
+    keys.forEach(function(k){
+      var sample=''; var count=0;
       data.forEach(function(m){
-        if (m[k]!==undefined&&m[k]!==null&&m[k]!==''){
-          count++;
-          if (!sample) sample = String(m[k]);
-        }
+        if(m[k]!==undefined&&m[k]!==null&&m[k]!==''){count++;if(!sample)sample=String(m[k]);}
       });
       html += '<tr>'
-        + '<td style="color:#f0883e;font-family:monospace">' + esc(k) + '</td>'
-        + '<td>' + esc(sample.substring(0,120)) + '</td>'
-        + '<td style="color:#8b949e">' + count + ' / ' + data.length + '</td>'
+        + '<td style="color:#f0883e;font-family:monospace">'+esc(k)+'</td>'
+        + '<td>'+esc(sample.substring(0,120))+'</td>'
+        + '<td style="color:#8b949e">'+count+' / '+data.length+'</td>'
         + '</tr>';
     });
     html += '</tbody></table></div>';
     body.innerHTML = html;
 
   } else if (tab === 'raw') {
-    body.innerHTML = '<div class="debug-raw">' + esc(JSON.stringify(data, null, 2)) + '</div>';
+    body.innerHTML = '<div class="debug-raw">'+esc(JSON.stringify(data,null,2))+'</div>';
   }
 }
-
 function filterDebugTable(q) {
   q = q.toLowerCase();
   document.querySelectorAll('#debug-tbl tbody tr').forEach(function(row){
@@ -879,6 +924,7 @@ function copyDebugData(){
     .catch(function(){ toast('Copy failed',true); });
 }
 
+// ── Utilities ──────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML=html; }
 var toastTimer=null;
@@ -891,75 +937,6 @@ function toast(msg,isError){
   if(toastTimer)clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){el.classList.remove('show');},3500);
 }
-// ── Exclusions modal ───────────────────────────────────
-function openExclude() {
-  document.getElementById('exclude-input').value = excludedItemNumbers.join('\n');
-  document.getElementById('exclude-msg').textContent = '';
-  document.getElementById('exclude-save-btn').disabled = false;
-  document.getElementById('exclude-modal').classList.add('open');
-  setTimeout(function(){ document.getElementById('exclude-input').focus(); }, 80);
-}
-function closeExclude() {
-  document.getElementById('exclude-modal').classList.remove('open');
-}
-function onExcludeOverlayClick(e) {
-  if (e.target === document.getElementById('exclude-modal')) closeExclude();
-}
-function saveExclusions() {
-  var raw = document.getElementById('exclude-input').value || '';
-  var items = raw.split('\n')
-    .map(function(l){ return l.trim().toUpperCase(); })
-    .filter(Boolean);
-
-  var msg = document.getElementById('exclude-msg');
-  var btn = document.getElementById('exclude-save-btn');
-  msg.style.color = 'var(--amber)';
-  msg.textContent = 'Saving\u2026';
-  btn.disabled = true;
-
-  apiPost('/api/materials-exclude', { itemNumbers: items, updatedBy: currentUser })
-    .then(function(data) {
-      btn.disabled = false;
-      if (data.error) {
-        msg.style.color = 'var(--red)';
-        msg.textContent = 'Error: ' + data.error;
-        return;
-      }
-      excludedItemNumbers = items;
-      msg.style.color = 'var(--green)';
-      msg.textContent = '\u2713 Saved ' + items.length + ' exclusion' + (items.length === 1 ? '' : 's') + '. Refreshing\u2026';
-      setTimeout(function(){ closeExclude(); loadAll(true); }, 900);
-    })
-    .catch(function(e) {
-      btn.disabled = false;
-      msg.style.color = 'var(--red)';
-      msg.textContent = 'Failed: ' + e.message;
-    });
-}
-
-  
 </script>
-
-  <!-- PO Number Modal -->
-<div class="modal-overlay" id="po-modal" onclick="onPoOverlayClick(event)">
-  <div class="modal">
-    <button class="modal-close" onclick="closePoModal()">&#10005;</button>
-    <h3 style="margin-bottom:8px">&#128203; Purchase Order</h3>
-    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px">Enter the PO number for this order. You can leave it blank and add it later.</p>
-    <div style="margin-bottom:16px">
-      <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:6px">PO Number</label>
-      <input type="text" id="po-input" placeholder="e.g. PO-2026-001"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.95rem;outline:none;"
-        onkeydown="if(event.key==='Enter')confirmPoModal()"
-        onfocus="this.style.borderColor='var(--accent)'"
-        onblur="this.style.borderColor='var(--border)'"/>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-ghost" onclick="cancelPoModal()">Cancel</button>
-      <button class="btn-primary" onclick="confirmPoModal()">&#10003; Confirm Order</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
