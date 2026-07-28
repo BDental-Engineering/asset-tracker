@@ -945,19 +945,57 @@ function doComplianceUpdate(uuid,newValue,selectEl,msgEl){
         throw new Error('HTTP '+r.status+': '+txt);
       });
     })
-    .then(function(){
+        .then(function(){
       setAnyFieldValueLocal(asset,COMPLIANCE_FIELD,newValue);
       saveLocal();
-      selectEl.classList.remove('saving');selectEl.classList.add('saved');
+
+      // Update every compliance select on the page for this asset immediately
+      document.querySelectorAll('[data-uuid="'+uuid+'"] .compliance-select').forEach(function(sel){
+        sel.value = newValue;
+        sel.classList.remove('saving','saved','error');
+      });
+
+      // Update the compliance pill in list/kanban views immediately
+      document.querySelectorAll('[data-uuid="'+uuid+'"] .comp-pill').forEach(function(pill){
+        pill.className = 'comp-pill ' + compliancePillClass(newValue);
+        pill.textContent = newValue;
+      });
+
+      selectEl.classList.remove('saving');
+      selectEl.classList.add('saved');
+      selectEl.value = newValue;
+
       if(msgEl){msgEl.textContent='\u2713 Saved';msgEl.className='compliance-status-msg saved';}
+
       setTimeout(function(){
         selectEl.classList.remove('saved');
         if(msgEl){msgEl.textContent='';msgEl.className='compliance-status-msg';}
       },2500);
+
       writeHistory({type:'compliance',asset_uuid:uuid,asset_name:asset.name||'Unnamed',client_name:getClientName(asset),field:'Compliance',old_value:oldValue,new_value:newValue});
+
+      // Re-render all views so kanban columns, stats, and suppression update
       renderAll();
+
+      // If the modal is open for this asset, refresh just the compliance section
+      var modalOverlay = document.getElementById('modal-overlay');
+      if(modalOverlay.classList.contains('open')){
+        var modalSel = document.getElementById('modal-overlay').querySelector('.modal-compliance-select');
+        if(modalSel && modalSel.getAttribute('onchange') && modalSel.getAttribute('onchange').indexOf(uuid) !== -1){
+          modalSel.value = newValue;
+          modalSel.classList.remove('saving','saved','error');
+          // Refresh the comp pill in the modal header
+          var modalPill = document.getElementById('modal-overlay').querySelector('.comp-pill');
+          if(modalPill){
+            modalPill.className = 'comp-pill ' + compliancePillClass(newValue);
+            modalPill.textContent = newValue;
+          }
+        }
+      }
+
       toast('Compliance updated to: '+newValue);
     })
+
     .catch(function(e){
       selectEl.classList.remove('saving');selectEl.classList.add('error');
       if(msgEl){msgEl.textContent='Failed.';msgEl.className='compliance-status-msg error';}
@@ -1267,15 +1305,17 @@ function hoursPill(hrs){if(!hrs)return '';return '<span class="hours-pill">&#128
 function compPill(val){if(!val)return '';return '<span class="comp-pill '+esc(compliancePillClass(val))+'">'+esc(val)+'</span>';}
 
 function complianceSelectHTML(uuid,currentValue,cssClass){
-  var isHidden=COMPLIANCE_HIDDEN.map(function(v){return v.toLowerCase();}).indexOf((currentValue||'').toLowerCase())!==-1;
-  var selectedVal=isHidden?'':(currentValue||'');
-  var opts=COMPLIANCE_OPTIONS.map(function(o){return '<option value="'+esc(o)+'"'+(o===selectedVal?' selected':'')+'>'+esc(o)+'</option>';}).join('');
-  var handler=cssClass==='modal-compliance-select'
-    ?'updateModalCompliance(\''+uuid+'\',this.value,this)'
-    :'updateComplianceField(\''+uuid+'\',this.value,this)';
+  var ALL_OPTIONS = COMPLIANCE_OPTIONS.concat(COMPLIANCE_HIDDEN);
+  var opts = ALL_OPTIONS.map(function(o){
+    return '<option value="'+esc(o)+'"'+(o===currentValue?' selected':'')+'>'+esc(o)+'</option>';
+  }).join('');
+  var handler = cssClass === 'modal-compliance-select'
+    ? 'updateModalCompliance(\''+uuid+'\',this.value,this)'
+    : 'updateComplianceField(\''+uuid+'\',this.value,this)';
   return '<select class="'+cssClass+'" onchange="'+handler+'" onclick="event.stopPropagation()">'
     +'<option value="">— Set Status —</option>'+opts+'</select>';
 }
+
 
 function renderAssets(){
   var data=filteredAssets();var sorted=sortedAssets(data);
