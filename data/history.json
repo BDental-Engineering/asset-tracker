@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "3dcb945f-6ead-443c-9545-22d3e006167a",
+    "asset_name": "Outdoor - R484424058",
+    "client_name": "Church Street Dental Practice - Somersham",
+    "field": "Compliance",
+    "old_value": "Scheduled",
+    "new_value": "Expired",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T17:57:48.307Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "3d2e7b62-4715-45e9-a1c5-22be4539862a",
     "asset_name": "Retired - Hallway - B226409023",
     "client_name": "Bury House Dental Practice",
