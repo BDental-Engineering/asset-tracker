@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "cfb13c64-516f-4821-820f-22be4be5787a",
+    "asset_name": "Surgery 1 - MFAEJ0021",
+    "client_name": "Bury House Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T19:29:24.592Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "cfb13c64-516f-4821-820f-22be4be5787a",
     "asset_name": "Surgery 1 - MFAEJ0021",
