@@ -308,12 +308,15 @@ function loadAll(force) {
     woJobs.forEach(function(j){ woUuids[j.uuid] = j; });
 
     var matsByJob = {};
-    rawMaterials.forEach(function(m){
+        rawMaterials.forEach(function(m){
       if (!m.job_uuid || !woUuids[m.job_uuid]) return;
       if (m.active !== 1 && String(m.active) !== '1') return;
+      var itemType = (m.item_type || '').toLowerCase().trim();
+      if (itemType === 'service') return;
       if (!matsByJob[m.job_uuid]) matsByJob[m.job_uuid] = [];
       matsByJob[m.job_uuid].push(m);
     });
+
 
     var clientGroups = {};
     Object.keys(matsByJob).forEach(function(jobUuid) {
