@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "ef5f6874-da5c-4298-805a-22d3e017971a",
+    "asset_name": "Surgery 1 - K378361172",
+    "client_name": "Church Street Dental Practice - Somersham",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Scheduled",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T18:02:39.034Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "3dcb945f-6ead-443c-9545-22d3e006167a",
     "asset_name": "Outdoor - R484424058",
     "client_name": "Church Street Dental Practice - Somersham",
