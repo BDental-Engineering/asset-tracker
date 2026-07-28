@@ -127,6 +127,7 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="jobs.html">&#128188; Jobs</a>
     <a class="back-btn" href="suppliers.html">&#9881; Suppliers</a>
+       <button class="btn-ghost btn-sm" onclick="openExclude()">&#128683; Exclusions</button>
     <button class="btn-ghost btn-sm" onclick="openDebug()">&#128027; Debug Materials</button>
     <button class="btn-ghost btn-sm" onclick="loadAll(true)">&#8635; Refresh</button>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
@@ -196,16 +197,44 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
 <div id="toast"></div>
 
 <script>
-var partsData       = [];
-var suppliersData   = {};
-var statesData      = {};
-var clientMap       = {};
-var rawMaterialsAll = [];
-var currentUser     = '';
-var loaded          = false;
-var debugTab        = 'table';
+var partsData           = [];
+var suppliersData       = {};
+var statesData          = {};
+var clientMap           = {};
+var rawMaterialsAll     = [];
+var excludedItemNumbers = [];
+var currentUser         = '';
+var loaded              = false;
+var debugTab            = 'table';
 
-// PO modal state
+<!-- Exclusions Modal -->
+<div class="modal-overlay" id="exclude-modal" onclick="onExcludeOverlayClick(event)">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeExclude()">&#10005;</button>
+    <h3 style="margin-bottom:6px">&#128683; Excluded Item Numbers</h3>
+    <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px">
+      Enter item numbers to exclude from the parts list, one per line.<br/>
+      These are matched against the <strong>item_number</strong> field from the ServiceM8 catalogue.
+    </p>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:0.72rem;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Item Numbers (one per line)</label>
+      <textarea id="exclude-input" rows="10" placeholder="e.g.&#10;LABOUR-01&#10;SERVICE-CALL&#10;TRAVEL-FEE"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+               padding:10px 14px;color:var(--text);font-size:0.88rem;outline:none;
+               font-family:monospace;resize:vertical;"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+    <div id="exclude-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn-ghost" onclick="closeExclude()">Cancel</button>
+      <button class="btn-primary" id="exclude-save-btn" onclick="saveExclusions()">&#128190; Save Exclusions</button>
+    </div>
+  </div>
+</div>
+  
+  
+//  state PO modal
 var pendingPoKey    = null;
 var pendingPoChecked = false;
 
@@ -261,8 +290,9 @@ function loadAll(force) {
     sm8Get('/company.json'),
     sm8Get('/jobmaterial.json'),
     sm8Get('/material.json').catch(function(){ return []; }),
-    apiGet('/api/suppliers'),
-    apiGet('/api/parts')
+       apiGet('/api/suppliers'),
+    apiGet('/api/parts'),
+    apiGet('/api/materials-exclude').catch(function(){ return { excludedItemNumbers: [] }; })
   ]).then(function(res) {
     var rawJobs       = Array.isArray(res[0]) ? res[0] : [];
     var rawStaff      = Array.isArray(res[1]) ? res[1] : [];
@@ -270,8 +300,12 @@ function loadAll(force) {
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
     var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
     var rawCatalogue  = Array.isArray(res[5]) ? res[5] : [];
-    suppliersData     = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
-    statesData        = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
+      suppliersData       = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
+    statesData          = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
+    var excludeData     = (res[8] && typeof res[8]==='object') ? res[8] : {};
+    excludedItemNumbers = Array.isArray(excludeData.excludedItemNumbers)
+      ? excludeData.excludedItemNumbers.map(function(n){ return String(n).toUpperCase().trim(); })
+      : [];
 
     rawMaterialsAll = rawMaterials;
 
@@ -308,14 +342,16 @@ function loadAll(force) {
     woJobs.forEach(function(j){ woUuids[j.uuid] = j; });
 
     var matsByJob = {};
-        rawMaterials.forEach(function(m){
+            rawMaterials.forEach(function(m){
       if (!m.job_uuid || !woUuids[m.job_uuid]) return;
       if (m.active !== 1 && String(m.active) !== '1') return;
-      var itemType = (m.item_type || '').toLowerCase().trim();
-      if (itemType === 'service') return;
+      // Exclude by item_number
+      var itemNum = (catalogueMap[m.material_uuid] || '').toUpperCase().trim();
+      if (itemNum && excludedItemNumbers.indexOf(itemNum) !== -1) return;
       if (!matsByJob[m.job_uuid]) matsByJob[m.job_uuid] = [];
       matsByJob[m.job_uuid].push(m);
     });
+
 
 
     var clientGroups = {};
@@ -855,6 +891,53 @@ function toast(msg,isError){
   if(toastTimer)clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){el.classList.remove('show');},3500);
 }
+// ── Exclusions modal ───────────────────────────────────
+function openExclude() {
+  document.getElementById('exclude-input').value = excludedItemNumbers.join('\n');
+  document.getElementById('exclude-msg').textContent = '';
+  document.getElementById('exclude-save-btn').disabled = false;
+  document.getElementById('exclude-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('exclude-input').focus(); }, 80);
+}
+function closeExclude() {
+  document.getElementById('exclude-modal').classList.remove('open');
+}
+function onExcludeOverlayClick(e) {
+  if (e.target === document.getElementById('exclude-modal')) closeExclude();
+}
+function saveExclusions() {
+  var raw = document.getElementById('exclude-input').value || '';
+  var items = raw.split('\n')
+    .map(function(l){ return l.trim().toUpperCase(); })
+    .filter(Boolean);
+
+  var msg = document.getElementById('exclude-msg');
+  var btn = document.getElementById('exclude-save-btn');
+  msg.style.color = 'var(--amber)';
+  msg.textContent = 'Saving\u2026';
+  btn.disabled = true;
+
+  apiPost('/api/materials-exclude', { itemNumbers: items, updatedBy: currentUser })
+    .then(function(data) {
+      btn.disabled = false;
+      if (data.error) {
+        msg.style.color = 'var(--red)';
+        msg.textContent = 'Error: ' + data.error;
+        return;
+      }
+      excludedItemNumbers = items;
+      msg.style.color = 'var(--green)';
+      msg.textContent = '\u2713 Saved ' + items.length + ' exclusion' + (items.length === 1 ? '' : 's') + '. Refreshing\u2026';
+      setTimeout(function(){ closeExclude(); loadAll(true); }, 900);
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Failed: ' + e.message;
+    });
+}
+
+  
 </script>
 
   <!-- PO Number Modal -->
