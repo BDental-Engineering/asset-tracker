@@ -6,6 +6,17 @@
     "client_name": "West Mersea Dental Practice",
     "field": "Compliance",
     "old_value": "",
+    "new_value": "Quoted",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T08:13:24.394Z"
+  },
+  {
+    "type": "compliance",
+    "asset_uuid": "a7d05770-cac5-4f0a-a9c9-2316730f571a",
+    "asset_name": "Decon - 201941-B1219",
+    "client_name": "West Mersea Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
     "new_value": "Scheduled",
     "changed_by": "Richard Buckingham",
     "timestamp": "2026-07-28T08:13:18.718Z"
