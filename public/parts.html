@@ -62,6 +62,11 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
 .pill-none{background:rgba(136,146,176,0.12);color:var(--muted);}
 .pill-ordered{background:rgba(245,158,11,0.13);color:var(--amber);}
 .pill-received{background:rgba(34,197,94,0.13);color:var(--green);}
+  .pill-allocated{background:rgba(79,110,247,0.13);color:var(--accent);}
+.stock-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:var(--green);margin-top:3px;white-space:nowrap;}
+.stock-badge.low{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:var(--amber);}
+.stock-badge.none{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:var(--red);}
+
 /* ── Debug panel ── */
 .debug-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
 .debug-overlay.open{display:flex;}
@@ -154,12 +159,14 @@ input[type=checkbox].cb-received{accent-color:var(--green);}
     <input type="text"  id="q-search"   placeholder="&#128269; Search parts&hellip;" oninput="render()"/>
     <select id="q-client"   onchange="render()"><option value="">All Clients</option></select>
     <select id="q-supplier" onchange="render()"><option value="">All Suppliers</option></select>
-    <select id="q-status"   onchange="render()">
+        <select id="q-status"   onchange="render()">
       <option value="">All Statuses</option>
       <option value="none">Needs Ordering</option>
       <option value="ordered">Ordered</option>
+      <option value="allocated">Allocated</option>
       <option value="received">Received</option>
     </select>
+
   </div>
 
   <div id="parts-list"></div>
@@ -268,10 +275,18 @@ function loadAll(force) {
 
     rawMaterialsAll = rawMaterials;
 
-    var catalogueMap = {};
+        var catalogueMap = {};
+    var inventoryMap = {};
     rawCatalogue.forEach(function(c) {
-      if (c.uuid) catalogueMap[c.uuid] = c.item_number || '';
+      if (c.uuid) {
+        catalogueMap[c.uuid] = c.item_number || '';
+        inventoryMap[c.uuid] = {
+          isInventoried: String(c.item_is_inventoried) === '1',
+          qtyInStock:    parseFloat(c.quantity_in_stock) || 0
+        };
+      }
     });
+
 
     var staffMap = {};
     rawStaff.filter(function(s){ return String(s.active)==='1'; }).forEach(function(s){
@@ -318,18 +333,22 @@ function loadAll(force) {
         if (!clientGroups[clientUuid].parts[normKey]) {
           var supplierInfo = lookupSupplier(normName, itemNumber);
           var stateKey = clientUuid + '__' + normKey;
+                    var invInfo = m.material_uuid ? (inventoryMap[m.material_uuid] || null) : null;
           clientGroups[clientUuid].parts[normKey] = {
-            name:         normName,
-            itemNumber:   itemNumber,
-            totalQty:     0,
-            jobs:         [],
-            clientUuid:   clientUuid,
-            clientName:   clientName,
-            supplierName: supplierInfo ? supplierInfo.supplierName : '',
-            supplierId:   supplierInfo ? supplierInfo.supplierId   : '',
-            productCode:  supplierInfo ? supplierInfo.productCode  : '',
-            key:          stateKey
+            name:          normName,
+            itemNumber:    itemNumber,
+            totalQty:      0,
+            jobs:          [],
+            clientUuid:    clientUuid,
+            clientName:    clientName,
+            supplierName:  supplierInfo ? supplierInfo.supplierName : '',
+            supplierId:    supplierInfo ? supplierInfo.supplierId   : '',
+            productCode:   supplierInfo ? supplierInfo.productCode  : '',
+            key:           stateKey,
+            isInventoried: invInfo ? invInfo.isInventoried : false,
+            qtyInStock:    invInfo ? invInfo.qtyInStock    : 0
           };
+
         }
 
         var qty = parseFloat(m.quantity || 1);
@@ -416,7 +435,7 @@ function populateFilters() {
   });
 }
 
-function getState(key) { return statesData[key] || { ordered: false, received: false, poNumber: '' }; }
+function getState(key) { return statesData[key] || { ordered: false, received: false, allocated: false, poNumber: '' }; }
 
 function getFiltered() {
   var q       = (document.getElementById('q-search').value   || '').toLowerCase();
@@ -427,12 +446,14 @@ function getFiltered() {
     if (clientF && p.clientUuid !== clientF) return false;
     if (supF    && p.supplierId !== supF)    return false;
     if (q && p.name.toLowerCase().indexOf(q)===-1 && p.clientName.toLowerCase().indexOf(q)===-1) return false;
-    if (statusF) {
+        if (statusF) {
       var st = getState(p.key);
-      if (statusF==='none'     && (st.ordered||st.received))  return false;
-      if (statusF==='ordered'  && (!st.ordered||st.received)) return false;
-      if (statusF==='received' && !st.received)               return false;
+      if (statusF==='none'      && (st.ordered||st.received))           return false;
+      if (statusF==='ordered'   && (!st.ordered||st.allocated||st.received)) return false;
+      if (statusF==='allocated' && (!st.allocated||st.received))        return false;
+      if (statusF==='received'  && !st.received)                        return false;
     }
+
     return true;
   });
 }
@@ -467,7 +488,8 @@ function render() {
       + '<th style="text-align:center;width:50px">Qty</th>'
       + '<th>Jobs</th>'
       + '<th>Supplier</th>'
-      + '<th style="text-align:center;width:80px">Order</th>'
+            + '<th style="text-align:center;width:80px">Order</th>'
+      + '<th style="text-align:center;width:80px">Allocated</th>'
       + '<th style="text-align:center;width:80px">Received</th>'
       + '<th style="width:140px">Status / PO</th>'
       + '</tr></thead><tbody>';
@@ -489,9 +511,12 @@ function render() {
 
       var statusPill = st.received
         ? '<span class="status-pill pill-received">&#10003; Received</span>'
-        : st.ordered
-          ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
-          : '<span class="status-pill pill-none">Needs Order</span>';
+        : st.allocated
+          ? '<span class="status-pill pill-allocated">&#128230; Allocated</span>'
+          : st.ordered
+            ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+            : '<span class="status-pill pill-none">Needs Order</span>';
+
 
       var poHTML = (st.ordered && st.poNumber)
         ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
@@ -499,20 +524,31 @@ function render() {
           ? '<div style="margin-top:3px"><button class="btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px;" onclick="openPoEdit(\'' + esc(p.key) + '\')">+ Add PO#</button></div>'
           : '';
 
+           var stockHTML = '';
+      if (p.isInventoried) {
+        var stockCls = p.qtyInStock <= 0 ? 'none' : p.qtyInStock < p.totalQty ? 'low' : '';
+        stockHTML = '<span class="stock-badge ' + stockCls + '">&#128200; In stock: ' + p.qtyInStock + '</span>';
+      }
       html += '<tr' + rowCls + ' id="row-' + esc(p.key) + '">'
         + '<td>'
         +   '<div class="part-name">' + esc(p.name) + '</div>'
         +   (p.itemNumber ? '<div class="part-ref">&#128230; ' + esc(p.itemNumber) + '</div>' : '')
+        +   (stockHTML ? '<div>' + stockHTML + '</div>' : '')
         + '</td>'
+
         + '<td class="qty-cell">' + qtyStr + '</td>'
         + '<td><div class="part-jobs">' + jobList + '</div></td>'
         + '<td>' + supplierHTML + '</td>'
-        + '<td class="cb-cell">'
+               + '<td class="cb-cell">'
         +   '<input type="checkbox" id="ord-' + esc(p.key) + '" ' + (st.ordered ? 'checked' : '') + ' onchange="onOrderedChange(\'' + esc(p.key) + '\',this.checked)"/>'
+        + '</td>'
+        + '<td class="cb-cell">'
+        +   '<input type="checkbox" id="alloc-' + esc(p.key) + '" ' + (st.allocated ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'allocated\',this.checked)" style="accent-color:var(--accent)"/>'
         + '</td>'
         + '<td class="cb-cell">'
         +   '<input type="checkbox" class="cb-received" id="rec-' + esc(p.key) + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'received\',this.checked)"/>'
         + '</td>'
+
         + '<td id="pill-' + esc(p.key) + '">'
         +   statusPill
         +   poHTML
@@ -527,15 +563,17 @@ function render() {
 }
 
 function renderStats(filtered) {
-  var total    = filtered.length;
-  var needs    = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered&&!s.received; }).length;
-  var ordered  = filtered.filter(function(p){ var s=getState(p.key); return s.ordered&&!s.received; }).length;
-  var received = filtered.filter(function(p){ var s=getState(p.key); return s.received; }).length;
+    var total     = filtered.length;
+  var needs     = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered&&!s.received; }).length;
+  var ordered   = filtered.filter(function(p){ var s=getState(p.key); return s.ordered&&!s.allocated&&!s.received; }).length;
+  var allocated = filtered.filter(function(p){ var s=getState(p.key); return s.allocated&&!s.received; }).length;
+  var received  = filtered.filter(function(p){ var s=getState(p.key); return s.received; }).length;
   document.getElementById('stats-bar').innerHTML =
-    stat(total,    'Total Parts',  'var(--text)')  +
-    stat(needs,    'Needs Order',  'var(--red)')   +
-    stat(ordered,  'Ordered',      'var(--amber)') +
-    stat(received, 'Received',     'var(--green)');
+    stat(total,     'Total Parts',  'var(--text)')   +
+    stat(needs,     'Needs Order',  'var(--red)')    +
+    stat(ordered,   'Ordered',      'var(--amber)')  +
+    stat(allocated, 'Allocated',    'var(--accent)') +
+    stat(received,  'Received',     'var(--green)');
 }
 function stat(v,l,c){ return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
 
@@ -621,10 +659,13 @@ function toggleState(key, field, value) {
     statesData[key].poNumber = '';
   }
 
-  var ordCb = document.getElementById('ord-' + key);
-  var recCb = document.getElementById('rec-' + key);
-  if (ordCb) ordCb.checked = statesData[key].ordered;
-  if (recCb) recCb.checked = statesData[key].received;
+  var ordCb   = document.getElementById('ord-'   + key);
+  var allocCb = document.getElementById('alloc-' + key);
+  var recCb   = document.getElementById('rec-'   + key);
+  if (ordCb)   ordCb.checked   = statesData[key].ordered;
+  if (allocCb) allocCb.checked = statesData[key].allocated;
+  if (recCb)   recCb.checked   = statesData[key].received;
+
 
   updateRowUI(key);
   saveState(key);
@@ -633,11 +674,14 @@ function toggleState(key, field, value) {
 function updateRowUI(key) {
   var st = statesData[key] || { ordered: false, received: false, poNumber: '' };
 
-  var statusPill = st.received
+         var statusPill = st.received
     ? '<span class="status-pill pill-received">&#10003; Received</span>'
-    : st.ordered
-      ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
-      : '<span class="status-pill pill-none">Needs Order</span>';
+    : st.allocated
+      ? '<span class="status-pill pill-allocated">&#9745; Allocated</span>'
+      : st.ordered
+        ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+        : '<span class="status-pill pill-none">Needs Order</span>';
+
 
   var poHTML = (st.ordered && st.poNumber)
     ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
@@ -659,11 +703,12 @@ function updateRowUI(key) {
 
 function saveState(key) {
   var st = statesData[key];
-  apiPost('/api/parts', {
+   apiPost('/api/parts', {
     key:       key,
     field:     'ordered',
     value:     st.ordered,
     received:  st.received,
+    allocated: st.allocated || false,
     poNumber:  st.poNumber || '',
     updatedBy: currentUser
   }).catch(function(){ toast('Save failed', true); });
