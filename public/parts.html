@@ -488,9 +488,10 @@ function render() {
       + '<th style="text-align:center;width:50px">Qty</th>'
       + '<th>Jobs</th>'
       + '<th>Supplier</th>'
-            + '<th style="text-align:center;width:80px">Order</th>'
-      + '<th style="text-align:center;width:80px">Allocated</th>'
+      + '<th style="text-align:center;width:80px">Order</th>'
       + '<th style="text-align:center;width:80px">Received</th>'
+      + '<th style="text-align:center;width:80px">Allocated</th>'
+
       + '<th style="width:140px">Status / PO</th>'
       + '</tr></thead><tbody>';
 
@@ -542,12 +543,13 @@ function render() {
                + '<td class="cb-cell">'
         +   '<input type="checkbox" id="ord-' + esc(p.key) + '" ' + (st.ordered ? 'checked' : '') + ' onchange="onOrderedChange(\'' + esc(p.key) + '\',this.checked)"/>'
         + '</td>'
-        + '<td class="cb-cell">'
-        +   '<input type="checkbox" id="alloc-' + esc(p.key) + '" ' + (st.allocated ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'allocated\',this.checked)" style="accent-color:var(--accent)"/>'
-        + '</td>'
-        + '<td class="cb-cell">'
+                + '<td class="cb-cell">'
         +   '<input type="checkbox" class="cb-received" id="rec-' + esc(p.key) + '" ' + (st.received ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'received\',this.checked)"/>'
         + '</td>'
+        + '<td class="cb-cell">'
+        +   '<input type="checkbox" class="cb-received" id="alloc-' + esc(p.key) + '" ' + (st.allocated ? 'checked' : '') + ' onchange="toggleState(\'' + esc(p.key) + '\',\'allocated\',this.checked)"/>'
+        + '</td>'
+
 
         + '<td id="pill-' + esc(p.key) + '">'
         +   statusPill
@@ -674,13 +676,13 @@ function toggleState(key, field, value) {
 function updateRowUI(key) {
   var st = statesData[key] || { ordered: false, received: false, poNumber: '' };
 
-         var statusPill = st.received
-    ? '<span class="status-pill pill-received">&#10003; Received</span>'
-    : st.allocated
-      ? '<span class="status-pill pill-allocated">&#9745; Allocated</span>'
-      : st.ordered
-        ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
-        : '<span class="status-pill pill-none">Needs Order</span>';
+         var statusPill = st.allocated
+        ? '<span class="status-pill pill-received">&#10003; Allocated</span>'
+        : st.received
+          ? '<span class="status-pill pill-ordered">&#128230; Received</span>'
+          : st.ordered
+            ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
+            : '<span class="status-pill pill-none">Needs Order</span>';
 
 
   var poHTML = (st.ordered && st.poNumber)
