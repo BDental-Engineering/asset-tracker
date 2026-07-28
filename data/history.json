@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "9bcdd454-372f-4006-925d-22df64c3861a",
+    "asset_name": "Cupboard - CH102617",
+    "client_name": "Great Cornard Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Expired",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T19:26:24.366Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "9b52954c-3c55-4e5f-a508-22c47a5cb1da",
     "asset_name": "Decon - 201641-B1054",
     "client_name": "Dental Smiles Flagstaff Colchester",
