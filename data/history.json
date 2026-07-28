@@ -1,5 +1,16 @@
 [
   {
+    "type": "date_change",
+    "asset_uuid": "6bee979f-0f8e-4f88-bce5-22be4c3e0e8a",
+    "asset_name": "Surgery 2 - 314521",
+    "client_name": "Bury House Dental Practice",
+    "field": "Performance Due",
+    "old_value": "2026-05-06",
+    "new_value": "2025-05-06",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T19:30:25.482Z"
+  },
+  {
     "type": "compliance",
     "asset_uuid": "6bee979f-0f8e-4f88-bce5-22be4c3e0e8a",
     "asset_name": "Surgery 2 - 314521",
