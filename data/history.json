@@ -1,5 +1,16 @@
 [
   {
+    "type": "date_change",
+    "asset_uuid": "fff432b2-4e17-408b-84a1-2421eed2c65a",
+    "asset_name": "Surgery 1 - XAOC0293",
+    "client_name": "Just Smile Dental Practice",
+    "field": "Performance Due",
+    "old_value": "2026-04-29",
+    "new_value": "2025-04-29",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-28T19:27:03.209Z"
+  },
+  {
     "type": "compliance",
     "asset_uuid": "fff432b2-4e17-408b-84a1-2421eed2c65a",
     "asset_name": "Surgery 1 - XAOC0293",
