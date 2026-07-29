@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "6283ab62-90d6-43c8-ba98-246f191b640a",
+    "asset_name": "Surgery 2 - AV09D0318",
+    "client_name": "DentalHouse Castor",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-07-29T06:06:46.498Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "5ac527c0-3405-428b-bef2-22d3e75f090a",
     "asset_name": "Outdoor - VT75-00650",
     "client_name": "Church Street Dental Practice - Somersham",
