@@ -48,6 +48,10 @@ button:hover{opacity:0.87;}
 .parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;}
 .parts-table tr:last-child td{border-bottom:none;}
 .parts-table tr.allocated-row td{opacity:0.5;}
+.parts-table tbody tr:nth-child(even) td{background:rgba(255,255,255,0.025);}
+.parts-table tbody tr:nth-child(odd) td{background:transparent;}
+.parts-table tbody tr:hover td{background:rgba(79,110,247,0.07);}
+.parts-table tbody tr.allocated-row:nth-child(even) td{background:rgba(255,255,255,0.015);}
 .part-name{font-weight:600;color:var(--text);}
 .part-ref{font-size:0.68rem;color:var(--accent);font-weight:600;margin-top:2px;}
 .part-jobs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
