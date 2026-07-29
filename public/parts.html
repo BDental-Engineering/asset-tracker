@@ -725,9 +725,12 @@ function buildRow(p) {
     }
   }
 
+   var showClient = sortField !== 'client';
+
   return '<tr' + rowCls + ' id="row-' + esc(p.key) + '">'
     + '<td>'
     +   '<div class="part-name">' + esc(p.name) + '</div>'
+    +   (showClient ? '<div style="font-size:0.72rem;color:var(--accent);margin-top:2px;font-weight:600;">&#128205; ' + esc(p.clientName) + '</div>' : '')
     +   (p.itemNumber ? '<div class="part-ref">&#128230; ' + esc(p.itemNumber) + '</div>' : '')
     +   (stockHTML ? '<div>' + stockHTML + '</div>' : '')
     + '</td>'
