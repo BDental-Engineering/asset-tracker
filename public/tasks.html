@@ -322,6 +322,59 @@ button:hover{opacity:0.87;}
 .reassign-select:focus{border-color:var(--accent);}
 .reassign-select option{background:var(--surface2);color:var(--text);}
 .reassign-msg{font-size:0.75rem;margin-top:6px;min-height:16px;}
+/* ── Notifications ── */
+.notif-btn{
+  position:relative;display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);
+  cursor:pointer;transition:border-color 0.15s;
+}
+.notif-btn:hover{border-color:var(--accent);}
+.notif-badge{
+  position:absolute;top:-6px;right:-6px;
+  background:var(--red);color:#fff;border-radius:10px;
+  padding:1px 6px;font-size:0.65rem;font-weight:800;
+  min-width:18px;text-align:center;line-height:16px;
+  display:none;
+}
+.notif-badge.show{display:block;}
+.notif-dropdown{
+  display:none;position:fixed;top:64px;right:20px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);width:360px;max-height:480px;
+  overflow-y:auto;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.notif-dropdown.open{display:block;}
+.notif-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-weight:700;font-size:0.88rem;position:sticky;top:0;
+  background:var(--surface);z-index:1;
+}
+.notif-clear-btn{
+  font-size:0.72rem;color:var(--muted);background:none;border:none;
+  cursor:pointer;padding:2px 6px;border-radius:4px;font-weight:600;
+}
+.notif-clear-btn:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+.notif-empty{padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;}
+.notif-item{
+  display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background 0.15s;align-items:flex-start;
+}
+.notif-item:hover{background:rgba(79,110,247,0.06);}
+.notif-item:last-child{border-bottom:none;}
+.notif-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.notif-body{flex:1;min-width:0;}
+.notif-task{font-weight:700;font-size:0.82rem;color:var(--text);margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notif-msg{font-size:0.75rem;color:var(--muted);line-height:1.4;}
+.notif-time{font-size:0.65rem;color:var(--muted);margin-top:4px;}
+.notif-dismiss{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:0.75rem;padding:2px 5px;border-radius:4px;flex-shrink:0;
+}
+.notif-dismiss:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+
 </style>
 </head>
 <body>
@@ -335,12 +388,26 @@ button:hover{opacity:0.87;}
     </svg>
     Asset Tracker
   </a>
-  <div class="header-right">
+    <div class="header-right">
     <span class="user-badge" id="user-badge"></span>
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="jobs.html" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:var(--green);">&#128188; Jobs</a>
+    <div style="position:relative;">
+      <button class="notif-btn" onclick="toggleNotifDropdown(event)" id="notif-btn">
+        &#128276;
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+      <div class="notif-dropdown" id="notif-dropdown">
+        <div class="notif-header">
+          &#128276; Notifications
+          <button class="notif-clear-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div id="notif-list"><div class="notif-empty">No notifications</div></div>
+      </div>
+    </div>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
+
 </header>
 
 <div id="auth-screen">
@@ -609,6 +676,9 @@ var debugVisible    = false;
 var completedMode   = false;
 var commentsCache   = {};
 var COMMENTS_API    = '/api/taskcomments';
+var notificationsData = [];
+var NOTIF_API         = '/api/notifications';
+var notifPollTimer    = null;
 
 var STATUS_ORDER = { 'Work Order':0,'Quote':1,'Unsuccessful':2,'Completed':3 };
 var STAFF_COLORS = [
@@ -708,6 +778,146 @@ function loadAllComments() {
     .then(function(d){ commentsCache = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; })
     .catch(function(){ commentsCache = {}; });
 }
+
+// ── Notifications ──────────────────────────────────────
+function loadNotifications() {
+  if (!currentUser) return Promise.resolve();
+  return fetch(NOTIF_API + '?user=' + encodeURIComponent(currentUser), { credentials:'include' })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(d){
+      notificationsData = Array.isArray(d) ? d : [];
+      renderNotifBadge();
+      renderNotifList();
+    })
+    .catch(function(){ notificationsData = []; });
+}
+
+function renderNotifBadge() {
+  var badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  var count = notificationsData.length;
+  badge.textContent = count > 9 ? '9+' : String(count);
+  badge.classList.toggle('show', count > 0);
+}
+
+function renderNotifList() {
+  var el = document.getElementById('notif-list');
+  if (!el) return;
+  if (!notificationsData.length) {
+    el.innerHTML = '<div class="notif-empty">&#10003; All caught up!</div>';
+    return;
+  }
+  el.innerHTML = notificationsData.map(function(n) {
+    return '<div class="notif-item" onclick="onNotifClick(\'' + esc(n.id) + '\',\'' + esc(n.taskId) + '\')">'
+      + '<span class="notif-icon">&#128172;</span>'
+      + '<div class="notif-body">'
+      +   '<div class="notif-task">' + esc(n.taskName || 'Task') + '</div>'
+      +   '<div class="notif-msg"><strong>' + esc(n.fromUser) + '</strong> commented: &ldquo;'
+      +     esc((n.commentText || '').substring(0, 80)) + (n.commentText && n.commentText.length > 80 ? '&hellip;' : '')
+      +   '&rdquo;</div>'
+      +   '<div class="notif-time">&#128336; ' + fmtDateTime(n.timestamp) + '</div>'
+      + '</div>'
+      + '<button class="notif-dismiss" onclick="dismissNotification(event,\'' + esc(n.id) + '\')">&#10005;</button>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleNotifDropdown(e) {
+  e.stopPropagation();
+  var dd = document.getElementById('notif-dropdown');
+  dd.classList.toggle('open');
+}
+
+function onNotifClick(notifId, taskId) {
+  document.getElementById('notif-dropdown').classList.remove('open');
+  dismissNotification(null, notifId);
+  // Open the task if it exists
+  var t = tasksData.find(function(x){ return x._id === taskId; });
+  if (t) { openEdit(taskId); }
+}
+
+function dismissNotification(e, notifId) {
+  if (e) e.stopPropagation();
+  fetch(NOTIF_API, {
+    method:'DELETE', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: notifId })
+  }).then(function(){
+    notificationsData = notificationsData.filter(function(n){ return n.id !== notifId; });
+    renderNotifBadge();
+    renderNotifList();
+  }).catch(function(){});
+}
+
+function clearAllNotifications() {
+  if (!currentUser) return;
+  fetch(NOTIF_API, {
+    method:'DELETE', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ clearAll: true, user: currentUser })
+  }).then(function(){
+    notificationsData = [];
+    renderNotifBadge();
+    renderNotifList();
+    document.getElementById('notif-dropdown').classList.remove('open');
+  }).catch(function(){});
+}
+
+function dispatchCommentNotification(taskId, commentText) {
+  // Find the task to know who it belongs to
+  var allTasks = tasksData.concat(completedData);
+  var t = allTasks.find(function(x){ return x._id === taskId; });
+  if (!t) return;
+
+  // Collect users to notify: task assignee + anyone who previously commented
+  var toNotify = {};
+
+  // Notify the assignee if it's not the current user
+  if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== currentUser) {
+    toNotify[t.staffName] = true;
+  }
+
+  // Notify anyone else who commented on this task
+  var existing = commentsCache[taskId] || [];
+  existing.forEach(function(c) {
+    if (c.author && c.author !== currentUser) {
+      toNotify[c.author] = true;
+    }
+  });
+
+  var recipients = Object.keys(toNotify);
+  if (!recipients.length) return;
+
+  recipients.forEach(function(recipient) {
+    fetch(NOTIF_API, {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        forUser:     recipient,
+        fromUser:    currentUser || 'Someone',
+        taskId:      taskId,
+        taskName:    t.name,
+        commentText: commentText
+      })
+    }).catch(function(){});
+  });
+}
+  
+function startNotifPolling() {
+  loadNotifications();
+  notifPollTimer = setInterval(loadNotifications, 30000); // poll every 30s
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('notif-dropdown');
+  if (dd && dd.classList.contains('open')) {
+    if (!dd.contains(e.target) && e.target.id !== 'notif-btn') {
+      dd.classList.remove('open');
+    }
+  }
+});
+  
 function getCommentCount(taskId) {
   return Array.isArray(commentsCache[taskId]) ? commentsCache[taskId].length : 0;
 }
@@ -780,6 +990,7 @@ function postCardComment(taskId) {
       setTimeout(function(){ st.textContent = ''; }, 2500);
       if (!commentsCache[taskId]) commentsCache[taskId] = [];
       commentsCache[taskId].push(data.comment);
+      dispatchCommentNotification(taskId, text);
       renderCardCommentList(taskId);
       updateCommentBadge(taskId);
     })
@@ -852,6 +1063,7 @@ function postModalComment() {
       setTimeout(function(){ st.textContent = ''; }, 2500);
       if (!commentsCache[taskId]) commentsCache[taskId] = [];
       commentsCache[taskId].push(data.comment);
+      dispatchCommentNotification(taskId, text);
       renderModalCommentList(taskId);
       updateCommentBadge(taskId);
     })
@@ -1008,7 +1220,7 @@ function toggleCompletedMode() {
 function checkSession() {
   fetch('/api/proxy?path=' + encodeURIComponent('/staff.json'), { credentials:'include' })
     .then(function(r){ if (r.status===401){ showAuth(); return null; } return r.json(); })
-    .then(function(d){ if (d){ showMain(); loadTasks(false); } })
+    .then(function(d){ if (d){ showMain(); loadTasks(false); startNotifPolling(); } })
     .catch(function(){ showAuth(); });
 }
 function showAuth() {
