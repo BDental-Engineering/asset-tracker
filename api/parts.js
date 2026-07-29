@@ -1,9 +1,9 @@
 // api/parts.js
 // Stores part checkbox states in data/parts.json on GitHub
-// Structure: { "[clientUuid]__[materialName]": { ordered: bool, received: bool, poNumber: string, updatedAt, updatedBy } }
+// Structure: { "[clientUuid]__[materialName]": { ordered, received, allocated, poNumber, updatedAt, updatedBy } }
 //
 // GET    /api/parts  → entire map
-// POST   /api/parts  → body: { key, field, value, poNumber?, received?, updatedBy }
+// POST   /api/parts  → body: { key, field, value, poNumber?, received?, allocated?, updatedBy }
 // DELETE /api/parts  → body: { key }
 
 const https = require('https');
@@ -87,24 +87,26 @@ const handler = async (req, res) => {
       if (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { body = {}; } }
       if (!body || typeof body !== 'object') body = {};
 
-      const key       = String(body.key       || '').trim();
-      const field     = String(body.field     || '').trim();
-      const value     = !!body.value;
-      const poNumber  = body.poNumber !== undefined ? String(body.poNumber).trim() : null;
-      const received  = body.received !== undefined ? !!body.received : null;
-      const updatedBy = String(body.updatedBy || 'Unknown').trim();
+      const key        = String(body.key       || '').trim();
+      const field      = String(body.field     || '').trim();
+      const value      = !!body.value;
+      const poNumber   = body.poNumber  !== undefined ? String(body.poNumber).trim()  : null;
+      const received   = body.received  !== undefined ? !!body.received               : null;
+      const allocated  = body.allocated !== undefined ? !!body.allocated              : null;
+      const updatedBy  = String(body.updatedBy || 'Unknown').trim();
 
       if (!key) return res.status(400).json({ error: 'key is required' });
-      if (field !== 'ordered' && field !== 'received') {
-        return res.status(400).json({ error: 'field must be ordered or received' });
+      if (field !== 'ordered' && field !== 'received' && field !== 'allocated') {
+        return res.status(400).json({ error: 'field must be ordered, received or allocated' });
       }
 
-      console.log('[parts] POST key:', key, 'field:', field, 'value:', value, 'poNumber:', poNumber);
+      console.log('[parts] POST key:', key, 'field:', field, 'value:', value, 'poNumber:', poNumber, 'allocated:', allocated);
 
       const { content, sha } = await getFile();
 
-      if (!content[key]) content[key] = { ordered: false, received: false, poNumber: '' };
+      if (!content[key]) content[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
 
+      // Write the field being changed
       content[key][field]    = value;
       content[key].updatedAt = new Date().toISOString();
       content[key].updatedBy = updatedBy;
@@ -115,13 +117,28 @@ const handler = async (req, res) => {
       // Sync received if provided alongside ordered
       if (received !== null) content[key].received = received;
 
+      // Sync allocated if provided
+      if (allocated !== null) content[key].allocated = allocated;
+
+      // Allocated = final step, force ordered + received true
+      if (field === 'allocated' && value) {
+        content[key].ordered  = true;
+        content[key].received = true;
+      }
+
       // If received, also mark ordered
       if (field === 'received' && value) content[key].ordered = true;
 
-      // If un-ordering, also clear received and PO number
+      // If un-ordering, clear everything below
       if (field === 'ordered' && !value) {
-        content[key].received = false;
-        content[key].poNumber = '';
+        content[key].received  = false;
+        content[key].allocated = false;
+        content[key].poNumber  = '';
+      }
+
+      // If un-receiving, clear allocated
+      if (field === 'received' && !value) {
+        content[key].allocated = false;
       }
 
       await putFile(content, sha);
