@@ -44,9 +44,8 @@ button:hover{opacity:0.87;}
 .client-name{flex:1;}
 .client-job-count{font-size:0.72rem;color:var(--muted);font-weight:400;}
 .parts-table{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
-.parts-table td{overflow:hidden;text-overflow:ellipsis;}
 .parts-table th{text-align:left;padding:9px 14px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--surface);border-bottom:2px solid var(--border);}
-.parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+.parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;}
 .parts-table tr:last-child td{border-bottom:none;}
 .parts-table tr.allocated-row td{opacity:0.5;}
 .parts-table tbody tr:nth-child(even) td{background:rgba(255,255,255,0.025);}
@@ -58,8 +57,8 @@ button:hover{opacity:0.87;}
 .part-jobs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
 .supplier-tag{display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;font-weight:600;padding:2px 7px;border-radius:5px;background:rgba(79,110,247,0.1);color:var(--accent);margin-top:3px;}
 .product-code{font-size:0.68rem;color:var(--muted);margin-left:4px;}
-.qty-cell{font-weight:700;color:var(--accent);text-align:center;width:50px;}
-.cb-cell{text-align:center;width:80px;}
+.qty-cell{font-weight:700;color:var(--accent);text-align:center;}
+.cb-cell{text-align:center;}
 input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;}
 input[type=checkbox].cb-green{accent-color:var(--green);}
 .status-pill{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;}
@@ -349,9 +348,9 @@ function loadAll(force) {
     var rawStaff      = Array.isArray(res[1]) ? res[1] : [];
     var rawCategories = Array.isArray(res[2]) ? res[2] : [];
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
-    var rawMaterials   = Array.isArray(res[4]) ? res[4] : [];
-    var rawActivities  = Array.isArray(res[5]) ? res[5] : [];
-    var rawCatalogue   = Array.isArray(res[6]) ? res[6] : [];
+    var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
+    var rawActivities = Array.isArray(res[5]) ? res[5] : [];
+    var rawCatalogue  = Array.isArray(res[6]) ? res[6] : [];
     suppliersData       = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
     statesData          = (res[8] && typeof res[8]==='object' && !Array.isArray(res[8])) ? res[8] : {};
     var excludeData     = (res[9] && typeof res[9]==='object') ? res[9] : {};
@@ -361,7 +360,7 @@ function loadAll(force) {
 
     rawMaterialsAll = rawMaterials;
 
- // Build bookings map: job_uuid → earliest future booking date
+    // Build bookings map: job_uuid → earliest future (or latest past) booking date
     var bookingsMap = {};
     var today = new Date(); today.setHours(0,0,0,0);
     rawActivities.forEach(function(a) {
@@ -373,14 +372,13 @@ function loadAll(force) {
       if (!bookingsMap[a.job_uuid]) bookingsMap[a.job_uuid] = [];
       bookingsMap[a.job_uuid].push(dateStr);
     });
-    // Sort each job's bookings and pick the next upcoming one (or latest past)
     var nextBookingDate = {};
     Object.keys(bookingsMap).forEach(function(jobUuid) {
-      var dates = bookingsMap[jobUuid].sort();
+      var dates  = bookingsMap[jobUuid].sort();
       var future = dates.filter(function(ds){ return new Date(ds + 'T00:00:00') >= today; });
       nextBookingDate[jobUuid] = future.length ? future[0] : dates[dates.length - 1];
     });
-    
+
     // Build catalogue + inventory maps
     var catalogueMap = {};
     var inventoryMap = {};
@@ -434,7 +432,6 @@ function loadAll(force) {
       var jobNumber  = job.generated_job_id || '';
       var jobDesc    = job.job_description  || '';
       var jobDate    = nextBookingDate[jobUuid] || '';
-
 
       if (!clientGroups[clientUuid]) clientGroups[clientUuid] = { clientName: clientName, parts: {} };
 
@@ -636,7 +633,6 @@ function render() {
   var html   = '';
 
   if (sortField === 'client') {
-    // Group by client
     var byClient = {};
     sorted.forEach(function(p) {
       if (!byClient[p.clientUuid]) byClient[p.clientUuid] = { name: p.clientName, parts: [] };
@@ -649,7 +645,6 @@ function render() {
       html += '</tbody></table></div>';
     });
   } else {
-    // Flat list
     html += buildTableHeader('All Parts', sorted.length);
     sorted.forEach(function(p){ html += buildRow(p); });
     html += '</tbody></table></div>';
@@ -666,7 +661,7 @@ function buildTableHeader(groupLabel, count) {
     + '<span class="client-job-count">' + count + ' part line' + (count===1?'':'s') + '</span>'
     + '</div>'
     + '<table class="parts-table">'
-       + '<colgroup>'
+    + '<colgroup>'
     + '<col style="width:18%"/>'
     + '<col style="width:4%"/>'
     + '<col style="width:22%"/>'
@@ -688,7 +683,7 @@ function buildTableHeader(groupLabel, count) {
     + '<th style="text-align:center">Allocated</th>'
     + '<th>Status / PO</th>'
     + '</tr></thead><tbody>';
-
+}
 
 function buildRow(p) {
   var st      = getState(p.key);
@@ -727,21 +722,21 @@ function buildRow(p) {
   // Format scheduled date
   var dateHTML = '<span style="color:var(--muted);font-size:0.72rem">\u2014</span>';
   if (p.earliestDate) {
-    var d = new Date(p.earliestDate);
+    var d = new Date(p.earliestDate + 'T00:00:00');
     if (!isNaN(d.getTime())) {
       var now      = new Date(); now.setHours(0,0,0,0);
-      var diffDays = Math.ceil((d - now) / 86400000);
+      var diffDays = Math.round((d - now) / 86400000);
       var dateStr  = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
       var clr      = diffDays < 0 ? 'var(--red)' : diffDays <= 7 ? 'var(--amber)' : 'var(--green)';
-      var tag      = diffDays < 0  ? ' <span style="font-size:0.62rem;color:var(--red)">(overdue)</span>'
-                   : diffDays === 0 ? ' <span style="font-size:0.62rem;color:var(--amber)">(today)</span>'
-                   : diffDays <= 7  ? ' <span style="font-size:0.62rem;color:var(--amber)">(' + diffDays + 'd)</span>'
+      var tag      = diffDays < 0   ? ' <span style="font-size:0.62rem;color:var(--red)">(overdue)</span>'
+                   : diffDays === 0  ? ' <span style="font-size:0.62rem;color:var(--amber)">(today)</span>'
+                   : diffDays <= 7   ? ' <span style="font-size:0.62rem;color:var(--amber)">(' + diffDays + 'd)</span>'
                    : '';
       dateHTML = '<span class="date-cell" style="color:' + clr + '">&#128197; ' + dateStr + '</span>' + tag;
     }
   }
 
-   var showClient = sortField !== 'client';
+  var showClient = sortField !== 'client';
 
   return '<tr' + rowCls + ' id="row-' + esc(p.key) + '">'
     + '<td>'
@@ -794,23 +789,19 @@ function toggleState(key, field, value) {
   if (!statesData[key]) statesData[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
   statesData[key][field] = value;
 
-  // Allocated is the final step — ticks ordered + received too
   if (field === 'allocated' && value) {
     statesData[key].ordered  = true;
     statesData[key].received = true;
   }
-  // Unticking ordered clears everything below
   if (field === 'ordered' && !value) {
     statesData[key].received  = false;
     statesData[key].allocated = false;
     statesData[key].poNumber  = '';
   }
-  // Unticking received clears allocated
   if (field === 'received' && !value) {
     statesData[key].allocated = false;
   }
 
-  // Sync all checkboxes
   var ordCb   = document.getElementById('ord-'   + key);
   var recCb   = document.getElementById('rec-'   + key);
   var allocCb = document.getElementById('alloc-' + key);
@@ -866,7 +857,7 @@ function saveState(key) {
   }).catch(function(){ toast('Save failed', true); });
 }
 
-// ── Ordered checkbox (opens PO modal) ──────────────────
+// ── Ordered checkbox ───────────────────────────────────
 function onOrderedChange(key, checked) {
   if (checked) {
     var cb = document.getElementById('ord-' + key);
