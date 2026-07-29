@@ -374,7 +374,28 @@ button:hover{opacity:0.87;}
   font-size:0.75rem;padding:2px 5px;border-radius:4px;flex-shrink:0;
 }
 .notif-dismiss:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+/* ── @mention dropdown ── */
+.mention-dropdown{
+  position:absolute;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  z-index:600;min-width:200px;max-height:220px;overflow-y:auto;
+  display:none;
+}
+.mention-dropdown.open{display:block;}
+.mention-item{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  cursor:pointer;font-size:0.82rem;font-weight:600;transition:background 0.12s;
+}
+.mention-item:hover,.mention-item.active{background:rgba(79,110,247,0.12);}
+.mention-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mention-chip{
+  display:inline-block;background:rgba(79,110,247,0.15);
+  border:1px solid rgba(79,110,247,0.35);border-radius:5px;
+  color:var(--accent);font-weight:700;font-size:0.82em;
+  padding:0 4px;
+}
 
+  
 </style>
 </head>
 <body>
@@ -579,8 +600,9 @@ button:hover{opacity:0.87;}
     <div class="frow">
       <label>&#128172; Comments</label>
       <div class="tc-list" id="m-tc-list" style="margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
-      <div class="tc-compose">
-        <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment…"></textarea>
+            <div class="tc-compose" style="position:relative;">
+        <div class="mention-dropdown" id="m-modal-mention-drop" style="position:fixed;"></div>
+        <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment… type @ to mention someone"></textarea>
         <div class="tc-compose-row">
           <button class="tc-submit" id="m-tc-submit" onclick="postModalComment()">Post</button>
           <span class="tc-status" id="m-tc-status"></span>
@@ -864,31 +886,30 @@ function clearAllNotifications() {
 }
 
 function dispatchCommentNotification(taskId, commentText) {
-  // Find the task to know who it belongs to
   var allTasks = tasksData.concat(completedData);
   var t = allTasks.find(function(x){ return x._id === taskId; });
   if (!t) return;
 
-  // Collect users to notify: task assignee + anyone who previously commented
   var toNotify = {};
 
-  // Notify the assignee if it's not the current user
+  // Notify assignee if not the commenter
   if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== currentUser) {
     toNotify[t.staffName] = true;
   }
 
-  // Notify anyone else who commented on this task
+  // Notify anyone who previously commented
   var existing = commentsCache[taskId] || [];
   existing.forEach(function(c) {
-    if (c.author && c.author !== currentUser) {
-      toNotify[c.author] = true;
-    }
+    if (c.author && c.author !== currentUser) toNotify[c.author] = true;
   });
 
-  var recipients = Object.keys(toNotify);
-  if (!recipients.length) return;
+  // Notify anyone @mentioned in this comment
+  var mentioned = extractMentions(commentText);
+  mentioned.forEach(function(name) {
+    if (name !== currentUser) toNotify[name] = true;
+  });
 
-  recipients.forEach(function(recipient) {
+  Object.keys(toNotify).forEach(function(recipient) {
     fetch(NOTIF_API, {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
@@ -902,6 +923,149 @@ function dispatchCommentNotification(taskId, commentText) {
     }).catch(function(){});
   });
 }
+
+// ── @mention engine ───────────────────────────────────
+var mentionState = {
+  active:    false,
+  query:     '',
+  startPos:  0,
+  targetEl:  null,
+  dropEl:    null,
+  cursor:    0,
+  matches:   []
+};
+
+function attachMentionListener(textarea, dropdownEl) {
+  textarea.addEventListener('keydown', function(e) {
+    if (!mentionState.active) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      mentionState.cursor = Math.min(mentionState.cursor + 1, mentionState.matches.length - 1);
+      highlightMentionItem(dropdownEl);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      mentionState.cursor = Math.max(mentionState.cursor - 1, 0);
+      highlightMentionItem(dropdownEl);
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      if (mentionState.matches.length) {
+        e.preventDefault();
+        selectMention(mentionState.matches[mentionState.cursor], textarea, dropdownEl);
+      }
+    } else if (e.key === 'Escape') {
+      closeMentionDropdown(dropdownEl);
+    }
+  });
+
+  textarea.addEventListener('input', function() {
+    handleMentionInput(textarea, dropdownEl);
+  });
+
+  textarea.addEventListener('blur', function() {
+    setTimeout(function(){ closeMentionDropdown(dropdownEl); }, 150);
+  });
+}
+
+function handleMentionInput(textarea, dropdownEl) {
+  var val = textarea.value;
+  var pos = textarea.selectionStart;
+
+  // Find the @ that triggered this mention
+  var slice = val.substring(0, pos);
+  var atIdx = slice.lastIndexOf('@');
+  if (atIdx === -1) { closeMentionDropdown(dropdownEl); return; }
+
+  // Make sure there's no space between @ and cursor
+  var between = slice.substring(atIdx + 1);
+  if (/\s/.test(between)) { closeMentionDropdown(dropdownEl); return; }
+
+  var query = between.toLowerCase();
+  var matches = staffList.filter(function(s) {
+    return s.name.toLowerCase().indexOf(query) !== -1;
+  }).slice(0, 8);
+
+  if (!matches.length) { closeMentionDropdown(dropdownEl); return; }
+
+  mentionState.active   = true;
+  mentionState.query    = query;
+  mentionState.startPos = atIdx;
+  mentionState.targetEl = textarea;
+  mentionState.dropEl   = dropdownEl;
+  mentionState.matches  = matches;
+  mentionState.cursor   = 0;
+
+  renderMentionDropdown(matches, dropdownEl, textarea);
+}
+
+function renderMentionDropdown(matches, dropdownEl, textarea) {
+  dropdownEl.innerHTML = matches.map(function(s, i) {
+    var color = staffColorMap[s.uuid] || '#8892b0';
+    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '" '
+      + 'data-idx="' + i + '" '
+      + 'onmousedown="selectMention(mentionState.matches[' + i + '],mentionState.targetEl,mentionState.dropEl)">'
+      + '<span class="mention-dot" style="background:' + color + '"></span>'
+      + esc(s.name)
+      + '</div>';
+  }).join('');
+
+  // Position below the textarea
+  var rect = textarea.getBoundingClientRect();
+  dropdownEl.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  dropdownEl.style.left = (rect.left   + window.scrollX)     + 'px';
+  dropdownEl.classList.add('open');
+}
+
+function highlightMentionItem(dropdownEl) {
+  dropdownEl.querySelectorAll('.mention-item').forEach(function(el, i) {
+    el.classList.toggle('active', i === mentionState.cursor);
+  });
+}
+
+function selectMention(staff, textarea, dropdownEl) {
+  if (!staff || !textarea) return;
+  var val      = textarea.value;
+  var before   = val.substring(0, mentionState.startPos);
+  var after    = val.substring(textarea.selectionStart);
+  textarea.value = before + '@' + staff.name + ' ' + after;
+  // Move cursor after the inserted mention
+  var newPos = (before + '@' + staff.name + ' ').length;
+  textarea.setSelectionRange(newPos, newPos);
+  textarea.focus();
+  closeMentionDropdown(dropdownEl);
+}
+
+function closeMentionDropdown(dropdownEl) {
+  if (dropdownEl) dropdownEl.classList.remove('open');
+  mentionState.active = false;
+  mentionState.matches = [];
+}
+
+// Extract @mentioned names from comment text
+function extractMentions(text) {
+  var found = [];
+  var regex = /@([\w\s]+?)(?=\s@|\s*$|[^a-zA-Z\s])/g;
+  var match;
+  while ((match = regex.exec(text)) !== null) {
+    var name = match[1].trim();
+    var staff = staffList.find(function(s) {
+      return s.name.toLowerCase() === name.toLowerCase();
+    });
+    if (staff && found.indexOf(staff.name) === -1) found.push(staff.name);
+  }
+  return found;
+}
+
+// Render comment text with highlighted @mentions
+function renderCommentText(text) {
+  return esc(text).replace(/@([\w ]+)/g, function(match, name) {
+    var staff = staffList.find(function(s) {
+      return s.name.toLowerCase() === name.trim().toLowerCase();
+    });
+    return staff
+      ? '<span class="mention-chip">@' + esc(staff.name) + '</span>'
+      : match;
+  });
+}
+
   
 function startNotifPolling() {
   loadNotifications();
@@ -918,6 +1082,7 @@ document.addEventListener('click', function(e) {
   }
 });
   
+
 function getCommentCount(taskId) {
   return Array.isArray(commentsCache[taskId]) ? commentsCache[taskId].length : 0;
 }
@@ -934,8 +1099,9 @@ function buildCommentPanel(taskId) {
     + '</button>'
     + '<div class="tc-panel" id="tc-panel-' + safeId + '">'
     +   '<div class="tc-list" id="tc-list-' + safeId + '"></div>'
-    +   '<div class="tc-compose">'
-    +     '<textarea class="tc-textarea" id="tc-ta-' + safeId + '" placeholder="Add a comment…"></textarea>'
+    +   '<div class="tc-compose" style="position:relative;">'
+    +     '<div class="mention-dropdown" id="tc-md-' + safeId + '" style="position:fixed;"></div>'
+    +     '<textarea class="tc-textarea" id="tc-ta-' + safeId + '" placeholder="Add a comment… type @ to mention someone"></textarea>'
     +     '<div class="tc-compose-row">'
     +       '<button class="tc-submit" onclick="postCardComment(\'' + esc(taskId) + '\')">Post</button>'
     +       '<span class="tc-status" id="tc-st-' + safeId + '"></span>'
@@ -944,15 +1110,24 @@ function buildCommentPanel(taskId) {
     + '</div>'
     + '</div>';
 }
+
 function toggleCommentPanel(taskId) {
   var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
   var panel  = document.getElementById('tc-panel-' + safeId);
   if (!panel) return;
   var isOpen = panel.classList.contains('open');
   document.querySelectorAll('.tc-panel.open').forEach(function(p){ p.classList.remove('open'); });
-  if (!isOpen) { panel.classList.add('open'); renderCardCommentList(taskId); }
+  if (!isOpen) {
+    panel.classList.add('open');
+    renderCardCommentList(taskId);
+    // Attach mention listener after panel is visible
+    var ta = document.getElementById('tc-ta-'  + safeId);
+    var md = document.getElementById('tc-md-'  + safeId);
+    if (ta && md) attachMentionListener(ta, md);
+  }
 }
-function renderCardCommentList(taskId) {
+
+  function renderCardCommentList(taskId) {
   var safeId   = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
   var listEl   = document.getElementById('tc-list-' + safeId);
   if (!listEl) return;
@@ -961,7 +1136,7 @@ function renderCardCommentList(taskId) {
   listEl.innerHTML = comments.map(function(c) {
     return '<div class="tc-item" id="tc-c-' + esc(c.id) + '">'
       + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
-      + '<div class="tc-item-text">'  + esc(c.text) + '</div>'
+       + '<div class="tc-item-text">'  + renderCommentText(c.text) + '</div>'
       + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
       + '<button class="tc-item-del" onclick="deleteCardComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
       + '</div>';
@@ -1821,6 +1996,10 @@ function openEdit(id) {
   renderModalCommentList(t._id);
   document.getElementById('m-tc-textarea').value = '';
   document.getElementById('m-tc-status').textContent = '';
+  // Attach mention listener to modal textarea
+  var mTa = document.getElementById('m-tc-textarea');
+  var mMd = document.getElementById('m-modal-mention-drop');
+  if (mTa && mMd) attachMentionListener(mTa, mMd);
   var statusRow=document.getElementById('m-status-row');
   if(t.jobStatus){ statusRow.style.display=''; document.getElementById('m-status').innerHTML=statusBadge(t.jobStatus); }
   else { statusRow.style.display='none'; }
