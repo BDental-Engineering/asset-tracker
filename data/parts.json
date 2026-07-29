@@ -92,5 +92,13 @@
     "updatedAt": "2026-07-29T05:48:42.403Z",
     "updatedBy": "Richard Buckingham",
     "allocated": true
+  },
+  "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__mixed bed resin meladem 47 / 56": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "",
+    "updatedAt": "2026-07-29T19:57:43.152Z",
+    "updatedBy": "Richard Buckingham"
   }
 }
