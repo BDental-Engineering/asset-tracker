@@ -100,5 +100,13 @@
     "poNumber": "",
     "updatedAt": "2026-07-29T19:57:43.152Z",
     "updatedBy": "Richard Buckingham"
+  },
+  "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__pump condensate/collecting tank mt 10 (+ evo) 230 v / 50 hz": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "",
+    "updatedAt": "2026-07-29T19:57:47.606Z",
+    "updatedBy": "Richard Buckingham"
   }
 }
