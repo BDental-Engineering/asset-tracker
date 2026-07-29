@@ -1,7 +1,11 @@
 {
   "excludedItemNumbers": [
-    "TRAVEL"
+    "TRAVEL",
+    "SERVLABOUR",
+    "PVI-COMP-CERT",
+    "PVI-AUTO-CERT",
+    "LABOUR"
   ],
-  "updatedAt": "2026-07-29T05:39:32.151Z",
+  "updatedAt": "2026-07-29T05:40:53.212Z",
   "updatedBy": "Richard Buckingham"
 }
