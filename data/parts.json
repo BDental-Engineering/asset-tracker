@@ -44,10 +44,10 @@
   "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__metherm 55 c citric acid based neutralizer": {
     "ordered": true,
     "received": true,
-    "updatedAt": "2026-07-29T19:57:34.646Z",
+    "updatedAt": "2026-07-29T19:57:36.742Z",
     "updatedBy": "Richard Buckingham",
     "poNumber": "",
-    "allocated": false
+    "allocated": true
   },
   "75e0b92d-0b11-45c6-a082-214e0144fc7b__travel": {
     "ordered": true,
