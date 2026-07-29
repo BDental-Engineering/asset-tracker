@@ -66,6 +66,7 @@ input[type=checkbox].cb-green{accent-color:var(--green);}
 .stock-badge.low{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.25);color:var(--amber);}
 .stock-badge.none{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:var(--red);}
 .po-badge{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);margin-top:3px;font-family:monospace;}
+.date-cell{font-size:0.78rem;font-weight:600;white-space:nowrap;}
 
 /* ── Modals ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:16px;}
@@ -171,7 +172,7 @@ input[type=checkbox].cb-green{accent-color:var(--green);}
     <span id="sync-detail">Loading&hellip;</span>
   </div>
 
-   <div class="toolbar">
+  <div class="toolbar">
     <input type="text" id="q-search" placeholder="&#128269; Search parts&hellip;" oninput="render()"/>
     <select id="q-client" onchange="render()"><option value="">All Clients</option></select>
     <select id="q-supplier" onchange="render()"><option value="">All Suppliers</option></select>
@@ -190,7 +191,6 @@ input[type=checkbox].cb-green{accent-color:var(--green);}
       <option value="status">Sort: Status</option>
     </select>
   </div>
-
 
   <div id="parts-list"></div>
 </div>
@@ -446,14 +446,14 @@ function loadAll(force) {
           matUuid:   m.uuid,
           jobDate:   jobDate
         });
-                // Track earliest scheduled date across jobs for this part
+
+        // Track earliest scheduled date across all jobs for this part
         if (jobDate) {
           var cur = clientGroups[clientUuid].parts[normKey].earliestDate;
           if (!cur || jobDate < cur) {
             clientGroups[clientUuid].parts[normKey].earliestDate = jobDate;
           }
         }
-
       });
     });
 
@@ -531,42 +531,6 @@ function populateFilters() {
   });
 }
 
-function onSortChange(val) {
-  if (val === 'date-asc')  { sortField = 'date';   sortDir =  1; }
-  else if (val === 'date-desc') { sortField = 'date';   sortDir = -1; }
-  else if (val === 'name') { sortField = 'name';   sortDir =  1; }
-  else if (val === 'status'){ sortField = 'status'; sortDir =  1; }
-  else                     { sortField = 'client'; sortDir =  1; }
-  render();
-}
-
-function statusOrder(key) {
-  var s = getState(key);
-  if (s.allocated) return 3;
-  if (s.received)  return 2;
-  if (s.ordered)   return 1;
-  return 0;
-}
-
-function sortParts(parts) {
-  return parts.slice().sort(function(a, b) {
-    if (sortField === 'date') {
-      var da = a.earliestDate || '9999';
-      var db = b.earliestDate || '9999';
-      return da < db ? -sortDir : da > db ? sortDir : 0;
-    }
-    if (sortField === 'name') {
-      return a.name.localeCompare(b.name) * sortDir;
-    }
-    if (sortField === 'status') {
-      return (statusOrder(a.key) - statusOrder(b.key)) * sortDir;
-    }
-    // default: client then name
-    var cc = a.clientName.localeCompare(b.clientName);
-    return cc !== 0 ? cc : a.name.localeCompare(b.name);
-  });
-}
-  
 function getState(key) {
   return statesData[key] || { ordered: false, received: false, allocated: false, poNumber: '' };
 }
@@ -582,12 +546,50 @@ function getFiltered() {
     if (q && p.name.toLowerCase().indexOf(q)===-1 && p.clientName.toLowerCase().indexOf(q)===-1) return false;
     if (statusF) {
       var st = getState(p.key);
-      if (statusF==='none'      && (st.ordered || st.received || st.allocated))          return false;
-      if (statusF==='ordered'   && (!st.ordered || st.received || st.allocated))         return false;
-      if (statusF==='received'  && (!st.received || st.allocated))                       return false;
-      if (statusF==='allocated' && !st.allocated)                                        return false;
+      if (statusF==='none'      && (st.ordered || st.received || st.allocated))      return false;
+      if (statusF==='ordered'   && (!st.ordered || st.received || st.allocated))     return false;
+      if (statusF==='received'  && (!st.received || st.allocated))                   return false;
+      if (statusF==='allocated' && !st.allocated)                                    return false;
     }
     return true;
+  });
+}
+
+// ── Sorting ────────────────────────────────────────────
+function onSortChange(val) {
+  if      (val === 'date-asc')  { sortField = 'date';   sortDir =  1; }
+  else if (val === 'date-desc') { sortField = 'date';   sortDir = -1; }
+  else if (val === 'name')      { sortField = 'name';   sortDir =  1; }
+  else if (val === 'status')    { sortField = 'status'; sortDir =  1; }
+  else                          { sortField = 'client'; sortDir =  1; }
+  render();
+}
+
+function statusOrder(key) {
+  var s = getState(key);
+  if (s.allocated) return 3;
+  if (s.received)  return 2;
+  if (s.ordered)   return 1;
+  return 0;
+}
+
+function sortParts(parts) {
+  return parts.slice().sort(function(a, b) {
+    if (sortField === 'date') {
+      var da = a.earliestDate || '9999-99-99';
+      var db = b.earliestDate || '9999-99-99';
+      return da < db ? -sortDir : da > db ? sortDir : 0;
+    }
+    if (sortField === 'name') {
+      return a.name.localeCompare(b.name) * sortDir;
+    }
+    if (sortField === 'status') {
+      var diff = statusOrder(a.key) - statusOrder(b.key);
+      return diff !== 0 ? diff * sortDir : a.name.localeCompare(b.name);
+    }
+    // default: client then name
+    var cc = a.clientName.localeCompare(b.clientName);
+    return cc !== 0 ? cc : a.name.localeCompare(b.name);
   });
 }
 
@@ -602,12 +604,11 @@ function render() {
     return;
   }
 
-    var sorted = sortParts(filtered);
-
-  // If sorting by date or name, show flat list; otherwise group by client
-  var html = '';
+  var sorted = sortParts(filtered);
+  var html   = '';
 
   if (sortField === 'client') {
+    // Group by client
     var byClient = {};
     sorted.forEach(function(p) {
       if (!byClient[p.clientUuid]) byClient[p.clientUuid] = { name: p.clientName, parts: [] };
@@ -620,78 +621,16 @@ function render() {
       html += '</tbody></table></div>';
     });
   } else {
+    // Flat list
     html += buildTableHeader('All Parts', sorted.length);
     sorted.forEach(function(p){ html += buildRow(p); });
     html += '</tbody></table></div>';
   }
 
-      var st     = getState(p.key);
-      var rowCls = st.allocated ? ' class="allocated-row"' : '';
-      var jobList = p.jobs.map(function(j){
-        return 'Job #' + esc(j.jobNumber) + (j.jobDesc ? ' \u2014 ' + esc(j.jobDesc.substring(0,40)) : '');
-      }).join('<br>');
-      var qtyStr = Number.isInteger(p.totalQty) ? String(p.totalQty) : p.totalQty.toFixed(2).replace(/\.?0+$/,'');
-
-      var supplierHTML = p.supplierName
-        ? '<div class="supplier-tag">&#128230; ' + esc(p.supplierName)
-            + (p.productCode ? '<span class="product-code">' + esc(p.productCode) + '</span>' : '')
-            + '</div>'
-        : '<span style="color:var(--muted);font-size:0.72rem">\u2014</span>';
-
-      var statusPill = st.allocated
-        ? '<span class="status-pill pill-allocated">&#10003; Allocated</span>'
-        : st.received
-          ? '<span class="status-pill pill-received">&#128230; Received</span>'
-          : st.ordered
-            ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
-            : '<span class="status-pill pill-none">Needs Order</span>';
-
-      var poHTML = (st.ordered && st.poNumber)
-        ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
-        : (st.ordered && !st.poNumber)
-          ? '<div style="margin-top:3px"><button class="btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px;" onclick="openPoEdit(\'' + esc(p.key) + '\')">+ Add PO#</button></div>'
-          : '';
-
-      var stockHTML = '';
-      if (p.isInventoried) {
-        var stockCls = p.qtyInStock <= 0 ? 'none' : p.qtyInStock < p.totalQty ? 'low' : '';
-        stockHTML = '<span class="stock-badge ' + stockCls + '">&#128200; In stock: ' + p.qtyInStock + '</span>';
-      }
-
-      html += '<tr' + rowCls + ' id="row-' + esc(p.key) + '">'
-        + '<td>'
-        +   '<div class="part-name">' + esc(p.name) + '</div>'
-        +   (p.itemNumber ? '<div class="part-ref">&#128230; ' + esc(p.itemNumber) + '</div>' : '')
-        +   (stockHTML ? '<div>' + stockHTML + '</div>' : '')
-        + '</td>'
-        + '<td class="qty-cell">' + qtyStr + '</td>'
-        + '<td><div class="part-jobs">' + jobList + '</div></td>'
-        + '<td>' + supplierHTML + '</td>'
-        + '<td class="cb-cell">'
-        +   '<input type="checkbox" id="ord-' + esc(p.key) + '"'
-        +   (st.ordered ? ' checked' : '')
-        +   ' onchange="onOrderedChange(\'' + esc(p.key) + '\',this.checked)"/>'
-        + '</td>'
-        + '<td class="cb-cell">'
-        +   '<input type="checkbox" class="cb-green" id="rec-' + esc(p.key) + '"'
-        +   (st.received ? ' checked' : '')
-        +   ' onchange="toggleState(\'' + esc(p.key) + '\',\'received\',this.checked)"/>'
-        + '</td>'
-        + '<td class="cb-cell">'
-        +   '<input type="checkbox" class="cb-green" id="alloc-' + esc(p.key) + '"'
-        +   (st.allocated ? ' checked' : '')
-        +   ' onchange="toggleState(\'' + esc(p.key) + '\',\'allocated\',this.checked)"/>'
-        + '</td>'
-        + '<td id="pill-' + esc(p.key) + '">' + statusPill + poHTML + '</td>'
-        + '</tr>';
-    });
-
-    html += '</tbody></table></div>';
-  });
-
   document.getElementById('parts-list').innerHTML = html;
 }
 
+// ── Table builders ─────────────────────────────────────
 function buildTableHeader(groupLabel, count) {
   return '<div class="client-group">'
     + '<div class="client-group-header">'
@@ -703,7 +642,7 @@ function buildTableHeader(groupLabel, count) {
     + '<th>Part / Material</th>'
     + '<th style="text-align:center;width:50px">Qty</th>'
     + '<th>Jobs</th>'
-    + '<th style="width:110px">Scheduled</th>'
+    + '<th style="width:120px">Scheduled</th>'
     + '<th>Supplier</th>'
     + '<th style="text-align:center;width:80px">Ordered</th>'
     + '<th style="text-align:center;width:80px">Received</th>'
@@ -751,23 +690,15 @@ function buildRow(p) {
   if (p.earliestDate) {
     var d = new Date(p.earliestDate);
     if (!isNaN(d.getTime())) {
-      var now      = new Date();
+      var now      = new Date(); now.setHours(0,0,0,0);
       var diffDays = Math.ceil((d - now) / 86400000);
       var dateStr  = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-      var urgency  = diffDays < 0
-        ? 'color:var(--red)'
-        : diffDays <= 7
-          ? 'color:var(--amber)'
-          : 'color:var(--green)';
-      var tag = diffDays < 0
-        ? ' <span style="font-size:0.62rem;color:var(--red)">(overdue)</span>'
-        : diffDays === 0
-          ? ' <span style="font-size:0.62rem;color:var(--amber)">(today)</span>'
-          : diffDays <= 7
-            ? ' <span style="font-size:0.62rem;color:var(--amber)">(' + diffDays + 'd)</span>'
-            : '';
-      dateHTML = '<span style="font-size:0.78rem;font-weight:600;' + urgency + '">'
-        + '&#128197; ' + dateStr + '</span>' + tag;
+      var clr      = diffDays < 0 ? 'var(--red)' : diffDays <= 7 ? 'var(--amber)' : 'var(--green)';
+      var tag      = diffDays < 0  ? ' <span style="font-size:0.62rem;color:var(--red)">(overdue)</span>'
+                   : diffDays === 0 ? ' <span style="font-size:0.62rem;color:var(--amber)">(today)</span>'
+                   : diffDays <= 7  ? ' <span style="font-size:0.62rem;color:var(--amber)">(' + diffDays + 'd)</span>'
+                   : '';
+      dateHTML = '<span class="date-cell" style="color:' + clr + '">&#128197; ' + dateStr + '</span>' + tag;
     }
   }
 
@@ -800,7 +731,7 @@ function buildRow(p) {
     + '</tr>';
 }
 
-
+// ── Stats ──────────────────────────────────────────────
 function renderStats(filtered) {
   var total     = filtered.length;
   var needs     = filtered.filter(function(p){ var s=getState(p.key); return !s.ordered && !s.received && !s.allocated; }).length;
@@ -969,9 +900,9 @@ function saveExclusions() {
   var items = raw.split('\n').map(function(l){ return l.trim().toUpperCase(); }).filter(Boolean);
   var msg   = document.getElementById('exclude-msg');
   var btn   = document.getElementById('exclude-save-btn');
-  msg.style.color  = 'var(--amber)';
-  msg.textContent  = 'Saving\u2026';
-  btn.disabled     = true;
+  msg.style.color = 'var(--amber)';
+  msg.textContent = 'Saving\u2026';
+  btn.disabled    = true;
 
   apiPost('/api/materials-exclude', { itemNumbers: items, updatedBy: currentUser })
     .then(function(data) {
