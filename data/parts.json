@@ -84,10 +84,10 @@
     "updatedBy": "Rosie Buckingham"
   },
   "ea5a19f9-097a-461a-88c4-22421842fcbb__adec annual service kit performer / cascade / 200": {
-    "ordered": false,
-    "received": false,
+    "ordered": true,
+    "received": true,
     "poNumber": "",
-    "updatedAt": "2026-07-29T05:44:03.208Z",
+    "updatedAt": "2026-07-29T05:44:04.412Z",
     "updatedBy": "Richard Buckingham"
   }
 }
