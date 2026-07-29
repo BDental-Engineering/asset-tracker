@@ -30,10 +30,12 @@
     "updatedBy": "Rosie Buckingham"
   },
   "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__area 1 callout (35 mile radius)": {
-    "ordered": true,
-    "received": true,
-    "updatedAt": "2026-07-26T18:38:30.254Z",
-    "updatedBy": "Rosie Buckingham"
+    "ordered": false,
+    "received": false,
+    "updatedAt": "2026-07-29T19:58:26.038Z",
+    "updatedBy": "Richard Buckingham",
+    "poNumber": "",
+    "allocated": false
   },
   "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__labour per hour": {
     "ordered": true,
