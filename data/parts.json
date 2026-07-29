@@ -87,7 +87,8 @@
     "ordered": true,
     "received": true,
     "poNumber": "",
-    "updatedAt": "2026-07-29T05:44:08.305Z",
-    "updatedBy": "Richard Buckingham"
+    "updatedAt": "2026-07-29T05:47:45.613Z",
+    "updatedBy": "Richard Buckingham",
+    "allocated": false
   }
 }
