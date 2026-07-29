@@ -5,12 +5,11 @@
     "PVI-COMP-CERT",
     "PVI-AUTO-CERT",
     "LABOUR",
-    "AREA 1 CALLOUT (35 MILE RADIUS)",
-    "AREA 1 CALLOUT (35 MILE RADIUS)",
+    "CALLOUT-1",
     "INSTALL-INTRAORAL",
     "INSTALL-CHAIR",
     "DELIVERY CHARGE"
   ],
-  "updatedAt": "2026-07-29T20:01:55.198Z",
+  "updatedAt": "2026-07-29T20:02:39.854Z",
   "updatedBy": "Richard Buckingham"
 }
