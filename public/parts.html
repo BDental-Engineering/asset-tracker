@@ -334,6 +334,7 @@ function loadAll(force) {
     sm8Get('/category.json'),
     sm8Get('/company.json'),
     sm8Get('/jobmaterial.json'),
+    sm8Get('/jobactivity.json').catch(function(){ return []; }),
     sm8Get('/material.json').catch(function(){ return []; }),
     apiGet('/api/suppliers'),
     apiGet('/api/parts'),
@@ -343,17 +344,38 @@ function loadAll(force) {
     var rawStaff      = Array.isArray(res[1]) ? res[1] : [];
     var rawCategories = Array.isArray(res[2]) ? res[2] : [];
     var rawCompanies  = Array.isArray(res[3]) ? res[3] : [];
-    var rawMaterials  = Array.isArray(res[4]) ? res[4] : [];
-    var rawCatalogue  = Array.isArray(res[5]) ? res[5] : [];
-    suppliersData       = (res[6] && typeof res[6]==='object' && !Array.isArray(res[6])) ? res[6] : {};
-    statesData          = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
-    var excludeData     = (res[8] && typeof res[8]==='object') ? res[8] : {};
+    var rawMaterials   = Array.isArray(res[4]) ? res[4] : [];
+    var rawActivities  = Array.isArray(res[5]) ? res[5] : [];
+    var rawCatalogue   = Array.isArray(res[6]) ? res[6] : [];
+    suppliersData       = (res[7] && typeof res[7]==='object' && !Array.isArray(res[7])) ? res[7] : {};
+    statesData          = (res[8] && typeof res[8]==='object' && !Array.isArray(res[8])) ? res[8] : {};
+    var excludeData     = (res[9] && typeof res[9]==='object') ? res[9] : {};
     excludedItemNumbers = Array.isArray(excludeData.excludedItemNumbers)
       ? excludeData.excludedItemNumbers.map(function(n){ return String(n).toUpperCase().trim(); })
       : [];
 
     rawMaterialsAll = rawMaterials;
 
+ // Build bookings map: job_uuid → earliest future booking date
+    var bookingsMap = {};
+    var today = new Date(); today.setHours(0,0,0,0);
+    rawActivities.forEach(function(a) {
+      if (!a.job_uuid) return;
+      var dateStr = (a.start_date || a.date || '').substring(0, 10);
+      if (!dateStr) return;
+      var d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return;
+      if (!bookingsMap[a.job_uuid]) bookingsMap[a.job_uuid] = [];
+      bookingsMap[a.job_uuid].push(dateStr);
+    });
+    // Sort each job's bookings and pick the next upcoming one (or latest past)
+    var nextBookingDate = {};
+    Object.keys(bookingsMap).forEach(function(jobUuid) {
+      var dates = bookingsMap[jobUuid].sort();
+      var future = dates.filter(function(ds){ return new Date(ds + 'T00:00:00') >= today; });
+      nextBookingDate[jobUuid] = future.length ? future[0] : dates[dates.length - 1];
+    });
+    
     // Build catalogue + inventory maps
     var catalogueMap = {};
     var inventoryMap = {};
@@ -406,7 +428,8 @@ function loadAll(force) {
       var clientName = clientMap[clientUuid] || 'Unknown Client';
       var jobNumber  = job.generated_job_id || '';
       var jobDesc    = job.job_description  || '';
-      var jobDate    = job.date || job.start_date || job.scheduled_start_date || '';
+      var jobDate    = nextBookingDate[jobUuid] || '';
+
 
       if (!clientGroups[clientUuid]) clientGroups[clientUuid] = { clientName: clientName, parts: {} };
 
