@@ -43,7 +43,8 @@ button:hover{opacity:0.87;}
 .client-group-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;font-weight:700;font-size:0.9rem;}
 .client-name{flex:1;}
 .client-job-count{font-size:0.72rem;color:var(--muted);font-weight:400;}
-.parts-table{width:100%;border-collapse:collapse;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
+.parts-table{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
+.parts-table td{overflow:hidden;text-overflow:ellipsis;}
 .parts-table th{text-align:left;padding:9px 14px;font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;background:var(--surface);border-bottom:2px solid var(--border);}
 .parts-table td{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);vertical-align:middle;}
 .parts-table tr:last-child td{border-bottom:none;}
@@ -665,18 +666,29 @@ function buildTableHeader(groupLabel, count) {
     + '<span class="client-job-count">' + count + ' part line' + (count===1?'':'s') + '</span>'
     + '</div>'
     + '<table class="parts-table">'
+       + '<colgroup>'
+    + '<col style="width:18%"/>'
+    + '<col style="width:4%"/>'
+    + '<col style="width:22%"/>'
+    + '<col style="width:11%"/>'
+    + '<col style="width:13%"/>'
+    + '<col style="width:7%"/>'
+    + '<col style="width:7%"/>'
+    + '<col style="width:7%"/>'
+    + '<col style="width:11%"/>'
+    + '</colgroup>'
     + '<thead><tr>'
     + '<th>Part / Material</th>'
-    + '<th style="text-align:center;width:50px">Qty</th>'
+    + '<th style="text-align:center">Qty</th>'
     + '<th>Jobs</th>'
-    + '<th style="width:120px">Scheduled</th>'
+    + '<th>Scheduled</th>'
     + '<th>Supplier</th>'
-    + '<th style="text-align:center;width:80px">Ordered</th>'
-    + '<th style="text-align:center;width:80px">Received</th>'
-    + '<th style="text-align:center;width:80px">Allocated</th>'
-    + '<th style="width:140px">Status / PO</th>'
+    + '<th style="text-align:center">Ordered</th>'
+    + '<th style="text-align:center">Received</th>'
+    + '<th style="text-align:center">Allocated</th>'
+    + '<th>Status / PO</th>'
     + '</tr></thead><tbody>';
-}
+
 
 function buildRow(p) {
   var st      = getState(p.key);
