@@ -1,1 +1,7 @@
-{}
+{
+  "excludedItemNumbers": [
+    "TRAVEL"
+  ],
+  "updatedAt": "2026-07-29T05:39:32.151Z",
+  "updatedBy": "Richard Buckingham"
+}
