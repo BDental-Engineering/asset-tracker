@@ -211,12 +211,14 @@ button:hover{opacity:0.87;}
 .modal-sm8-link:hover{background:rgba(79,110,247,0.2);}
 .frow{margin-bottom:14px;}
 .frow label{display:block;font-size:0.72rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em;}
-.frow textarea{
+.frow textarea,.frow input[type=text],.frow input[type=date]{
   width:100%;background:var(--surface2);border:1px solid var(--border);
   border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-  outline:none;font-family:inherit;resize:vertical;min-height:70px;
+  outline:none;font-family:inherit;
 }
-.frow textarea:focus{border-color:var(--accent);}
+.frow textarea{resize:vertical;min-height:70px;}
+.frow input[type=date]{color-scheme:dark;}
+.frow input:focus,.frow textarea:focus{border-color:var(--accent);}
 .frow .readonly-val{
   background:var(--surface2);border:1px solid var(--border);border-radius:8px;
   padding:9px 12px;font-size:0.85rem;color:var(--muted);
@@ -254,7 +256,6 @@ button:hover{opacity:0.87;}
   border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;
   border:none;cursor:pointer;
 }
-.auth-btn:hover{opacity:0.85;}
 #toast{
   position:fixed;bottom:24px;right:24px;
   background:var(--surface);border:1px solid var(--border);
@@ -263,7 +264,8 @@ button:hover{opacity:0.87;}
   transition:all 0.3s;max-width:320px;pointer-events:none;
 }
 #toast.show{transform:translateY(0);opacity:1;}
-/* ── Task Comments ── */
+
+/* ── Comments ── */
 .tc-btn{
   display:inline-flex;align-items:center;gap:5px;
   background:rgba(79,110,247,0.1);border:1px solid rgba(79,110,247,0.25);
@@ -297,7 +299,7 @@ button:hover{opacity:0.87;}
 }
 .tc-item-del:hover{color:var(--red);background:rgba(239,68,68,0.1);}
 .tc-empty{font-size:0.8rem;color:var(--muted);text-align:center;padding:10px 0;}
-.tc-compose{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);padding-top:10px;}
+.tc-compose{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);padding-top:10px;position:relative;}
 .tc-textarea{
   background:var(--surface);border:1px solid var(--border);border-radius:8px;
   padding:8px 10px;color:var(--text);font-size:0.82rem;resize:vertical;
@@ -307,21 +309,31 @@ button:hover{opacity:0.87;}
 .tc-compose-row{display:flex;gap:8px;align-items:center;}
 .tc-submit{
   background:var(--accent);color:#fff;border:none;border-radius:8px;
-  padding:5px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:opacity 0.15s;
+  padding:5px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;
 }
-.tc-submit:hover{opacity:0.85;}
 .tc-submit:disabled{opacity:0.5;cursor:not-allowed;}
 .tc-status{font-size:0.75rem;color:var(--muted);}
 .tc-wrap{display:flex;flex-direction:column;margin-top:8px;}
-/* ── Reassign ── */
-.reassign-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.reassign-select{
-  flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;
+
+/* ── @mention ── */
+.mention-dropdown{
+  position:fixed;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  z-index:600;min-width:200px;max-height:220px;overflow-y:auto;display:none;
 }
-.reassign-select:focus{border-color:var(--accent);}
-.reassign-select option{background:var(--surface2);color:var(--text);}
-.reassign-msg{font-size:0.75rem;margin-top:6px;min-height:16px;}
+.mention-dropdown.open{display:block;}
+.mention-item{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  cursor:pointer;font-size:0.82rem;font-weight:600;transition:background 0.12s;
+}
+.mention-item:hover,.mention-item.active{background:rgba(79,110,247,0.12);}
+.mention-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.mention-chip{
+  display:inline-block;background:rgba(79,110,247,0.15);
+  border:1px solid rgba(79,110,247,0.35);border-radius:5px;
+  color:var(--accent);font-weight:700;font-size:0.82em;padding:0 4px;
+}
+
 /* ── Notifications ── */
 .notif-btn{
   position:relative;display:inline-flex;align-items:center;gap:6px;
@@ -334,8 +346,7 @@ button:hover{opacity:0.87;}
   position:absolute;top:-6px;right:-6px;
   background:var(--red);color:#fff;border-radius:10px;
   padding:1px 6px;font-size:0.65rem;font-weight:800;
-  min-width:18px;text-align:center;line-height:16px;
-  display:none;
+  min-width:18px;text-align:center;line-height:16px;display:none;
 }
 .notif-badge.show{display:block;}
 .notif-dropdown{
@@ -374,28 +385,16 @@ button:hover{opacity:0.87;}
   font-size:0.75rem;padding:2px 5px;border-radius:4px;flex-shrink:0;
 }
 .notif-dismiss:hover{color:var(--red);background:rgba(239,68,68,0.1);}
-/* ── @mention dropdown ── */
-.mention-dropdown{
-  position:absolute;background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.35);
-  z-index:600;min-width:200px;max-height:220px;overflow-y:auto;
-  display:none;
-}
-.mention-dropdown.open{display:block;}
-.mention-item{
-  display:flex;align-items:center;gap:8px;padding:8px 12px;
-  cursor:pointer;font-size:0.82rem;font-weight:600;transition:background 0.12s;
-}
-.mention-item:hover,.mention-item.active{background:rgba(79,110,247,0.12);}
-.mention-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.mention-chip{
-  display:inline-block;background:rgba(79,110,247,0.15);
-  border:1px solid rgba(79,110,247,0.35);border-radius:5px;
-  color:var(--accent);font-weight:700;font-size:0.82em;
-  padding:0 4px;
-}
 
-  
+/* ── Reassign ── */
+.reassign-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.reassign-select{
+  flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.85rem;outline:none;cursor:pointer;
+}
+.reassign-select:focus{border-color:var(--accent);}
+.reassign-select option{background:var(--surface2);color:var(--text);}
+.reassign-msg{font-size:0.75rem;margin-top:6px;min-height:16px;}
 </style>
 </head>
 <body>
@@ -409,7 +408,7 @@ button:hover{opacity:0.87;}
     </svg>
     Asset Tracker
   </a>
-    <div class="header-right">
+  <div class="header-right">
     <span class="user-badge" id="user-badge"></span>
     <a class="back-btn" href="index.html">&#8592; Dashboard</a>
     <a class="back-btn" href="jobs.html" style="background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.3);color:var(--green);">&#128188; Jobs</a>
@@ -428,7 +427,6 @@ button:hover{opacity:0.87;}
     </div>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
-
 </header>
 
 <div id="auth-screen">
@@ -464,7 +462,7 @@ button:hover{opacity:0.87;}
     &#10003; Showing completed tasks &mdash; <span id="completed-banner-count"></span>
   </div>
 
-  <div class="debug-panel" id="debug-panel">Loading&hellip;</div>
+  <div class="debug-panel" id="debug-panel"></div>
 
   <div class="toolbar">
     <div class="toolbar-group">
@@ -492,11 +490,11 @@ button:hover{opacity:0.87;}
     <div class="toolbar-group">
       <span class="status-pills-label">Status</span>
       <div class="status-pills" id="q-status-pills">
-        <label class="status-pill pill-wo"    title="Work Order"><input type="checkbox" value="Work Order"/>&#127959; Work Order</label>
-        <label class="status-pill pill-quote" title="Quote"><input type="checkbox" value="Quote"/>&#128203; Quote</label>
-        <label class="status-pill pill-unsuc" title="Unsuccessful"><input type="checkbox" value="Unsuccessful"/>&#10007; Unsuccessful</label>
-        <label class="status-pill pill-comp"  title="Completed"><input type="checkbox" value="Completed"/>&#10003; Completed</label>
-        <label class="status-pill pill-none"  title="No Status"><input type="checkbox" value="__none__"/>&#9711; No Status</label>
+        <label class="status-pill pill-wo"   ><input type="checkbox" value="Work Order"/>&#127959; Work Order</label>
+        <label class="status-pill pill-quote"><input type="checkbox" value="Quote"/>&#128203; Quote</label>
+        <label class="status-pill pill-unsuc"><input type="checkbox" value="Unsuccessful"/>&#10007; Unsuccessful</label>
+        <label class="status-pill pill-comp" ><input type="checkbox" value="Completed"/>&#10003; Completed</label>
+        <label class="status-pill pill-none" ><input type="checkbox" value="__none__"/>&#9711; No Status</label>
       </div>
     </div>
   </div>
@@ -516,11 +514,11 @@ button:hover{opacity:0.87;}
   <div id="task-body"></div>
 </div>
 
-<!-- Modal -->
+<!-- ══ Task Detail Modal ══════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal" onclick="onOverlayClick(event)">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&#10005;</button>
-        <h3>Task Detail</h3>
+    <h3>Task Detail</h3>
 
     <div id="m-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
     <div class="modal-actions" style="margin-top:0;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);">
@@ -533,24 +531,15 @@ button:hover{opacity:0.87;}
       &#128279; Open Job in ServiceM8
     </a>
 
-
     <div class="frow">
       <label>Task Name</label>
-      <input type="text" id="m-name" style="
-        width:100%;background:var(--surface2);border:1px solid var(--border);
-        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-        outline:none;font-family:inherit;
-      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      <input type="text" id="m-name"/>
     </div>
 
     <div class="frow">
       <label>Due Date</label>
       <div style="display:flex;gap:8px;align-items:center;">
-        <input type="date" id="m-due-date" oninput="updateDuePreview()" style="
-          flex:1;background:var(--surface2);border:1px solid var(--border);
-          border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-          outline:none;font-family:inherit;color-scheme:dark;
-        " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        <input type="date" id="m-due-date" oninput="updateDuePreview()" style="flex:1;"/>
         <button class="btn-ghost btn-sm" onclick="clearDueDate()">&#10005; Clear</button>
       </div>
       <div id="m-due-preview" style="margin-top:5px;font-size:0.75rem;color:var(--muted);"></div>
@@ -576,32 +565,17 @@ button:hover{opacity:0.87;}
       <div class="reassign-msg" id="m-reassign-msg"></div>
     </div>
 
-    <div class="frow" id="m-status-row" style="display:none">
-      <label>Job Status</label>
-      <div class="readonly-val" id="m-status"></div>
-    </div>
-    <div class="frow" id="m-category-row" style="display:none">
-      <label>Category</label>
-      <div class="readonly-val" id="m-category"></div>
-    </div>
-    <div class="frow" id="m-section-row" style="display:none">
-      <label>Section</label>
-      <div class="readonly-val" id="m-section"></div>
-    </div>
-    <div class="frow" id="m-job-row" style="display:none">
-      <label>Linked Job</label>
-      <div class="readonly-val" id="m-job-display"></div>
-    </div>
-    <div class="frow" id="m-reminder-row" style="display:none">
-      <label>Due / Reminder</label>
-      <div class="readonly-val" id="m-reminder"></div>
-    </div>
+    <div class="frow" id="m-status-row"   style="display:none"><label>Job Status</label><div class="readonly-val" id="m-status"></div></div>
+    <div class="frow" id="m-category-row" style="display:none"><label>Category</label><div class="readonly-val" id="m-category"></div></div>
+    <div class="frow" id="m-section-row"  style="display:none"><label>Section</label><div class="readonly-val" id="m-section"></div></div>
+    <div class="frow" id="m-job-row"      style="display:none"><label>Linked Job</label><div class="readonly-val" id="m-job-display"></div></div>
+    <div class="frow" id="m-reminder-row" style="display:none"><label>Due / Reminder</label><div class="readonly-val" id="m-reminder"></div></div>
 
     <div class="frow">
       <label>&#128172; Comments</label>
       <div class="tc-list" id="m-tc-list" style="margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
-            <div class="tc-compose" style="position:relative;">
-        <div class="mention-dropdown" id="m-modal-mention-drop" style="position:fixed;"></div>
+      <div class="tc-compose">
+        <div class="mention-dropdown" id="m-modal-mention-drop"></div>
         <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment… type @ to mention someone"></textarea>
         <div class="tc-compose-row">
           <button class="tc-submit" id="m-tc-submit" onclick="postModalComment()">Post</button>
@@ -614,55 +588,34 @@ button:hover{opacity:0.87;}
       <label>Raw ServiceM8 Data</label>
       <textarea id="m-raw" style="font-family:monospace;font-size:0.72rem;min-height:120px;" readonly></textarea>
     </div>
-
-    <div id="m-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
-
-    
   </div>
 </div>
-<!-- Add Task Modal -->
+
+<!-- ══ Add Task Modal ═════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="add-modal" onclick="onAddOverlayClick(event)">
-  <div class="modal">
+  <div class="modal" style="max-width:520px;">
     <button class="modal-close" onclick="closeAddModal()">&#10005;</button>
     <h3>&#10133; Add New Task</h3>
 
     <div class="frow">
       <label>Task Name *</label>
-      <input type="text" id="add-name" placeholder="Enter task name…" style="
-        width:100%;background:var(--surface2);border:1px solid var(--border);
-        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-        outline:none;font-family:inherit;
-      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      <input type="text" id="add-name" placeholder="Enter task name…"/>
     </div>
-
     <div class="frow">
       <label>Job Number <span style="color:var(--muted);font-weight:400;">(leave blank to use #1146)</span></label>
-      <input type="text" id="add-job-number" placeholder="e.g. 1234" style="
-        width:100%;background:var(--surface2);border:1px solid var(--border);
-        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-        outline:none;font-family:inherit;
-      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      <input type="text" id="add-job-number" placeholder="e.g. 1234" oninput="lookupAddJobNumber(this.value.trim())"/>
       <div id="add-job-preview" style="margin-top:5px;font-size:0.75rem;color:var(--muted);min-height:16px;"></div>
     </div>
-
     <div class="frow">
       <label>Assign To</label>
-      <select id="add-staff-select" class="reassign-select" style="width:100%;">
-        <option value="">— Unassigned —</option>
-      </select>
+      <select id="add-staff-select" class="reassign-select" style="width:100%;"></select>
     </div>
-
     <div class="frow">
       <label>Due Date</label>
-      <input type="date" id="add-due-date" style="
-        width:100%;background:var(--surface2);border:1px solid var(--border);
-        border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.88rem;
-        outline:none;font-family:inherit;color-scheme:dark;
-      " onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      <input type="date" id="add-due-date"/>
     </div>
 
     <div id="add-save-msg" style="font-size:0.78rem;font-weight:600;min-height:18px;margin-bottom:8px;"></div>
-
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
       <button class="btn-primary" id="add-save-btn" onclick="saveNewTask()">&#10133; Create Task</button>
@@ -672,7 +625,12 @@ button:hover{opacity:0.87;}
 
 <div id="toast"></div>
 
+<!-- ══ SCRIPT ═════════════════════════════════════════════════════════════ -->
 <script>
+// ── Constants ──────────────────────────────────────────
+var ENGAGEMENT_API     = '/api/taskengagement';
+var DEFAULT_JOB_NUMBER = '1146';
+
 // ── State ──────────────────────────────────────────────
 var tasksData       = [];
 var completedData   = [];
@@ -697,10 +655,8 @@ var editRecord      = null;
 var debugVisible    = false;
 var completedMode   = false;
 var commentsCache   = {};
-var COMMENTS_API    = '/api/taskcomments';
 var notificationsData = [];
-var NOTIF_API         = '/api/notifications';
-var notifPollTimer    = null;
+var notifPollTimer  = null;
 
 var STATUS_ORDER = { 'Work Order':0,'Quote':1,'Unsuccessful':2,'Completed':3 };
 var STAFF_COLORS = [
@@ -708,6 +664,12 @@ var STAFF_COLORS = [
   '#06b6d4','#f97316','#ec4899','#84cc16','#14b8a6',
   '#8b5cf6','#fb923c','#e879f9','#34d399','#60a5fa'
 ];
+
+// ── Mention state ──────────────────────────────────────
+var mentionState = {
+  active:false, query:'', startPos:0,
+  targetEl:null, dropEl:null, cursor:0, matches:[]
+};
 
 // ── Boot ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
@@ -718,10 +680,14 @@ window.addEventListener('DOMContentLoaded', function() {
   currentUserUuid = id.uuid || '';
   if (currentUser) document.getElementById('user-badge').textContent = '\uD83D\uDC64 ' + currentUser;
   initStatusPills();
-  loadFlaggedIds().then(function() {
-    loadAllComments().then(function() {
-      checkSession();
-    });
+  checkSession();
+  document.addEventListener('click', function(e) {
+    var dd = document.getElementById('notif-dropdown');
+    if (dd && dd.classList.contains('open')) {
+      if (!dd.contains(e.target) && e.target.id !== 'notif-btn') {
+        dd.classList.remove('open');
+      }
+    }
   });
 });
 
@@ -756,646 +722,19 @@ function getStatusFilter() {
   return active;
 }
 
-// ── Flagged IDs ────────────────────────────────────────
-function loadFlaggedIds() {
-  return fetch('/api/flaggedtasks', { cache:'no-store', credentials:'include' })
-    .then(function(r){ return r.ok ? r.json() : {}; })
-    .then(function(d){ flaggedIds = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; })
-    .catch(function(){ flaggedIds = {}; });
-}
-function saveFlaggedIds() {
-  return fetch('/api/flaggedtasks', {
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(flaggedIds)
-  }).then(function(r){
-    return r.json().then(function(d){ console.log('[flaggedtasks] save response:', d); });
-  }).catch(function(e){ console.warn('[flaggedtasks] save failed:', e); });
-}
-function toggleFlag(id, event) {
-  if (event) event.stopPropagation();
-  if (flaggedIds[id]) delete flaggedIds[id]; else flaggedIds[id] = true;
-  saveFlaggedIds();
-  var t = tasksData.find(function(x){ return x._id===id; });
-  if (t) t.flagged = !!flaggedIds[id];
-  render();
-}
-function toggleModalFlag() {
-  if (!editRecord) return;
-  var id = editRecord._id;
-  if (flaggedIds[id]) delete flaggedIds[id]; else flaggedIds[id] = true;
-  editRecord.flagged = !!flaggedIds[id];
-  saveFlaggedIds();
-  var cb  = document.getElementById('m-flag-cb');
-  var row = document.getElementById('m-flag-row');
-  cb.checked = editRecord.flagged;
-  row.classList.toggle('flagged', editRecord.flagged);
-  render();
-}
-
-// ── Comments ───────────────────────────────────────────
-function loadAllComments() {
-  return fetch(COMMENTS_API, { credentials:'include' })
-    .then(function(r){ return r.ok ? r.json() : {}; })
-    .then(function(d){ commentsCache = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; })
-    .catch(function(){ commentsCache = {}; });
-}
-
-// ── Notifications ──────────────────────────────────────
-function loadNotifications() {
-  if (!currentUser) return Promise.resolve();
-  return fetch(NOTIF_API + '?user=' + encodeURIComponent(currentUser), { credentials:'include' })
-    .then(function(r){ return r.ok ? r.json() : []; })
-    .then(function(d){
-      notificationsData = Array.isArray(d) ? d : [];
-      renderNotifBadge();
-      renderNotifList();
-    })
-    .catch(function(){ notificationsData = []; });
-}
-
-function renderNotifBadge() {
-  var badge = document.getElementById('notif-badge');
-  if (!badge) return;
-  var count = notificationsData.length;
-  badge.textContent = count > 9 ? '9+' : String(count);
-  badge.classList.toggle('show', count > 0);
-}
-
-function renderNotifList() {
-  var el = document.getElementById('notif-list');
-  if (!el) return;
-  if (!notificationsData.length) {
-    el.innerHTML = '<div class="notif-empty">&#10003; All caught up!</div>';
-    return;
-  }
-  el.innerHTML = notificationsData.map(function(n) {
-    return '<div class="notif-item" onclick="onNotifClick(\'' + esc(n.id) + '\',\'' + esc(n.taskId) + '\')">'
-      + '<span class="notif-icon">&#128172;</span>'
-      + '<div class="notif-body">'
-      +   '<div class="notif-task">' + esc(n.taskName || 'Task') + '</div>'
-      +   '<div class="notif-msg"><strong>' + esc(n.fromUser) + '</strong> commented: &ldquo;'
-      +     esc((n.commentText || '').substring(0, 80)) + (n.commentText && n.commentText.length > 80 ? '&hellip;' : '')
-      +   '&rdquo;</div>'
-      +   '<div class="notif-time">&#128336; ' + fmtDateTime(n.timestamp) + '</div>'
-      + '</div>'
-      + '<button class="notif-dismiss" onclick="dismissNotification(event,\'' + esc(n.id) + '\')">&#10005;</button>'
-      + '</div>';
-  }).join('');
-}
-
-function toggleNotifDropdown(e) {
-  e.stopPropagation();
-  var dd = document.getElementById('notif-dropdown');
-  dd.classList.toggle('open');
-}
-
-function onNotifClick(notifId, taskId) {
-  document.getElementById('notif-dropdown').classList.remove('open');
-  dismissNotification(null, notifId);
-  // Open the task if it exists
-  var t = tasksData.find(function(x){ return x._id === taskId; });
-  if (t) { openEdit(taskId); }
-}
-
-function dismissNotification(e, notifId) {
-  if (e) e.stopPropagation();
-  fetch(NOTIF_API, {
-    method:'DELETE', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ id: notifId })
-  }).then(function(){
-    notificationsData = notificationsData.filter(function(n){ return n.id !== notifId; });
-    renderNotifBadge();
-    renderNotifList();
-  }).catch(function(){});
-}
-
-function clearAllNotifications() {
-  if (!currentUser) return;
-  fetch(NOTIF_API, {
-    method:'DELETE', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ clearAll: true, user: currentUser })
-  }).then(function(){
-    notificationsData = [];
-    renderNotifBadge();
-    renderNotifList();
-    document.getElementById('notif-dropdown').classList.remove('open');
-  }).catch(function(){});
-}
-
-function dispatchCommentNotification(taskId, commentText) {
-  var allTasks = tasksData.concat(completedData);
-  var t = allTasks.find(function(x){ return x._id === taskId; });
-  if (!t) return;
-
-  var toNotify = {};
-
-  // Notify assignee if not the commenter
-  if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== currentUser) {
-    toNotify[t.staffName] = true;
-  }
-
-  // Notify anyone who previously commented
-  var existing = commentsCache[taskId] || [];
-  existing.forEach(function(c) {
-    if (c.author && c.author !== currentUser) toNotify[c.author] = true;
-  });
-
-  // Notify anyone @mentioned in this comment
-  var mentioned = extractMentions(commentText);
-  mentioned.forEach(function(name) {
-    if (name !== currentUser) toNotify[name] = true;
-  });
-
-  Object.keys(toNotify).forEach(function(recipient) {
-    fetch(NOTIF_API, {
-      method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        forUser:     recipient,
-        fromUser:    currentUser || 'Someone',
-        taskId:      taskId,
-        taskName:    t.name,
-        commentText: commentText
-      })
-    }).catch(function(){});
-  });
-}
-
-// ── @mention engine ───────────────────────────────────
-var mentionState = {
-  active:    false,
-  query:     '',
-  startPos:  0,
-  targetEl:  null,
-  dropEl:    null,
-  cursor:    0,
-  matches:   []
-};
-
-function attachMentionListener(textarea, dropdownEl) {
-  textarea.addEventListener('keydown', function(e) {
-    if (!mentionState.active) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      mentionState.cursor = Math.min(mentionState.cursor + 1, mentionState.matches.length - 1);
-      highlightMentionItem(dropdownEl);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      mentionState.cursor = Math.max(mentionState.cursor - 1, 0);
-      highlightMentionItem(dropdownEl);
-    } else if (e.key === 'Enter' || e.key === 'Tab') {
-      if (mentionState.matches.length) {
-        e.preventDefault();
-        selectMention(mentionState.matches[mentionState.cursor], textarea, dropdownEl);
-      }
-    } else if (e.key === 'Escape') {
-      closeMentionDropdown(dropdownEl);
-    }
-  });
-
-  textarea.addEventListener('input', function() {
-    handleMentionInput(textarea, dropdownEl);
-  });
-
-  textarea.addEventListener('blur', function() {
-    setTimeout(function(){ closeMentionDropdown(dropdownEl); }, 150);
-  });
-}
-
-function handleMentionInput(textarea, dropdownEl) {
-  var val = textarea.value;
-  var pos = textarea.selectionStart;
-
-  // Find the @ that triggered this mention
-  var slice = val.substring(0, pos);
-  var atIdx = slice.lastIndexOf('@');
-  if (atIdx === -1) { closeMentionDropdown(dropdownEl); return; }
-
-  // Make sure there's no space between @ and cursor
-  var between = slice.substring(atIdx + 1);
-  if (/\s/.test(between)) { closeMentionDropdown(dropdownEl); return; }
-
-  var query = between.toLowerCase();
-  var matches = staffList.filter(function(s) {
-    return s.name.toLowerCase().indexOf(query) !== -1;
-  }).slice(0, 8);
-
-  if (!matches.length) { closeMentionDropdown(dropdownEl); return; }
-
-  mentionState.active   = true;
-  mentionState.query    = query;
-  mentionState.startPos = atIdx;
-  mentionState.targetEl = textarea;
-  mentionState.dropEl   = dropdownEl;
-  mentionState.matches  = matches;
-  mentionState.cursor   = 0;
-
-  renderMentionDropdown(matches, dropdownEl, textarea);
-}
-
-function renderMentionDropdown(matches, dropdownEl, textarea) {
-  dropdownEl.innerHTML = matches.map(function(s, i) {
-    var color = staffColorMap[s.uuid] || '#8892b0';
-    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '" '
-      + 'data-idx="' + i + '" '
-      + 'onmousedown="selectMention(mentionState.matches[' + i + '],mentionState.targetEl,mentionState.dropEl)">'
-      + '<span class="mention-dot" style="background:' + color + '"></span>'
-      + esc(s.name)
-      + '</div>';
-  }).join('');
-
-  // Position below the textarea
-  var rect = textarea.getBoundingClientRect();
-  dropdownEl.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
-  dropdownEl.style.left = (rect.left   + window.scrollX)     + 'px';
-  dropdownEl.classList.add('open');
-}
-
-function highlightMentionItem(dropdownEl) {
-  dropdownEl.querySelectorAll('.mention-item').forEach(function(el, i) {
-    el.classList.toggle('active', i === mentionState.cursor);
-  });
-}
-
-function selectMention(staff, textarea, dropdownEl) {
-  if (!staff || !textarea) return;
-  var val      = textarea.value;
-  var before   = val.substring(0, mentionState.startPos);
-  var after    = val.substring(textarea.selectionStart);
-  textarea.value = before + '@' + staff.name + ' ' + after;
-  // Move cursor after the inserted mention
-  var newPos = (before + '@' + staff.name + ' ').length;
-  textarea.setSelectionRange(newPos, newPos);
-  textarea.focus();
-  closeMentionDropdown(dropdownEl);
-}
-
-function closeMentionDropdown(dropdownEl) {
-  if (dropdownEl) dropdownEl.classList.remove('open');
-  mentionState.active = false;
-  mentionState.matches = [];
-}
-
-// Extract @mentioned names from comment text
-function extractMentions(text) {
-  var found = [];
-  var regex = /@([\w\s]+?)(?=\s@|\s*$|[^a-zA-Z\s])/g;
-  var match;
-  while ((match = regex.exec(text)) !== null) {
-    var name = match[1].trim();
-    var staff = staffList.find(function(s) {
-      return s.name.toLowerCase() === name.toLowerCase();
-    });
-    if (staff && found.indexOf(staff.name) === -1) found.push(staff.name);
-  }
-  return found;
-}
-
-// Render comment text with highlighted @mentions
-function renderCommentText(text) {
-  return esc(text).replace(/@([\w ]+)/g, function(match, name) {
-    var staff = staffList.find(function(s) {
-      return s.name.toLowerCase() === name.trim().toLowerCase();
-    });
-    return staff
-      ? '<span class="mention-chip">@' + esc(staff.name) + '</span>'
-      : match;
-  });
-}
-
-  
-function startNotifPolling() {
-  loadNotifications();
-  notifPollTimer = setInterval(loadNotifications, 30000); // poll every 30s
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-  var dd = document.getElementById('notif-dropdown');
-  if (dd && dd.classList.contains('open')) {
-    if (!dd.contains(e.target) && e.target.id !== 'notif-btn') {
-      dd.classList.remove('open');
-    }
-  }
-});
-  
-
-function getCommentCount(taskId) {
-  return Array.isArray(commentsCache[taskId]) ? commentsCache[taskId].length : 0;
-}
-
-// Inline card comment panel
-function buildCommentPanel(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var count  = getCommentCount(taskId);
-  return '<div class="tc-wrap" onclick="event.stopPropagation()">'
-    + '<button class="tc-btn' + (count > 0 ? ' has-comments' : '') + '" '
-    +   'id="tc-btn-' + safeId + '" '
-    +   'onclick="toggleCommentPanel(\'' + esc(taskId) + '\')">'
-    + '&#128172; <span class="tc-count" id="tc-count-' + safeId + '">' + count + '</span>'
-    + '</button>'
-    + '<div class="tc-panel" id="tc-panel-' + safeId + '">'
-    +   '<div class="tc-list" id="tc-list-' + safeId + '"></div>'
-    +   '<div class="tc-compose" style="position:relative;">'
-    +     '<div class="mention-dropdown" id="tc-md-' + safeId + '" style="position:fixed;"></div>'
-    +     '<textarea class="tc-textarea" id="tc-ta-' + safeId + '" placeholder="Add a comment… type @ to mention someone"></textarea>'
-    +     '<div class="tc-compose-row">'
-    +       '<button class="tc-submit" onclick="postCardComment(\'' + esc(taskId) + '\')">Post</button>'
-    +       '<span class="tc-status" id="tc-st-' + safeId + '"></span>'
-    +     '</div>'
-    +   '</div>'
-    + '</div>'
-    + '</div>';
-}
-
-function toggleCommentPanel(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var panel  = document.getElementById('tc-panel-' + safeId);
-  if (!panel) return;
-  var isOpen = panel.classList.contains('open');
-  document.querySelectorAll('.tc-panel.open').forEach(function(p){ p.classList.remove('open'); });
-  if (!isOpen) {
-    panel.classList.add('open');
-    renderCardCommentList(taskId);
-    // Attach mention listener after panel is visible
-    var ta = document.getElementById('tc-ta-'  + safeId);
-    var md = document.getElementById('tc-md-'  + safeId);
-    if (ta && md) attachMentionListener(ta, md);
-  }
-}
-
-  function renderCardCommentList(taskId) {
-  var safeId   = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var listEl   = document.getElementById('tc-list-' + safeId);
-  if (!listEl) return;
-  var comments = commentsCache[taskId] || [];
-  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
-  listEl.innerHTML = comments.map(function(c) {
-    return '<div class="tc-item" id="tc-c-' + esc(c.id) + '">'
-      + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
-       + '<div class="tc-item-text">'  + renderCommentText(c.text) + '</div>'
-      + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
-      + '<button class="tc-item-del" onclick="deleteCardComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
-      + '</div>';
-  }).join('');
-  listEl.scrollTop = listEl.scrollHeight;
-}
-function postCardComment(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var ta  = document.getElementById('tc-ta-'  + safeId);
-  var st  = document.getElementById('tc-st-'  + safeId);
-  var sub = document.querySelector('#tc-panel-' + safeId + ' .tc-submit');
-  if (!ta || !st || !sub) return;
-  var text = (ta.value || '').trim();
-  if (!text) { st.textContent = 'Please enter a comment.'; return; }
-  sub.disabled = true; st.textContent = 'Saving\u2026';
-  fetch(COMMENTS_API, {
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId:taskId, text:text, author:currentUser||'Unknown' })
-  })
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      sub.disabled = false;
-      if (data.error) { st.textContent = 'Error: ' + data.error; return; }
-      ta.value = ''; st.textContent = '\u2713 Posted';
-      setTimeout(function(){ st.textContent = ''; }, 2500);
-      if (!commentsCache[taskId]) commentsCache[taskId] = [];
-      commentsCache[taskId].push(data.comment);
-      dispatchCommentNotification(taskId, text);
-      renderCardCommentList(taskId);
-      updateCommentBadge(taskId);
-    })
-    .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
-}
-function deleteCardComment(taskId, commentId) {
-  if (!confirm('Delete this comment?')) return;
-  fetch(COMMENTS_API, {
-    method:'DELETE', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId:taskId, commentId:commentId })
-  })
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      if (data.error) { toast('Delete failed: ' + data.error, true); return; }
-      if (commentsCache[taskId])
-        commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
-      var el = document.getElementById('tc-c-' + commentId);
-      if (el) el.remove();
-      updateCommentBadge(taskId);
-      if (editRecord && editRecord._id === taskId) renderModalCommentList(taskId);
-      toast('Comment deleted.');
-    })
-    .catch(function(e){ toast('Delete failed: ' + e.message, true); });
-}
-function updateCommentBadge(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var count  = getCommentCount(taskId);
-  var badge  = document.getElementById('tc-count-' + safeId);
-  if (badge) badge.textContent = count;
-  var btn = document.getElementById('tc-btn-' + safeId);
-  if (btn) btn.classList.toggle('has-comments', count > 0);
-}
-
-// Modal comment list
-function renderModalCommentList(taskId) {
-  var listEl   = document.getElementById('m-tc-list');
-  if (!listEl) return;
-  var comments = commentsCache[taskId] || [];
-  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
-  listEl.innerHTML = comments.map(function(c) {
-    return '<div class="tc-item" id="m-tc-c-' + esc(c.id) + '">'
-      + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
-      + '<div class="tc-item-text">'  + esc(c.text) + '</div>'
-      + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
-      + '<button class="tc-item-del" onclick="deleteModalComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
-      + '</div>';
-  }).join('');
-  listEl.scrollTop = listEl.scrollHeight;
-}
-function postModalComment() {
-  if (!editRecord) return;
-  var taskId = editRecord._id;
-  var ta  = document.getElementById('m-tc-textarea');
-  var st  = document.getElementById('m-tc-status');
-  var sub = document.getElementById('m-tc-submit');
-  var text = (ta.value || '').trim();
-  if (!text) { st.textContent = 'Please enter a comment.'; return; }
-  sub.disabled = true; st.textContent = 'Saving\u2026';
-  fetch(COMMENTS_API, {
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId:taskId, text:text, author:currentUser||'Unknown' })
-  })
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      sub.disabled = false;
-      if (data.error) { st.textContent = 'Error: ' + data.error; return; }
-      ta.value = ''; st.textContent = '\u2713 Posted';
-      setTimeout(function(){ st.textContent = ''; }, 2500);
-      if (!commentsCache[taskId]) commentsCache[taskId] = [];
-      commentsCache[taskId].push(data.comment);
-      dispatchCommentNotification(taskId, text);
-      renderModalCommentList(taskId);
-      updateCommentBadge(taskId);
-    })
-    .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
-}
-function deleteModalComment(taskId, commentId) {
-  if (!confirm('Delete this comment?')) return;
-  fetch(COMMENTS_API, {
-    method:'DELETE', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ taskId:taskId, commentId:commentId })
-  })
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      if (data.error) { toast('Delete failed: ' + data.error, true); return; }
-      if (commentsCache[taskId])
-        commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
-      var el = document.getElementById('m-tc-c-' + commentId);
-      if (el) el.remove();
-      updateCommentBadge(taskId);
-      renderCardCommentList(taskId);
-      toast('Comment deleted.');
-    })
-    .catch(function(e){ toast('Delete failed: ' + e.message, true); });
-}
-
-// ── Reassign ───────────────────────────────────────────
-function populateReassignDropdown(currentStaffUuid) {
-  var sel = document.getElementById('m-reassign-select');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— Reassign to… —</option>';
-  staffList.forEach(function(s) {
-    var o = document.createElement('option');
-    o.value = s.uuid;
-    o.textContent = s.name;
-    if (s.uuid === currentStaffUuid) o.disabled = true;
-    sel.appendChild(o);
-  });
-  sel.value = '';
-}
-function reassignTask() {
-  if (!editRecord) return;
-  var sel  = document.getElementById('m-reassign-select');
-  var msg  = document.getElementById('m-reassign-msg');
-  var newStaffUuid = sel.value;
-  if (!newStaffUuid) {
-    msg.style.color = 'var(--red)';
-    msg.textContent = 'Please select a staff member to reassign to.';
-    return;
-  }
-  var newStaffName = staffMap[newStaffUuid] || 'Unknown';
-  var oldStaffName = editRecord.staffName   || 'Unassigned';
-  var t   = editRecord;
-  var raw = t._raw;
-  msg.style.color = 'var(--amber)';
-  msg.textContent = 'Saving\u2026';
-  var payload = {
-    uuid: t._id,
-    job_uuid: raw.job_uuid || '',
-    name: raw.name || '',
-    section_name: raw.section_name || '',
-    item_type: raw.item_type || 'Todo',
-    sort_order: raw.sort_order || 0,
-    completed_timestamp: raw.completed_timestamp || '',
-    completed_by_staff_uuid: raw.completed_by_staff_uuid || '',
-    completed_during_checkin_uuid: raw.completed_during_checkin_uuid || '',
-    reminder_type: raw.reminder_type || '',
-    reminder_data: (raw.reminder_data && !Array.isArray(raw.reminder_data)) ? raw.reminder_data : null,
-    regarding_object: raw.regarding_object || '',
-    regarding_object_uuid: raw.regarding_object_uuid || '',
-    fulfilled_by_object_name: raw.fulfilled_by_object_name || '',
-    fulfilled_by_object_uuid: raw.fulfilled_by_object_uuid || '',
-    assigned_to_staff_uuids: [newStaffUuid],
-    is_locked: raw.is_locked || '0'
-  };
-  sm8Put('/jobchecklist/' + t._id + '.json', payload)
-    .then(function(r) {
-      return r.text().then(function(txt) {
-        if (r.status===200||r.status===201||r.status===204) return txt;
-        throw new Error('HTTP ' + r.status + ': ' + txt.substring(0,120));
-      });
-    })
-    .then(function() {
-      t.staffUuid  = newStaffUuid;
-      t.staffName  = newStaffName;
-      t.staffColor = staffColorMap[newStaffUuid] || '#8892b0';
-      raw.assigned_to_staff_uuids = [newStaffUuid];
-      document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
-      populateReassignDropdown(newStaffUuid);
-      msg.style.color = 'var(--green)';
-      msg.textContent = '\u2713 Reassigned to ' + newStaffName;
-      setTimeout(function(){ msg.textContent = ''; }, 3000);
-      // Auto-post reassignment comment
-      var commentText = '\uD83D\uDD04 Reassigned from ' + oldStaffName
-        + ' to ' + newStaffName + ' by ' + (currentUser || 'Unknown');
-      fetch(COMMENTS_API, {
-        method:'POST', credentials:'include',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ taskId:t._id, text:commentText, author:currentUser||'Unknown' })
-      })
-        .then(function(r){ return r.json(); })
-        .then(function(data) {
-          if (data.comment) {
-            if (!commentsCache[t._id]) commentsCache[t._id] = [];
-            commentsCache[t._id].push(data.comment);
-            renderModalCommentList(t._id);
-            updateCommentBadge(t._id);
-          }
-        })
-        .catch(function(e){ console.warn('[reassign] comment post failed:', e.message); });
-      render();
-      toast('Task reassigned to ' + newStaffName + '.');
-    })
-    .catch(function(e) {
-      msg.style.color = 'var(--red)';
-      msg.textContent = 'Failed: ' + e.message;
-      toast('Reassign failed: ' + e.message, true);
-    });
-}
-function staffChipHTML(color, name) {
-  return '<span class="staff-chip" style="background:' + esc(color) + '22;border-color:' + esc(color) + '55;">'
-    + '<span class="staff-chip-dot" style="background:' + esc(color) + '"></span>'
-    + esc(name) + '</span>';
-}
-
-// ── Completed mode ─────────────────────────────────────
-function toggleCompletedMode() {
-  completedMode = !completedMode;
-  var btn       = document.getElementById('completed-toggle-btn');
-  var banner    = document.getElementById('completed-banner');
-  var title     = document.getElementById('page-title');
-  var sub       = document.getElementById('page-subtitle');
-  var sortGroup = document.getElementById('sort-group');
-  var bulkBar   = document.getElementById('bulk-bar');
-  if (completedMode) {
-    btn.innerHTML = '&#9003; Show Incomplete';
-    title.textContent = '\u2713 Completed Tasks';
-    sub.textContent   = 'Recently completed checklist tasks from ServiceM8.';
-    sortGroup.style.display = 'none';
-    bulkBar.style.display   = 'none';
-    selectedIds = {};
-    banner.style.display = 'flex';
-  } else {
-    btn.innerHTML = '&#10003; Show Completed';
-    title.innerHTML = '&#10003; Tasks';
-    sub.textContent = 'Incomplete checklist tasks from ServiceM8.';
-    sortGroup.style.display = '';
-    banner.style.display    = 'none';
-  }
-  render();
-}
-
 // ── Session ────────────────────────────────────────────
 function checkSession() {
   fetch('/api/proxy?path=' + encodeURIComponent('/staff.json'), { credentials:'include' })
     .then(function(r){ if (r.status===401){ showAuth(); return null; } return r.json(); })
-    .then(function(d){ if (d){ showMain(); loadTasks(false); startNotifPolling(); } })
+    .then(function(d){
+      if (d) {
+        showMain();
+        loadEngagementData().then(function() {
+          loadTasks(false);
+          startNotifPolling();
+        });
+      }
+    })
     .catch(function(){ showAuth(); });
 }
 function showAuth() {
@@ -1423,13 +762,523 @@ function sm8Put(path, payload) {
     body: JSON.stringify(payload)
   });
 }
+function engagementPost(body) {
+  return fetch(ENGAGEMENT_API, {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }).then(function(r){ return r.json(); });
+}
+function engagementDelete(body) {
+  return fetch(ENGAGEMENT_API, {
+    method:'DELETE', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }).then(function(r){ return r.json(); });
+}
 
-// ── Load ───────────────────────────────────────────────
+// ── Load engagement data (comments + flags) ────────────
+function loadEngagementData() {
+  // Load all comments via bulk GET and flags
+  return Promise.all([
+    fetch(ENGAGEMENT_API + '?allComments=1', { credentials:'include' })
+      .then(function(r){ return r.ok ? r.json() : {}; })
+      .catch(function(){ return {}; }),
+    fetch(ENGAGEMENT_API + '?allFlags=1', { credentials:'include' })
+      .then(function(r){ return r.ok ? r.json() : {}; })
+      .catch(function(){ return {}; })
+  ]).then(function(res) {
+    // Build commentsCache keyed by taskId
+    var rawComments = Array.isArray(res[0]) ? res[0] : (res[0].comments || []);
+    commentsCache = {};
+    rawComments.forEach(function(c) {
+      if (!commentsCache[c.taskId]) commentsCache[c.taskId] = [];
+      commentsCache[c.taskId].push(c);
+    });
+    // Build flaggedIds
+    var flags = (res[1] && typeof res[1] === 'object') ? res[1] : {};
+    flaggedIds = flags.flagged || flags || {};
+  });
+}
+
+// ── Notifications ──────────────────────────────────────
+function loadNotifications() {
+  if (!currentUser) return Promise.resolve();
+  return fetch(ENGAGEMENT_API + '?user=' + encodeURIComponent(currentUser), { credentials:'include' })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(d){
+      notificationsData = Array.isArray(d) ? d : [];
+      renderNotifBadge();
+      renderNotifList();
+    })
+    .catch(function(){ notificationsData = []; });
+}
+function startNotifPolling() {
+  loadNotifications();
+  notifPollTimer = setInterval(loadNotifications, 30000);
+}
+function renderNotifBadge() {
+  var badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  var count = notificationsData.length;
+  badge.textContent = count > 9 ? '9+' : String(count);
+  badge.classList.toggle('show', count > 0);
+}
+function renderNotifList() {
+  var el = document.getElementById('notif-list');
+  if (!el) return;
+  if (!notificationsData.length) {
+    el.innerHTML = '<div class="notif-empty">&#10003; All caught up!</div>';
+    return;
+  }
+  el.innerHTML = notificationsData.map(function(n) {
+    return '<div class="notif-item" onclick="onNotifClick(\'' + esc(n.id) + '\',\'' + esc(n.taskId) + '\')">'
+      + '<span class="notif-icon">&#128172;</span>'
+      + '<div class="notif-body">'
+      +   '<div class="notif-task">' + esc(n.taskName || 'Task') + '</div>'
+      +   '<div class="notif-msg"><strong>' + esc(n.fromUser) + '</strong> commented: &ldquo;'
+      +     esc((n.commentText || '').substring(0, 80))
+      +     (n.commentText && n.commentText.length > 80 ? '&hellip;' : '')
+      +   '&rdquo;</div>'
+      +   '<div class="notif-time">&#128336; ' + fmtDateTime(n.timestamp) + '</div>'
+      + '</div>'
+      + '<button class="notif-dismiss" onclick="dismissNotification(event,\'' + esc(n.id) + '\')">&#10005;</button>'
+      + '</div>';
+  }).join('');
+}
+function toggleNotifDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('notif-dropdown').classList.toggle('open');
+}
+function onNotifClick(notifId, taskId) {
+  document.getElementById('notif-dropdown').classList.remove('open');
+  dismissNotification(null, notifId);
+  var t = tasksData.find(function(x){ return x._id === taskId; });
+  if (t) openEdit(taskId);
+}
+function dismissNotification(e, notifId) {
+  if (e) e.stopPropagation();
+  engagementDelete({ action:'notify', id: notifId }).then(function() {
+    notificationsData = notificationsData.filter(function(n){ return n.id !== notifId; });
+    renderNotifBadge();
+    renderNotifList();
+  }).catch(function(){});
+}
+function clearAllNotifications() {
+  if (!currentUser) return;
+  engagementDelete({ action:'notify', clearAll: true, user: currentUser }).then(function() {
+    notificationsData = [];
+    renderNotifBadge();
+    renderNotifList();
+    document.getElementById('notif-dropdown').classList.remove('open');
+  }).catch(function(){});
+}
+
+// ── Flags ──────────────────────────────────────────────
+function toggleFlag(id, event) {
+  if (event) event.stopPropagation();
+  var newVal = !flaggedIds[id];
+  if (newVal) flaggedIds[id] = true; else delete flaggedIds[id];
+  var t = tasksData.find(function(x){ return x._id === id; });
+  if (t) t.flagged = newVal;
+  engagementPost({ action:'flag', taskId: id, flagged: newVal })
+    .catch(function(){ toast('Flag save failed', true); });
+  render();
+}
+function toggleModalFlag() {
+  if (!editRecord) return;
+  var id = editRecord._id;
+  var newVal = !flaggedIds[id];
+  if (newVal) flaggedIds[id] = true; else delete flaggedIds[id];
+  editRecord.flagged = newVal;
+  engagementPost({ action:'flag', taskId: id, flagged: newVal })
+    .catch(function(){ toast('Flag save failed', true); });
+  var cb  = document.getElementById('m-flag-cb');
+  var row = document.getElementById('m-flag-row');
+  cb.checked = newVal;
+  row.classList.toggle('flagged', newVal);
+  render();
+}
+
+// ── Comments cache helpers ─────────────────────────────
+function getCommentCount(taskId) {
+  return Array.isArray(commentsCache[taskId]) ? commentsCache[taskId].length : 0;
+}
+function updateCommentBadge(taskId) {
+  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var count  = getCommentCount(taskId);
+  var badge  = document.getElementById('tc-count-' + safeId);
+  if (badge) badge.textContent = count;
+  var btn = document.getElementById('tc-btn-' + safeId);
+  if (btn) btn.classList.toggle('has-comments', count > 0);
+}
+
+// ── Comment panel (card) ───────────────────────────────
+function buildCommentPanel(taskId) {
+  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var count  = getCommentCount(taskId);
+  return '<div class="tc-wrap" onclick="event.stopPropagation()">'
+    + '<button class="tc-btn' + (count > 0 ? ' has-comments' : '') + '" '
+    +   'id="tc-btn-' + safeId + '" '
+    +   'onclick="toggleCommentPanel(\'' + esc(taskId) + '\')">'
+    + '&#128172; <span class="tc-count" id="tc-count-' + safeId + '">' + count + '</span>'
+    + '</button>'
+    + '<div class="tc-panel" id="tc-panel-' + safeId + '">'
+    +   '<div class="tc-list" id="tc-list-' + safeId + '"></div>'
+    +   '<div class="tc-compose">'
+    +     '<div class="mention-dropdown" id="tc-md-' + safeId + '"></div>'
+    +     '<textarea class="tc-textarea" id="tc-ta-' + safeId + '" placeholder="Add a comment… type @ to mention someone"></textarea>'
+    +     '<div class="tc-compose-row">'
+    +       '<button class="tc-submit" onclick="postCardComment(\'' + esc(taskId) + '\')">Post</button>'
+    +       '<span class="tc-status" id="tc-st-' + safeId + '"></span>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+}
+function toggleCommentPanel(taskId) {
+  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var panel  = document.getElementById('tc-panel-' + safeId);
+  if (!panel) return;
+  var isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.tc-panel.open').forEach(function(p){ p.classList.remove('open'); });
+  if (!isOpen) {
+    panel.classList.add('open');
+    renderCardCommentList(taskId);
+    var ta = document.getElementById('tc-ta-' + safeId);
+    var md = document.getElementById('tc-md-' + safeId);
+    if (ta && md) attachMentionListener(ta, md);
+  }
+}
+function renderCardCommentList(taskId) {
+  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var listEl = document.getElementById('tc-list-' + safeId);
+  if (!listEl) return;
+  var comments = commentsCache[taskId] || [];
+  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
+  listEl.innerHTML = comments.map(function(c) {
+    return '<div class="tc-item" id="tc-c-' + esc(c.id) + '">'
+      + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
+      + '<div class="tc-item-text">' + renderCommentText(c.text) + '</div>'
+      + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
+      + '<button class="tc-item-del" onclick="deleteCardComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
+      + '</div>';
+  }).join('');
+  listEl.scrollTop = listEl.scrollHeight;
+}
+function postCardComment(taskId) {
+  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var ta  = document.getElementById('tc-ta-'  + safeId);
+  var st  = document.getElementById('tc-st-'  + safeId);
+  var sub = document.querySelector('#tc-panel-' + safeId + ' .tc-submit');
+  if (!ta || !st || !sub) return;
+  var text = (ta.value || '').trim();
+  if (!text) { st.textContent = 'Please enter a comment.'; return; }
+  sub.disabled = true; st.textContent = 'Saving\u2026';
+  engagementPost({ action:'comment', taskId:taskId, text:text, author:currentUser||'Unknown' })
+    .then(function(data) {
+      sub.disabled = false;
+      if (data.error) { st.textContent = 'Error: ' + data.error; return; }
+      ta.value = ''; st.textContent = '\u2713 Posted';
+      setTimeout(function(){ st.textContent = ''; }, 2500);
+      if (!commentsCache[taskId]) commentsCache[taskId] = [];
+      commentsCache[taskId].push(data.comment);
+      renderCardCommentList(taskId);
+      updateCommentBadge(taskId);
+      dispatchCommentNotification(taskId, text);
+    })
+    .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
+}
+function deleteCardComment(taskId, commentId) {
+  if (!confirm('Delete this comment?')) return;
+  engagementDelete({ action:'comment', taskId:taskId, commentId:commentId })
+    .then(function(data) {
+      if (data.error) { toast('Delete failed: ' + data.error, true); return; }
+      if (commentsCache[taskId])
+        commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
+      var el = document.getElementById('tc-c-' + commentId);
+      if (el) el.remove();
+      updateCommentBadge(taskId);
+      if (editRecord && editRecord._id === taskId) renderModalCommentList(taskId);
+      toast('Comment deleted.');
+    })
+    .catch(function(e){ toast('Delete failed: ' + e.message, true); });
+}
+
+// ── Comment panel (modal) ──────────────────────────────
+function renderModalCommentList(taskId) {
+  var listEl = document.getElementById('m-tc-list');
+  if (!listEl) return;
+  var comments = commentsCache[taskId] || [];
+  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
+  listEl.innerHTML = comments.map(function(c) {
+    return '<div class="tc-item" id="m-tc-c-' + esc(c.id) + '">'
+      + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
+      + '<div class="tc-item-text">' + renderCommentText(c.text) + '</div>'
+      + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
+      + '<button class="tc-item-del" onclick="deleteModalComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
+      + '</div>';
+  }).join('');
+  listEl.scrollTop = listEl.scrollHeight;
+}
+function postModalComment() {
+  if (!editRecord) return;
+  var taskId = editRecord._id;
+  var ta  = document.getElementById('m-tc-textarea');
+  var st  = document.getElementById('m-tc-status');
+  var sub = document.getElementById('m-tc-submit');
+  var text = (ta.value || '').trim();
+  if (!text) { st.textContent = 'Please enter a comment.'; return; }
+  sub.disabled = true; st.textContent = 'Saving\u2026';
+  engagementPost({ action:'comment', taskId:taskId, text:text, author:currentUser||'Unknown' })
+    .then(function(data) {
+      sub.disabled = false;
+      if (data.error) { st.textContent = 'Error: ' + data.error; return; }
+      ta.value = ''; st.textContent = '\u2713 Posted';
+      setTimeout(function(){ st.textContent = ''; }, 2500);
+      if (!commentsCache[taskId]) commentsCache[taskId] = [];
+      commentsCache[taskId].push(data.comment);
+      renderModalCommentList(taskId);
+      updateCommentBadge(taskId);
+      dispatchCommentNotification(taskId, text);
+    })
+    .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
+}
+function deleteModalComment(taskId, commentId) {
+  if (!confirm('Delete this comment?')) return;
+  engagementDelete({ action:'comment', taskId:taskId, commentId:commentId })
+    .then(function(data) {
+      if (data.error) { toast('Delete failed: ' + data.error, true); return; }
+      if (commentsCache[taskId])
+        commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
+      var el = document.getElementById('m-tc-c-' + commentId);
+      if (el) el.remove();
+      updateCommentBadge(taskId);
+      renderCardCommentList(taskId);
+      toast('Comment deleted.');
+    })
+    .catch(function(e){ toast('Delete failed: ' + e.message, true); });
+}
+
+// ── Notification dispatch ──────────────────────────────
+function dispatchCommentNotification(taskId, commentText) {
+  var allTasks = tasksData.concat(completedData);
+  var t = allTasks.find(function(x){ return x._id === taskId; });
+  if (!t) return;
+  var toNotify = {};
+  if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== currentUser)
+    toNotify[t.staffName] = true;
+  (commentsCache[taskId] || []).forEach(function(c) {
+    if (c.author && c.author !== currentUser) toNotify[c.author] = true;
+  });
+  extractMentions(commentText).forEach(function(name) {
+    if (name !== currentUser) toNotify[name] = true;
+  });
+  Object.keys(toNotify).forEach(function(recipient) {
+    engagementPost({
+      action:'notify', forUser:recipient, fromUser:currentUser||'Someone',
+      taskId:taskId, taskName:t.name, commentText:commentText
+    }).catch(function(){});
+  });
+}
+
+// ── @mention engine ────────────────────────────────────
+function attachMentionListener(textarea, dropdownEl) {
+  textarea.addEventListener('keydown', function(e) {
+    if (!mentionState.active) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      mentionState.cursor = Math.min(mentionState.cursor + 1, mentionState.matches.length - 1);
+      highlightMentionItem(dropdownEl);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      mentionState.cursor = Math.max(mentionState.cursor - 1, 0);
+      highlightMentionItem(dropdownEl);
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      if (mentionState.matches.length) {
+        e.preventDefault();
+        selectMention(mentionState.matches[mentionState.cursor], textarea, dropdownEl);
+      }
+    } else if (e.key === 'Escape') {
+      closeMentionDropdown(dropdownEl);
+    }
+  });
+  textarea.addEventListener('input', function() {
+    handleMentionInput(textarea, dropdownEl);
+  });
+  textarea.addEventListener('blur', function() {
+    setTimeout(function(){ closeMentionDropdown(dropdownEl); }, 150);
+  });
+}
+function handleMentionInput(textarea, dropdownEl) {
+  var val   = textarea.value;
+  var pos   = textarea.selectionStart;
+  var slice = val.substring(0, pos);
+  var atIdx = slice.lastIndexOf('@');
+  if (atIdx === -1) { closeMentionDropdown(dropdownEl); return; }
+  var between = slice.substring(atIdx + 1);
+  if (/\s/.test(between)) { closeMentionDropdown(dropdownEl); return; }
+  var query = between.toLowerCase();
+  var matches = staffList.filter(function(s) {
+    return s.name.toLowerCase().indexOf(query) !== -1;
+  }).slice(0, 8);
+  if (!matches.length) { closeMentionDropdown(dropdownEl); return; }
+  mentionState.active = true; mentionState.query = query;
+  mentionState.startPos = atIdx; mentionState.targetEl = textarea;
+  mentionState.dropEl = dropdownEl; mentionState.matches = matches; mentionState.cursor = 0;
+  renderMentionDropdown(matches, dropdownEl, textarea);
+}
+function renderMentionDropdown(matches, dropdownEl, textarea) {
+  dropdownEl.innerHTML = matches.map(function(s, i) {
+    var color = staffColorMap[s.uuid] || '#8892b0';
+    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" '
+      + 'onmousedown="selectMention(mentionState.matches[' + i + '],mentionState.targetEl,mentionState.dropEl)">'
+      + '<span class="mention-dot" style="background:' + color + '"></span>'
+      + esc(s.name) + '</div>';
+  }).join('');
+  var rect = textarea.getBoundingClientRect();
+  dropdownEl.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  dropdownEl.style.left = (rect.left + window.scrollX) + 'px';
+  dropdownEl.classList.add('open');
+}
+function highlightMentionItem(dropdownEl) {
+  dropdownEl.querySelectorAll('.mention-item').forEach(function(el, i) {
+    el.classList.toggle('active', i === mentionState.cursor);
+  });
+}
+function selectMention(staff, textarea, dropdownEl) {
+  if (!staff || !textarea) return;
+  var val    = textarea.value;
+  var before = val.substring(0, mentionState.startPos);
+  var after  = val.substring(textarea.selectionStart);
+  textarea.value = before + '@' + staff.name + ' ' + after;
+  var newPos = (before + '@' + staff.name + ' ').length;
+  textarea.setSelectionRange(newPos, newPos);
+  textarea.focus();
+  closeMentionDropdown(dropdownEl);
+}
+function closeMentionDropdown(dropdownEl) {
+  if (dropdownEl) dropdownEl.classList.remove('open');
+  mentionState.active = false; mentionState.matches = [];
+}
+function extractMentions(text) {
+  var found = []; var regex = /@([\w ]+?)(?=\s@|\s*$|[^a-zA-Z\s])/g; var match;
+  while ((match = regex.exec(text)) !== null) {
+    var name = match[1].trim();
+    var staff = staffList.find(function(s){ return s.name.toLowerCase() === name.toLowerCase(); });
+    if (staff && found.indexOf(staff.name) === -1) found.push(staff.name);
+  }
+  return found;
+}
+function renderCommentText(text) {
+  return esc(text).replace(/@([\w ]+)/g, function(match, name) {
+    var staff = staffList.find(function(s){ return s.name.toLowerCase() === name.trim().toLowerCase(); });
+    return staff ? '<span class="mention-chip">@' + esc(staff.name) + '</span>' : match;
+  });
+}
+
+// ── Reassign ───────────────────────────────────────────
+function populateReassignDropdown(currentStaffUuid) {
+  var sel = document.getElementById('m-reassign-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Reassign to… —</option>';
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid; o.textContent = s.name;
+    if (s.uuid === currentStaffUuid) o.disabled = true;
+    sel.appendChild(o);
+  });
+  sel.value = '';
+}
+function reassignTask() {
+  if (!editRecord) return;
+  var sel = document.getElementById('m-reassign-select');
+  var msg = document.getElementById('m-reassign-msg');
+  var newStaffUuid = sel.value;
+  if (!newStaffUuid) { msg.style.color='var(--red)'; msg.textContent='Please select a staff member.'; return; }
+  var newStaffName = staffMap[newStaffUuid] || 'Unknown';
+  var oldStaffName = editRecord.staffName || 'Unassigned';
+  var t = editRecord; var raw = t._raw;
+  msg.style.color = 'var(--amber)'; msg.textContent = 'Saving\u2026';
+  var payload = {
+    uuid:t._id, job_uuid:raw.job_uuid||'', name:raw.name||'',
+    section_name:raw.section_name||'', item_type:raw.item_type||'Todo',
+    sort_order:raw.sort_order||0, completed_timestamp:raw.completed_timestamp||'',
+    completed_by_staff_uuid:raw.completed_by_staff_uuid||'',
+    completed_during_checkin_uuid:raw.completed_during_checkin_uuid||'',
+    reminder_type:raw.reminder_type||'',
+    reminder_data:(raw.reminder_data&&!Array.isArray(raw.reminder_data))?raw.reminder_data:null,
+    regarding_object:raw.regarding_object||'', regarding_object_uuid:raw.regarding_object_uuid||'',
+    fulfilled_by_object_name:raw.fulfilled_by_object_name||'',
+    fulfilled_by_object_uuid:raw.fulfilled_by_object_uuid||'',
+    assigned_to_staff_uuids:[newStaffUuid], is_locked:raw.is_locked||'0'
+  };
+  sm8Put('/jobchecklist/' + t._id + '.json', payload)
+    .then(function(r) {
+      return r.text().then(function(txt) {
+        if (r.status===200||r.status===201||r.status===204) return txt;
+        throw new Error('HTTP ' + r.status + ': ' + txt.substring(0,120));
+      });
+    })
+    .then(function() {
+      t.staffUuid = newStaffUuid; t.staffName = newStaffName;
+      t.staffColor = staffColorMap[newStaffUuid] || '#8892b0';
+      raw.assigned_to_staff_uuids = [newStaffUuid];
+      document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
+      populateReassignDropdown(newStaffUuid);
+      msg.style.color = 'var(--green)';
+      msg.textContent = '\u2713 Reassigned to ' + newStaffName;
+      setTimeout(function(){ msg.textContent = ''; }, 3000);
+      var commentText = '\uD83D\uDD04 Reassigned from ' + oldStaffName + ' to ' + newStaffName + ' by ' + (currentUser||'Unknown');
+      engagementPost({ action:'comment', taskId:t._id, text:commentText, author:currentUser||'Unknown' })
+        .then(function(data) {
+          if (data.comment) {
+            if (!commentsCache[t._id]) commentsCache[t._id] = [];
+            commentsCache[t._id].push(data.comment);
+            renderModalCommentList(t._id);
+            updateCommentBadge(t._id);
+          }
+        }).catch(function(){});
+      render();
+      toast('Task reassigned to ' + newStaffName + '.');
+    })
+    .catch(function(e) {
+      msg.style.color = 'var(--red)'; msg.textContent = 'Failed: ' + e.message;
+      toast('Reassign failed: ' + e.message, true);
+    });
+}
+function staffChipHTML(color, name) {
+  return '<span class="staff-chip" style="background:' + esc(color) + '22;border-color:' + esc(color) + '55;">'
+    + '<span class="staff-chip-dot" style="background:' + esc(color) + '"></span>'
+    + esc(name) + '</span>';
+}
+
+// ── Completed mode ─────────────────────────────────────
+function toggleCompletedMode() {
+  completedMode = !completedMode;
+  var btn    = document.getElementById('completed-toggle-btn');
+  var banner = document.getElementById('completed-banner');
+  var sortGp = document.getElementById('sort-group');
+  var bulkB  = document.getElementById('bulk-bar');
+  if (completedMode) {
+    btn.innerHTML = '&#9003; Show Incomplete';
+    document.getElementById('page-title').textContent = '\u2713 Completed Tasks';
+    document.getElementById('page-subtitle').textContent = 'Recently completed checklist tasks from ServiceM8.';
+    sortGp.style.display = 'none'; bulkB.style.display = 'none';
+    selectedIds = {}; banner.style.display = 'flex';
+  } else {
+    btn.innerHTML = '&#10003; Show Completed';
+    document.getElementById('page-title').innerHTML = '&#10003; Tasks';
+    document.getElementById('page-subtitle').textContent = 'Incomplete checklist tasks from ServiceM8.';
+    sortGp.style.display = ''; banner.style.display = 'none';
+  }
+  render();
+}
+
+// ── Load tasks ─────────────────────────────────────────
 function loadTasks(force) {
   if (tasksLoaded && !force) return;
-  tasksLoaded = false;
-  selectedIds = {};
-  updateBulkBar();
+  tasksLoaded = false; selectedIds = {}; updateBulkBar();
   setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
   Promise.all([
@@ -1442,21 +1291,23 @@ function loadTasks(force) {
     var rawJobs       = Array.isArray(res[1]) ? res[1] : [];
     var rawItems      = Array.isArray(res[2]) ? res[2] : [];
     var rawCategories = Array.isArray(res[3]) ? res[3] : [];
-    rawDebugData    = rawItems;
-    rawCategoryData = rawCategories;
-    staffList = rawStaff
-      .filter(function(s){ return String(s.active)==='1'; })
+    rawDebugData = rawItems; rawCategoryData = rawCategories;
+
+    staffList = rawStaff.filter(function(s){ return String(s.active)==='1'; })
       .map(function(s){ return { uuid:s.uuid, name:((s.first||'')+' '+(s.last||'')).trim()||s.email||s.uuid }; });
     staffMap = {}; staffColorMap = {};
     staffList.forEach(function(s,idx){
       staffMap[s.uuid]      = s.name;
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
+
     jobMap = {};
     rawJobs.filter(function(j){ return String(j.active)==='1'; }).forEach(function(j){
-      jobMap[j.uuid] = { _raw:j, uuid:j.uuid, number:j.generated_job_id||'', desc:j.job_description||'',
-                         clientUuid:j.company_uuid||'', status:j.status||'', catUuid:j.category_uuid||'' };
+      jobMap[j.uuid] = { _raw:j, uuid:j.uuid, number:j.generated_job_id||'',
+                         desc:j.job_description||'', clientUuid:j.company_uuid||'',
+                         status:j.status||'', catUuid:j.category_uuid||'' };
     });
+
     rawCatNameMap = {};
     rawCategories.filter(function(c){ return String(c.active)==='1'; })
       .forEach(function(c){ rawCatNameMap[c.uuid]=c.name; });
@@ -1465,8 +1316,9 @@ function loadTasks(force) {
       var cu = j.category_uuid||j.job_category_uuid||'';
       if (cu && rawCatNameMap[cu]) categoryMap[j.uuid] = rawCatNameMap[cu];
     });
+
     function mapItem(i) {
-      var job        = jobMap[i.job_uuid] || {};
+      var job = jobMap[i.job_uuid] || {};
       var clientUuid = job.clientUuid || '';
       var clientName = clientUuid ? (clientMap[clientUuid]||'') : '';
       var staffUuid  = '';
@@ -1500,6 +1352,7 @@ function loadTasks(force) {
         completedTs:isCompleted?ts:'', isCompleted:isCompleted
       };
     }
+
     var activeTodos = rawItems.filter(function(i){
       if (String(i.active)!=='1') return false;
       if (i.item_type && String(i.item_type).toLowerCase()!=='todo') return false;
@@ -1512,20 +1365,23 @@ function loadTasks(force) {
       var ts=String(i.completed_timestamp||'').trim();
       return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
     });
+
     tasksData     = activeTodos.map(mapItem);
-    completedData = completedTodos.map(mapItem).sort(function(a,b){ return b.completedTs.localeCompare(a.completedTs); });
+    completedData = completedTodos.map(mapItem)
+      .sort(function(a,b){ return b.completedTs.localeCompare(a.completedTs); });
     tasksLoaded   = true;
-    setSyncMsg('Last synced: '+new Date().toLocaleTimeString()+
-               ' \u2014 '+tasksData.length+' incomplete, '+completedData.length+' completed');
+
+    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
+               ' \u2014 ' + tasksData.length + ' incomplete, ' + completedData.length + ' completed');
     updateDebugPanel();
     populateFilters();
     render();
   }).catch(function(e){
     if (e.message==='SESSION_EXPIRED'){ showAuth(); return; }
-    setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div>'+
-            '<p>Failed to load: '+esc(e.message)+'</p><br/>'+
-            '<button class="btn-ghost" onclick="loadTasks(true)">Retry</button></div>');
-    toast('Load failed: '+e.message, true);
+    setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div>'
+          + '<p>Failed to load: ' + esc(e.message) + '</p><br/>'
+          + '<button class="btn-ghost" onclick="loadTasks(true)">Retry</button></div>');
+    toast('Load failed: ' + e.message, true);
   });
 }
 
@@ -1538,41 +1394,18 @@ function toggleDebug() {
 function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
-  var typeCounts={};
+  var typeCounts = {};
   rawDebugData.forEach(function(i){ var t=i.item_type||'(none)'; typeCounts[t]=(typeCounts[t]||0)+1; });
   var activeCount   = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
-  var inactiveCount = rawDebugData.filter(function(i){ return String(i.active)!=='1'; }).length;
-  var statusCounts={};
-  tasksData.forEach(function(t){ var s=t.jobStatus||'(none)'; statusCounts[s]=(statusCounts[s]||0)+1; });
-  var flaggedCount = Object.keys(flaggedIds).length;
-  var commentCount = Object.keys(commentsCache).filter(function(k){ return (commentsCache[k]||[]).length>0; }).length;
-  var sampleTask   = tasksData.find(function(t){ return !!t.jobUuid; });
-  var sampleLookup = 'No tasks with job_uuid found';
-  var sampleJobRaw = 'n/a';
-  if (sampleTask) {
-    sampleLookup = 'Sample task job_uuid: '+sampleTask.jobUuid+
-                   '\n  categoryMap: '+(categoryMap[sampleTask.jobUuid]||'(not found)')+
-                   '\n  jobStatus: '+(sampleTask.jobStatus||'(none)')+
-                   '\n  flagged: '+sampleTask.flagged;
-    var je=jobMap[sampleTask.jobUuid];
-    if (je&&je._raw){ var raw=je._raw; var cf={};
-      Object.keys(raw).forEach(function(k){ if(k.toLowerCase().indexOf('cat')!==-1||k.toLowerCase().indexOf('status')!==-1) cf[k]=raw[k]; });
-      sampleJobRaw=JSON.stringify(cf,null,2);
-    }
-  }
+  var flaggedCount  = Object.keys(flaggedIds).length;
+  var commentCount  = Object.keys(commentsCache).filter(function(k){ return (commentsCache[k]||[]).length>0; }).length;
   panel.textContent =
-    '── CHECKLIST ──────────────────────────\n'+
-    'Total raw: '+rawDebugData.length+'  active=1: '+activeCount+'  active=0: '+inactiveCount+'\n'+
-    'Incomplete: '+tasksData.length+'  Completed: '+completedData.length+'\n'+
-    'Flagged IDs stored: '+flaggedCount+'\n'+
-    'Tasks with comments: '+commentCount+'\n\n'+
-    'item_type breakdown:\n'+Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n')+'\n\n'+
-    '── JOB STATUS ─────────────────────────\n'+Object.keys(statusCounts).map(function(k){ return '  '+k+': '+statusCounts[k]; }).join('\n')+'\n\n'+
-    '── CATEGORIES ─────────────────────────\n'+
-    'categoryMap entries: '+Object.keys(categoryMap).length+'\n'+
-    'First category: '+JSON.stringify(rawCategoryData[0]||'none',null,2)+'\n\n'+
-    sampleLookup+'\n\n'+
-    '── SAMPLE JOB ─────────────────────────\n'+sampleJobRaw;
+    '── CHECKLIST ──────────────────────────\n'
+    + 'Total raw: '+rawDebugData.length+'  active: '+activeCount+'\n'
+    + 'Incomplete: '+tasksData.length+'  Completed: '+completedData.length+'\n'
+    + 'Flagged: '+flaggedCount+'  Tasks with comments: '+commentCount+'\n\n'
+    + 'item_type breakdown:\n'
+    + Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n');
 }
 
 // ── Filters ────────────────────────────────────────────
@@ -1681,7 +1514,7 @@ function sortTasks(arr) {
   return copy;
 }
 
-// ── Bulk selection ─────────────────────────────────────
+// ── Bulk ───────────────────────────────────────────────
 function toggleSelect(id, checked, event) {
   if (event) event.stopPropagation();
   if (checked) selectedIds[id]=true; else delete selectedIds[id];
@@ -1690,8 +1523,7 @@ function toggleSelect(id, checked, event) {
   updateBulkBar();
 }
 function toggleSelectAll(checked) {
-  var filtered=getFiltered();
-  filtered.forEach(function(t){ if(checked) selectedIds[t._id]=true; else delete selectedIds[t._id]; });
+  getFiltered().forEach(function(t){ if(checked) selectedIds[t._id]=true; else delete selectedIds[t._id]; });
   document.querySelectorAll('.task-card[data-id]').forEach(function(card){
     card.classList.toggle('selected', !!selectedIds[card.dataset.id]);
     var cb=card.querySelector('.bulk-cb'); if(cb) cb.checked=!!selectedIds[card.dataset.id];
@@ -1727,7 +1559,7 @@ function bulkComplete() {
   var label=document.getElementById('bulk-count');
   var done=0,failed=0;
   function updateProgress(){ if(label) label.textContent='Completing '+(done+failed)+' / '+toComplete.length+'\u2026'; }
-  var promises=toComplete.map(function(t){
+  Promise.all(toComplete.map(function(t){
     return sm8Put('/jobchecklist/'+t._id+'.json', buildPayload(t,ts)).then(function(r){
       if(r.status===200||r.status===201||r.status===204){
         done++; t.completedTs=ts; t.isCompleted=true;
@@ -1736,14 +1568,11 @@ function bulkComplete() {
       } else { failed++; }
       updateProgress();
     }).catch(function(){ failed++; updateProgress(); });
-  });
-  Promise.all(promises).then(function(){
+  })).then(function(){
     selectedIds={}; populateFilters(); render();
-    toast(failed===0?done+' task'+(done===1?'':'s')+' marked as completed.':done+' completed, '+failed+' failed.', failed>0);
+    toast(failed===0?done+' task'+(done===1?'':'s')+' marked complete.':done+' completed, '+failed+' failed.', failed>0);
   });
 }
-
-// ── Payload builder ────────────────────────────────────
 function buildPayload(t, ts) {
   var raw=t._raw;
   return {
@@ -1754,8 +1583,7 @@ function buildPayload(t, ts) {
     completed_during_checkin_uuid:raw.completed_during_checkin_uuid||'',
     reminder_type:raw.reminder_type||'',
     reminder_data:(raw.reminder_data&&!Array.isArray(raw.reminder_data))?raw.reminder_data:null,
-    regarding_object:raw.regarding_object||'',
-    regarding_object_uuid:raw.regarding_object_uuid||'',
+    regarding_object:raw.regarding_object||'', regarding_object_uuid:raw.regarding_object_uuid||'',
     fulfilled_by_object_name:raw.fulfilled_by_object_name||'',
     fulfilled_by_object_uuid:raw.fulfilled_by_object_uuid||'',
     assigned_to_staff_uuids:Array.isArray(raw.assigned_to_staff_uuids)?raw.assigned_to_staff_uuids:[],
@@ -1772,85 +1600,74 @@ function render() {
   renderStats(filtered);
   if (!filtered.length) {
     updateBulkBar();
-    setBody('<div class="empty-wrap"><div class="empty-icon">'+(completedMode?'&#10003;':'&#9998;')+'</div>'+
-            '<p>'+(completedMode?'No completed tasks found.'
-              :(tScope==='mine'
-                  ?'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
-                  :'No tasks match the current filters.'))+'</p></div>');
+    setBody('<div class="empty-wrap"><div class="empty-icon">'+(completedMode?'&#10003;':'&#9998;')+'</div>'
+      + '<p>'+(completedMode?'No completed tasks found.'
+          :(tScope==='mine'?'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
+                           :'No tasks match the current filters.'))+'</p></div>');
     return;
   }
   var sorted=completedMode?filtered:sortTasks(filtered);
-  if (!completedMode&&sortMode==='staff'&&tScope==='all') renderGroupedByStaff(sorted);
-  else if (!completedMode&&sortMode==='status')           renderGroupedByStatus(sorted);
-  else if (!completedMode&&sortMode==='flagged')          renderGroupedByFlagged(sorted);
-  else {
-    var html='<div class="task-list">';
+  var html='';
+  if (!completedMode && sortMode==='staff' && tScope==='all') {
+    var groups=[]; var groupMap={};
+    sorted.forEach(function(t){
+      var key=t.staffUuid||'__unassigned__';
+      if(!groupMap[key]){ groupMap[key]={staffName:t.staffName,staffColor:t.staffColor,tasks:[]}; groups.push(groupMap[key]); }
+      groupMap[key].tasks.push(t);
+    });
+    groups.forEach(function(g){
+      html+='<div class="staff-group"><div class="staff-group-hdr">'
+        +'<span class="staff-avatar" style="background:'+esc(g.staffColor)+'">'+esc(initials(g.staffName))+'</span>'
+        +'<span class="staff-group-name">'+esc(g.staffName)+'</span>'
+        +'<span class="staff-group-ct">'+g.tasks.length+'</span>'
+        +'</div><div class="task-list">';
+      g.tasks.forEach(function(t){ html+=taskCard(t); });
+      html+='</div></div>';
+    });
+  } else if (!completedMode && sortMode==='status') {
+    var groups=[]; var groupMap={};
+    sorted.forEach(function(t){
+      var key=t.jobStatus||'__none__';
+      if(!groupMap[key]){ groupMap[key]={status:t.jobStatus||'No Status',tasks:[]}; groups.push(groupMap[key]); }
+      groupMap[key].tasks.push(t);
+    });
+    groups.forEach(function(g){
+      html+='<div class="staff-group"><div class="staff-group-hdr">'
+        +'<span class="group-icon">'+statusIcon(g.status)+'</span>'
+        +'<span class="staff-group-name">'+esc(g.status)+'</span>'
+        +'<span class="staff-group-ct">'+g.tasks.length+'</span>'
+        +'</div><div class="task-list">';
+      g.tasks.forEach(function(t){ html+=taskCard(t); });
+      html+='</div></div>';
+    });
+  } else if (!completedMode && sortMode==='flagged') {
+    var flaggedTasks  =sorted.filter(function(t){ return  t.flagged; });
+    var unflaggedTasks=sorted.filter(function(t){ return !t.flagged; });
+    if (flaggedTasks.length) {
+      html+='<div class="staff-group"><div class="staff-group-hdr">'
+        +'<span class="group-icon">&#9873;</span><span class="staff-group-name">Flagged</span>'
+        +'<span class="staff-group-ct">'+flaggedTasks.length+'</span>'
+        +'</div><div class="task-list">';
+      flaggedTasks.forEach(function(t){ html+=taskCard(t); });
+      html+='</div></div>';
+    }
+    if (unflaggedTasks.length) {
+      html+='<div class="staff-group"><div class="staff-group-hdr">'
+        +'<span class="group-icon">&#9711;</span><span class="staff-group-name">Not Flagged</span>'
+        +'<span class="staff-group-ct">'+unflaggedTasks.length+'</span>'
+        +'</div><div class="task-list">';
+      unflaggedTasks.forEach(function(t){ html+=taskCard(t); });
+      html+='</div></div>';
+    }
+  } else {
+    html='<div class="task-list">';
     sorted.forEach(function(t){ html+=taskCard(t); });
     html+='</div>';
-    setBody(html);
   }
+  setBody(html);
   updateBulkBar();
 }
-function renderGroupedByStaff(sorted) {
-  var groups=[]; var groupMap={};
-  sorted.forEach(function(t){
-    var key=t.staffUuid||'__unassigned__';
-    if(!groupMap[key]){ groupMap[key]={staffName:t.staffName,staffColor:t.staffColor,tasks:[]}; groups.push(groupMap[key]); }
-    groupMap[key].tasks.push(t);
-  });
-  var html='';
-  groups.forEach(function(g){
-    html+='<div class="staff-group"><div class="staff-group-hdr">'
-      +'<span class="staff-avatar" style="background:'+esc(g.staffColor)+'">'+esc(initials(g.staffName))+'</span>'
-      +'<span class="staff-group-name">'+esc(g.staffName)+'</span>'
-      +'<span class="staff-group-ct">'+g.tasks.length+'</span>'
-      +'</div><div class="task-list">';
-    g.tasks.forEach(function(t){ html+=taskCard(t); });
-    html+='</div></div>';
-  });
-  setBody(html);
-}
-function renderGroupedByStatus(sorted) {
-  var groups=[]; var groupMap={};
-  sorted.forEach(function(t){
-    var key=t.jobStatus||'__none__';
-    if(!groupMap[key]){ groupMap[key]={status:t.jobStatus||'No Status',tasks:[]}; groups.push(groupMap[key]); }
-    groupMap[key].tasks.push(t);
-  });
-  var html='';
-  groups.forEach(function(g){
-    html+='<div class="staff-group"><div class="staff-group-hdr">'
-      +'<span class="group-icon">'+statusIcon(g.status)+'</span>'
-      +'<span class="staff-group-name">'+esc(g.status)+'</span>'
-      +'<span class="staff-group-ct">'+g.tasks.length+'</span>'
-      +'</div><div class="task-list">';
-    g.tasks.forEach(function(t){ html+=taskCard(t); });
-    html+='</div></div>';
-  });
-  setBody(html);
-}
-function renderGroupedByFlagged(sorted) {
-  var flaggedTasks  =sorted.filter(function(t){ return  t.flagged; });
-  var unflaggedTasks=sorted.filter(function(t){ return !t.flagged; });
-  var html='';
-  if (flaggedTasks.length) {
-    html+='<div class="staff-group"><div class="staff-group-hdr">'
-      +'<span class="group-icon">&#9873;</span><span class="staff-group-name">Flagged</span>'
-      +'<span class="staff-group-ct">'+flaggedTasks.length+'</span>'
-      +'</div><div class="task-list">';
-    flaggedTasks.forEach(function(t){ html+=taskCard(t); });
-    html+='</div></div>';
-  }
-  if (unflaggedTasks.length) {
-    html+='<div class="staff-group"><div class="staff-group-hdr">'
-      +'<span class="group-icon">&#9711;</span><span class="staff-group-name">Not Flagged</span>'
-      +'<span class="staff-group-ct">'+unflaggedTasks.length+'</span>'
-      +'</div><div class="task-list">';
-    unflaggedTasks.forEach(function(t){ html+=taskCard(t); });
-    html+='</div></div>';
-  }
-  setBody(html);
-}
+
 function renderStats(scope) {
   if (completedMode) {
     document.getElementById('stats-bar').innerHTML=
@@ -1882,10 +1699,7 @@ function stat(v,l,c){
 // ── Task card ──────────────────────────────────────────
 function statusBadge(status) {
   if (!status) return '';
-  var cls='status-wo';
-  if (status==='Quote')        cls='status-quote';
-  if (status==='Completed')    cls='status-completed';
-  if (status==='Unsuccessful') cls='status-unsuccessful';
+  var cls = status==='Quote'?'status-quote':status==='Completed'?'status-completed':status==='Unsuccessful'?'status-unsuccessful':'status-wo';
   return '<span class="badge '+cls+'">'+esc(status)+'</span>';
 }
 function statusIcon(status) {
@@ -1896,21 +1710,19 @@ function statusIcon(status) {
   return '&#9679;';
 }
 function taskCard(t) {
-  var d         =t.dueDate?daysUntil(t.dueDate):null;
-  var isOverdue =!t.isCompleted&&d!==null&&d<0;
-  var colorCls  =t.isCompleted?'c-completed':(t.flagged?'c-flagged':(isOverdue?'c-overdue':'c-active'));
+  var d=t.dueDate?daysUntil(t.dueDate):null;
+  var isOverdue=!t.isCompleted&&d!==null&&d<0;
+  var colorCls=t.isCompleted?'c-completed':(t.flagged?'c-flagged':(isOverdue?'c-overdue':'c-active'));
   var isSelected=!!selectedIds[t._id];
   var sm8Btn=t.jobUuidSm8
     ?'<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/'+esc(t.jobUuidSm8)+
-    '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
+      '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
   var flagBtn=!t.isCompleted
-    ?'<button class="flag-btn'+(t.flagged?' flagged':'')+'" onclick="toggleFlag(\''+esc(t._id)+'\',event)" title="'+(t.flagged?'Remove flag':'Flag for follow-up')+'">&#9873;</button>':'';
-  var dateDisplay=t.dueDate?'<span>&#128336; Due '+fmtDate(t.dueDate)+'</span>':'';
-  var completedDisplay=t.isCompleted&&t.completedTs?'<span>&#10003; Completed '+fmtDate(t.completedTs)+'</span>':'';
+    ?'<button class="flag-btn'+(t.flagged?' flagged':'')+'" onclick="toggleFlag(\''+esc(t._id)+'\',event)">&#9873;</button>':'';
+  var commentCount=getCommentCount(t._id);
   var checkboxHtml=!t.isCompleted
     ?'<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\''+esc(t._id)+'\',this.checked,event)"'+(isSelected?' checked':'')+'/>':
      '<span style="width:17px;flex-shrink:0;"></span>';
-  var commentCount=getCommentCount(t._id);
   return '<div class="task-card '+colorCls+(isSelected?' selected':'')+'" data-id="'+esc(t._id)+'" onclick="openEdit(\''+esc(t._id)+'\')">'
     +checkboxHtml
     +'<div class="task-body">'
@@ -1929,7 +1741,8 @@ function taskCard(t) {
     +(t.category  ?'<span>&#127991; '+esc(t.category)+'</span>':'')
     +(t.clientName?'<span>&#128205; '+esc(t.clientName)+'</span>':'')
     +(t.jobNumber ?'<span>&#128188; Job #'+esc(t.jobNumber)+(t.jobDesc?' &mdash; '+esc(t.jobDesc.substring(0,40)):'')+' </span>':'')
-    +dateDisplay+completedDisplay
+    +(t.dueDate   ?'<span>&#128336; Due '+fmtDate(t.dueDate)+'</span>':'')
+    +(t.isCompleted&&t.completedTs?'<span>&#10003; Completed '+fmtDate(t.completedTs)+'</span>':'')
     +'</div>'
     +buildCommentPanel(t._id)
     +'</div>'
@@ -1971,35 +1784,40 @@ function openEdit(id) {
   var t=source.find(function(x){ return x._id===id; });
   if (!t) return;
   editRecord=t;
+
   var sm8Link=document.getElementById('m-sm8-link');
   if (t.jobUuidSm8){
     sm8Link.href='https://go.servicem8.com/openjob/'+t.jobUuidSm8;
     sm8Link.innerHTML='&#128279; Open Job #'+esc(t.jobNumber)+' in ServiceM8';
     sm8Link.style.display='inline-flex';
   } else { sm8Link.style.display='none'; }
-  document.getElementById('m-name').value    =t.name;
-  document.getElementById('m-name').disabled =t.isCompleted;
-  document.getElementById('m-due-date').value=t.dueDate||'';
-  document.getElementById('m-due-date').disabled=t.isCompleted;
+
+  document.getElementById('m-name').value     = t.name;
+  document.getElementById('m-name').disabled  = t.isCompleted;
+  document.getElementById('m-due-date').value = t.dueDate||'';
+  document.getElementById('m-due-date').disabled = t.isCompleted;
   updateDuePreview();
+
   var cb =document.getElementById('m-flag-cb');
   var row=document.getElementById('m-flag-row');
   cb.checked=!!t.flagged; cb.disabled=t.isCompleted;
   row.classList.toggle('flagged',!!t.flagged);
   row.style.opacity=t.isCompleted?'0.4':'1';
   row.style.pointerEvents=t.isCompleted?'none':'';
-  // Assigned to + reassign
+
   populateReassignDropdown(t.staffUuid);
-  document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
-  document.getElementById('m-reassign-msg').textContent = '';
+  document.getElementById('m-staff-display').innerHTML=staffChipHTML(t.staffColor,t.staffName);
+  document.getElementById('m-reassign-msg').textContent='';
+
   // Comments
   renderModalCommentList(t._id);
-  document.getElementById('m-tc-textarea').value = '';
-  document.getElementById('m-tc-status').textContent = '';
-  // Attach mention listener to modal textarea
-  var mTa = document.getElementById('m-tc-textarea');
-  var mMd = document.getElementById('m-modal-mention-drop');
-  if (mTa && mMd) attachMentionListener(mTa, mMd);
+  document.getElementById('m-tc-textarea').value='';
+  document.getElementById('m-tc-status').textContent='';
+  var mTa=document.getElementById('m-tc-textarea');
+  var mMd=document.getElementById('m-modal-mention-drop');
+  if (mTa&&mMd) attachMentionListener(mTa,mMd);
+
+  // Read-only fields
   var statusRow=document.getElementById('m-status-row');
   if(t.jobStatus){ statusRow.style.display=''; document.getElementById('m-status').innerHTML=statusBadge(t.jobStatus); }
   else { statusRow.style.display='none'; }
@@ -2017,19 +1835,21 @@ function openEdit(id) {
   var remRow=document.getElementById('m-reminder-row');
   if(t.reminderType){ remRow.style.display=''; document.getElementById('m-reminder').textContent=t.reminderType+(t.reminderData?': '+t.reminderData:''); }
   else { remRow.style.display='none'; }
+
   document.getElementById('m-raw').value=JSON.stringify(t._raw,null,2);
   document.getElementById('m-save-btn').style.display    =t.isCompleted?'none':'';
   document.getElementById('m-complete-btn').style.display=t.isCompleted?'none':'';
   setSaveMsg('','');
   openModal();
 }
+
 function updateDuePreview() {
   var val=document.getElementById('m-due-date').value;
   var el =document.getElementById('m-due-preview');
   if(!val){ el.textContent='No due date set'; return; }
   var d=daysUntil(val);
   if(d===null){ el.textContent=''; return; }
-   if(d<0)        el.textContent=Math.abs(d)+' day'+(Math.abs(d)===1?'':'s')+' overdue';
+  if(d<0)        el.textContent=Math.abs(d)+' day'+(Math.abs(d)===1?'':'s')+' overdue';
   else if(d===0) el.textContent='Due today';
   else           el.textContent='Due in '+d+' day'+(d===1?'':'s');
 }
@@ -2064,8 +1884,7 @@ function saveTaskEdits() {
     completed_by_staff_uuid:raw.completed_by_staff_uuid||'',
     completed_during_checkin_uuid:raw.completed_during_checkin_uuid||'',
     reminder_type:reminderType, reminder_data:reminderData,
-    regarding_object:raw.regarding_object||'',
-    regarding_object_uuid:raw.regarding_object_uuid||'',
+    regarding_object:raw.regarding_object||'', regarding_object_uuid:raw.regarding_object_uuid||'',
     fulfilled_by_object_name:raw.fulfilled_by_object_name||'',
     fulfilled_by_object_uuid:raw.fulfilled_by_object_uuid||'',
     assigned_to_staff_uuids:Array.isArray(raw.assigned_to_staff_uuids)?raw.assigned_to_staff_uuids:[],
@@ -2075,7 +1894,6 @@ function saveTaskEdits() {
     document.getElementById('m-save-btn').disabled=false;
     if(r.status===200||r.status===201||r.status===204){
       t.name=newName; t.dueDate=newDueDate; t.reminderType=reminderType;
-      t.reminderData=newDueDate?(newDueDate+' '+(reminderData?reminderData.absoluteDateTime.substring(11):'08:00:00')):'';
       if(reminderData){ t._raw.reminder_data=reminderData; t._raw.reminder_type=reminderType; }
       else { t._raw.reminder_data=null; t._raw.reminder_type=''; }
       t._raw.name=newName;
@@ -2092,12 +1910,97 @@ function completeFromModal() {
   if (!confirm('Mark "'+editRecord.name+'" as completed in ServiceM8?')) return;
   markComplete(editRecord);
 }
-
 function openModal() { document.getElementById('modal').classList.add('open'); }
 function closeModal(){ document.getElementById('modal').classList.remove('open'); editRecord=null; }
 function onOverlayClick(e){ if(e.target===document.getElementById('modal')) closeModal(); }
 
-// ── Helpers ────────────────────────────────────────────
+// ── Add Task ───────────────────────────────────────────
+function openAddTask() {
+  document.getElementById('add-name').value='';
+  document.getElementById('add-job-number').value='';
+  document.getElementById('add-due-date').value='';
+  document.getElementById('add-job-preview').textContent='';
+  document.getElementById('add-save-msg').textContent='';
+  document.getElementById('add-save-btn').disabled=false;
+  var sel=document.getElementById('add-staff-select');
+  sel.innerHTML='<option value="">— Unassigned —</option>';
+  staffList.forEach(function(s){
+    var o=document.createElement('option');
+    o.value=s.uuid; o.textContent=s.name;
+    if (s.uuid===currentUserUuid) o.selected=true;
+    sel.appendChild(o);
+  });
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('add-name').focus(); },100);
+}
+function lookupAddJobNumber(num) {
+  var preview=document.getElementById('add-job-preview');
+  if (!num){ preview.textContent='Will use default job #'+DEFAULT_JOB_NUMBER; preview.style.color='var(--muted)'; return; }
+  var found=null;
+  Object.values(jobMap).forEach(function(j){ if(j.number===num) found=j; });
+  if (found){
+    preview.textContent='\u2713 '+(found.desc||'Job found')+(found.status?' \u2014 '+found.status:'');
+    preview.style.color='var(--green)';
+  } else {
+    preview.textContent='\u26A0 Job #'+num+' not found';
+    preview.style.color='var(--amber)';
+  }
+}
+function resolveJobUuid(num) {
+  var target=num||DEFAULT_JOB_NUMBER; var found=null;
+  Object.values(jobMap).forEach(function(j){ if(j.number===target) found=j; });
+  return found?found.uuid:null;
+}
+function setAddMsg(msg,type){
+  var el=document.getElementById('add-save-msg'); el.textContent=msg;
+  el.style.color=type==='error'?'var(--red)':type==='ok'?'var(--green)':type==='saving'?'var(--amber)':'transparent';
+}
+function saveNewTask() {
+  var name     =(document.getElementById('add-name').value||'').trim();
+  var jobNum   =(document.getElementById('add-job-number').value||'').trim();
+  var staffUuid=document.getElementById('add-staff-select').value;
+  var dueDate  =document.getElementById('add-due-date').value;
+  if (!name){ setAddMsg('Task name cannot be empty.','error'); return; }
+  var jobUuid=resolveJobUuid(jobNum);
+  if (!jobUuid){ setAddMsg('\u26A0 Job #'+(jobNum||DEFAULT_JOB_NUMBER)+' not found.','error'); return; }
+  setAddMsg('Creating\u2026','saving');
+  document.getElementById('add-save-btn').disabled=true;
+  var reminderType=''; var reminderData=null;
+  if (dueDate){ reminderType='ABSOLUTE_DATETIME'; reminderData={absoluteDateTime:dueDate+' 08:00:00'}; }
+  var payload={
+    job_uuid:jobUuid, name:name, section_name:'Comments', item_type:'Todo',
+    sort_order:0, completed_timestamp:'', completed_by_staff_uuid:'',
+    completed_during_checkin_uuid:'', reminder_type:reminderType, reminder_data:reminderData,
+    regarding_object:'', regarding_object_uuid:'',
+    fulfilled_by_object_name:'', fulfilled_by_object_uuid:'',
+    assigned_to_staff_uuids:staffUuid?[staffUuid]:[], is_locked:'0'
+  };
+  fetch('/api/proxy?path='+encodeURIComponent('/jobchecklist.json'),{
+    method:'POST', credentials:'include',
+    headers:{'Accept':'application/json','Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(function(r){
+    document.getElementById('add-save-btn').disabled=false;
+    r.text().then(function(txt){
+      if(r.status===200||r.status===201||r.status===204){
+        setAddMsg('\u2713 Task created!','ok');
+        toast('Task "'+name+'" created successfully.');
+        setTimeout(function(){ closeAddModal(); loadTasks(true); },800);
+      } else {
+        setAddMsg('Failed: '+txt.substring(0,100),'error');
+        toast('Create failed: HTTP '+r.status,true);
+      }
+    });
+  }).catch(function(e){
+    document.getElementById('add-save-btn').disabled=false;
+    setAddMsg('Failed: '+e.message,'error');
+    toast('Create failed: '+e.message,true);
+  });
+}
+function closeAddModal(){ document.getElementById('add-modal').classList.remove('open'); }
+function onAddOverlayClick(e){ if(e.target===document.getElementById('add-modal')) closeAddModal(); }
+
+// ── Utilities ──────────────────────────────────────────
 function initials(name){
   if(!name||name==='Unassigned') return '?';
   var parts=name.trim().split(/\s+/);
@@ -2131,7 +2034,6 @@ function esc(s){
 }
 function setBody(html)   { document.getElementById('task-body').innerHTML=html; }
 function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML=html; }
-
 var toastTimer=null;
 function toast(msg,isError){
   var el=document.getElementById('toast');
@@ -2142,153 +2044,6 @@ function toast(msg,isError){
   if(toastTimer) clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){ el.classList.remove('show'); },3500);
 }
-// ── Add Task ───────────────────────────────────────────
-var DEFAULT_JOB_NUMBER = '1146';
-
-function openAddTask() {
-  // Reset form
-  document.getElementById('add-name').value        = '';
-  document.getElementById('add-job-number').value  = '';
-  document.getElementById('add-due-date').value    = '';
-  document.getElementById('add-job-preview').textContent = '';
-  document.getElementById('add-save-msg').textContent    = '';
-  document.getElementById('add-save-btn').disabled       = false;
-
-  // Populate staff dropdown
-  var sel = document.getElementById('add-staff-select');
-  sel.innerHTML = '<option value="">— Unassigned —</option>';
-  staffList.forEach(function(s) {
-    var o = document.createElement('option');
-    o.value = s.uuid;
-    o.textContent = s.name;
-    // Pre-select current user
-    if (s.uuid === currentUserUuid) o.selected = true;
-    sel.appendChild(o);
-  });
-
-  // Wire up job number lookup
-  document.getElementById('add-job-number').oninput = function() {
-    lookupAddJobNumber(this.value.trim());
-  };
-
-  document.getElementById('add-modal').classList.add('open');
-  setTimeout(function(){ document.getElementById('add-name').focus(); }, 100);
-}
-
-function lookupAddJobNumber(num) {
-  var preview = document.getElementById('add-job-preview');
-  if (!num) { preview.textContent = 'Will use default job #' + DEFAULT_JOB_NUMBER; preview.style.color = 'var(--muted)'; return; }
-  var found = null;
-  Object.values(jobMap).forEach(function(j) {
-    if (j.number === num) found = j;
-  });
-  if (found) {
-    preview.textContent = '\u2713 ' + (found.desc || 'Job found') + (found.status ? ' \u2014 ' + found.status : '');
-    preview.style.color = 'var(--green)';
-  } else {
-    preview.textContent = '\u26A0 Job #' + num + ' not found in loaded jobs';
-    preview.style.color = 'var(--amber)';
-  }
-}
-
-function resolveJobUuid(num) {
-  // Find job UUID by job number, fallback to default
-  var target = num || DEFAULT_JOB_NUMBER;
-  var found  = null;
-  Object.values(jobMap).forEach(function(j) {
-    if (j.number === target) found = j;
-  });
-  return found ? found.uuid : null;
-}
-
-function setAddMsg(msg, type) {
-  var el = document.getElementById('add-save-msg');
-  el.textContent = msg;
-  el.style.color = type === 'error'  ? 'var(--red)'
-                 : type === 'ok'     ? 'var(--green)'
-                 : type === 'saving' ? 'var(--amber)'
-                 : 'transparent';
-}
-
-function saveNewTask() {
-  var name      = (document.getElementById('add-name').value || '').trim();
-  var jobNum    = (document.getElementById('add-job-number').value || '').trim();
-  var staffUuid = document.getElementById('add-staff-select').value;
-  var dueDate   = document.getElementById('add-due-date').value;
-
-  if (!name) { setAddMsg('Task name cannot be empty.', 'error'); return; }
-
-  var jobUuid = resolveJobUuid(jobNum);
-  if (!jobUuid) {
-    setAddMsg('\u26A0 Job #' + (jobNum || DEFAULT_JOB_NUMBER) + ' not found. Please check the job number.', 'error');
-    return;
-  }
-
-  setAddMsg('Creating\u2026', 'saving');
-  document.getElementById('add-save-btn').disabled = true;
-
-  var reminderType = '';
-  var reminderData = null;
-  if (dueDate) {
-    reminderType = 'ABSOLUTE_DATETIME';
-    reminderData = { absoluteDateTime: dueDate + ' 08:00:00' };
-  }
-
-  var payload = {
-    job_uuid:                     jobUuid,
-    name:                         name,
-    section_name:                 'Comments',
-    item_type:                    'Todo',
-    sort_order:                   0,
-    completed_timestamp:          '',
-    completed_by_staff_uuid:      '',
-    completed_during_checkin_uuid:'',
-    reminder_type:                reminderType,
-    reminder_data:                reminderData,
-    regarding_object:             '',
-    regarding_object_uuid:        '',
-    fulfilled_by_object_name:     '',
-    fulfilled_by_object_uuid:     '',
-    assigned_to_staff_uuids:      staffUuid ? [staffUuid] : [],
-    is_locked:                    '0'
-  };
-
-  fetch('/api/proxy?path=' + encodeURIComponent('/jobchecklist.json'), {
-    method:      'POST',
-    credentials: 'include',
-    headers:     { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-    body:        JSON.stringify(payload)
-  }).then(function(r) {
-    document.getElementById('add-save-btn').disabled = false;
-    console.log('[addTask] status:', r.status);
-    r.text().then(function(txt) {
-      console.log('[addTask] response body:', txt);
-      if (r.status === 200 || r.status === 201 || r.status === 204) {
-        setAddMsg('\u2713 Task created!', 'ok');
-        toast('Task "' + name + '" created successfully.');
-        setTimeout(function() { closeAddModal(); loadTasks(true); }, 800);
-      } else {
-        setAddMsg('Failed: ' + txt.substring(0, 100), 'error');
-        toast('Create failed: HTTP ' + r.status, true);
-      }
-    });
-  }).catch(function(e) {
-    document.getElementById('add-save-btn').disabled = false;
-    setAddMsg('Failed: ' + e.message, 'error');
-    toast('Create failed: ' + e.message, true);
-  });
-}
-
-
-function closeAddModal() {
-  document.getElementById('add-modal').classList.remove('open');
-}
-function onAddOverlayClick(e) {
-  if (e.target === document.getElementById('add-modal')) closeAddModal();
-}
-
 </script>
 </body>
 </html>
-
-
