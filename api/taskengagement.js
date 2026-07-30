@@ -15,9 +15,11 @@
 //   action: "flag"     → remove a flag
 //
 // Storage:
-//   data/taskcomments.json   → { comments: [...] }
+//   data/taskcomments.json   → { comments: [...] }  OR old: [...]
 //   data/notifications.json  → { notifications: [...] }
-//   data/flaggedtasks.json   → { flagged: { taskId: true }, updatedAt: '' }
+//   data/flaggedtasks.json   → { flagged: { taskId: true } }
+//                               OR old flat: { taskId: true }
+//                               OR old array: ["taskId", ...]
 
 const https  = require('https');
 const crypto = require('crypto');
@@ -81,25 +83,92 @@ async function putFile(path, content, sha, message) {
   return res;
 }
 
+// ── Normalise helpers (backward compat) ────────────────────────────────────
+
+// Accepts any of:
+//   { comments: [...] }   ← new format
+//   [...]                 ← old format (bare array)
+//   { data: [...] }       ← some older variants
+// Always returns { comments: [...] }
+function normaliseComments(raw) {
+  if (Array.isArray(raw)) {
+    return { comments: raw };
+  }
+  if (raw && Array.isArray(raw.comments)) {
+    return raw;
+  }
+  if (raw && Array.isArray(raw.data)) {
+    return { comments: raw.data };
+  }
+  return { comments: [] };
+}
+
+// Accepts any of:
+//   { flagged: { taskId: true } }   ← new format
+//   { taskId: true, ... }           ← old flat format
+//   ["taskId", ...]                 ← old array format
+// Always returns { flagged: { taskId: true }, updatedAt: '' }
+function normaliseFlags(raw) {
+  // New format already correct
+  if (raw && typeof raw === 'object' && !Array.isArray(raw) && raw.flagged && typeof raw.flagged === 'object' && !Array.isArray(raw.flagged)) {
+    return raw;
+  }
+
+  // Old array format: ["uuid1", "uuid2"]
+  if (Array.isArray(raw)) {
+    var flagged = {};
+    raw.forEach(function(id) { if (typeof id === 'string') flagged[id] = true; });
+    return { flagged: flagged, updatedAt: '' };
+  }
+
+  // Old flat format: { "uuid1": true, "uuid2": true }
+  // Distinguish from new format by absence of a "flagged" key that is an object
+  if (raw && typeof raw === 'object') {
+    var flagged = {};
+    Object.keys(raw).forEach(function(k) {
+      // Skip meta keys
+      if (k === 'updatedAt') return;
+      if (raw[k] === true || raw[k] === 1 || raw[k] === '1') {
+        flagged[k] = true;
+      }
+    });
+    return { flagged: flagged, updatedAt: raw.updatedAt || '' };
+  }
+
+  return { flagged: {}, updatedAt: '' };
+}
+
+// Accepts any of:
+//   { notifications: [...] }   ← standard format
+//   [...]                      ← bare array
+// Always returns { notifications: [...] }
+function normaliseNotifs(raw) {
+  if (Array.isArray(raw)) {
+    return { notifications: raw };
+  }
+  if (raw && Array.isArray(raw.notifications)) {
+    return raw;
+  }
+  return { notifications: [] };
+}
+
 // ── File loaders ───────────────────────────────────────────────────────────
 
 async function loadComments() {
   const r = await getFile(PATH_COMMENTS, { comments: [] });
-  if (!Array.isArray(r.content.comments)) r.content.comments = [];
+  r.content = normaliseComments(r.content);
   return r;
 }
 
 async function loadNotifs() {
   const r = await getFile(PATH_NOTIFS, { notifications: [] });
-  if (!Array.isArray(r.content.notifications)) r.content.notifications = [];
+  r.content = normaliseNotifs(r.content);
   return r;
 }
 
 async function loadFlags() {
   const r = await getFile(PATH_FLAGS, { flagged: {}, updatedAt: '' });
-  if (!r.content.flagged || typeof r.content.flagged !== 'object' || Array.isArray(r.content.flagged)) {
-    r.content.flagged = {};
-  }
+  r.content = normaliseFlags(r.content);
   return r;
 }
 
@@ -158,6 +227,7 @@ const handler = async (req, res) => {
       // ── Bulk: all flags ──────────────────────────────────────────────────
       if (allFlags) {
         const { content } = await loadFlags();
+        // Always return normalised new format to frontend
         return res.status(200).json(content);
       }
 
@@ -276,6 +346,7 @@ const handler = async (req, res) => {
 
         flags.updatedAt = nowIso();
 
+        // Always write back in new normalised format
         await putFile(PATH_FLAGS, flags, flagsRes.sha, 'Update flagged tasks');
         return res.status(200).json({ ok: true, flagged: !!flags.flagged[taskId] });
       }
