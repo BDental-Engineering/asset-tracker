@@ -14,12 +14,14 @@
 //   action: "notify"   → dismiss a notification (or clearAll)
 //   action: "flag"     → remove a flag
 //
-// Storage:
-//   data/taskcomments.json   → { comments: [...] }  OR old: [...]
-//   data/notifications.json  → { notifications: [...] }
-//   data/flaggedtasks.json   → { flagged: { taskId: true } }
-//                               OR old flat: { taskId: true }
-//                               OR old array: ["taskId", ...]
+// Storage (all in data/):
+//   taskcomments.json   → migrated to { comments: [...] }
+//                          was: { "taskId": [...] }  (old keyed format)
+//                          was: { "taskId": [...], "comments": [...] } (mixed)
+//   notifications.json  → { notifications: [...] }
+//   flaggedtasks.json   → { flagged: { taskId: true }, updatedAt: '' }
+//                          was: { "taskId": true }  (old flat format)
+//                          was: ["taskId", ...]     (old array format)
 
 const https  = require('https');
 const crypto = require('crypto');
@@ -49,7 +51,6 @@ function githubRequest(method, endpoint, body) {
       }
     };
     if (payload) options.headers['Content-Length'] = Buffer.byteLength(payload);
-
     const req = https.request(options, function(res) {
       let data = '';
       res.on('data', function(chunk) { data += chunk; });
@@ -83,50 +84,106 @@ async function putFile(path, content, sha, message) {
   return res;
 }
 
-// ── Normalise helpers (backward compat) ────────────────────────────────────
+// ── Normalise: comments ────────────────────────────────────────────────────
+//
+// Handles all three real-world shapes found in taskcomments.json:
+//
+//  Shape A — pure old keyed object (written by old taskcomments.js):
+//    { "uuid1": [{...},{...}], "uuid2": [{...}] }
+//
+//  Shape B — pure new flat array (written by new taskengagement.js):
+//    { "comments": [{...},{...}] }
+//
+//  Shape C — mixed (written by both systems into same file):
+//    { "uuid1": [{...}], "comments": [{...}] }
+//
+//  Shape D — bare array (defensive):
+//    [{...},{...}]
+//
+// Output is always: { comments: [ ...flatArray ] }
+// After first write-back the file will be Shape B permanently.
 
-// Accepts any of:
-//   { comments: [...] }   ← new format
-//   [...]                 ← old format (bare array)
-//   { data: [...] }       ← some older variants
-// Always returns { comments: [...] }
 function normaliseComments(raw) {
+  var merged = [];
+  var seenIds = {};
+
+  function addComment(c) {
+    if (!c || typeof c !== 'object') return;
+    var id = c.id || '';
+    if (id && seenIds[id]) return; // deduplicate
+    if (id) seenIds[id] = true;
+    merged.push(c);
+  }
+
+  // Shape D — bare array
   if (Array.isArray(raw)) {
-    return { comments: raw };
+    raw.forEach(addComment);
+    return { comments: merged };
   }
-  if (raw && Array.isArray(raw.comments)) {
-    return raw;
+
+  if (raw && typeof raw === 'object') {
+    Object.keys(raw).forEach(function(key) {
+      var val = raw[key];
+
+      // Shape B — the new "comments" array key
+      if (key === 'comments' && Array.isArray(val)) {
+        val.forEach(addComment);
+        return;
+      }
+
+      // Shape A / C — old keyed entries where key is a task UUID
+      // Value must be an array of comment objects
+      if (Array.isArray(val)) {
+        val.forEach(function(c) {
+          // Ensure taskId is set (old format stored it on the comment too,
+          // but be safe in case it was missing)
+          if (c && typeof c === 'object') {
+            if (!c.taskId) c.taskId = key;
+            addComment(c);
+          }
+        });
+      }
+    });
   }
-  if (raw && Array.isArray(raw.data)) {
-    return { comments: raw.data };
-  }
-  return { comments: [] };
+
+  // Sort by timestamp ascending so oldest comments come first
+  merged.sort(function(a, b) {
+    return new Date(a.timestamp || 0) - new Date(b.timestamp || 0);
+  });
+
+  return { comments: merged };
 }
 
-// Accepts any of:
-//   { flagged: { taskId: true } }   ← new format
-//   { taskId: true, ... }           ← old flat format
-//   ["taskId", ...]                 ← old array format
-// Always returns { flagged: { taskId: true }, updatedAt: '' }
+// ── Normalise: flags ───────────────────────────────────────────────────────
+//
+//  Old flat:  { "uuid1": true, "uuid2": true }
+//  Old array: ["uuid1", "uuid2"]
+//  New:       { "flagged": { "uuid1": true }, "updatedAt": "..." }
+
 function normaliseFlags(raw) {
-  // New format already correct
-  if (raw && typeof raw === 'object' && !Array.isArray(raw) && raw.flagged && typeof raw.flagged === 'object' && !Array.isArray(raw.flagged)) {
+  // New format — has a "flagged" key that is a plain object
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    !Array.isArray(raw) &&
+    raw.flagged &&
+    typeof raw.flagged === 'object' &&
+    !Array.isArray(raw.flagged)
+  ) {
     return raw;
   }
 
-  // Old array format: ["uuid1", "uuid2"]
+  // Old array format
   if (Array.isArray(raw)) {
     var flagged = {};
     raw.forEach(function(id) { if (typeof id === 'string') flagged[id] = true; });
     return { flagged: flagged, updatedAt: '' };
   }
 
-  // Old flat format: { "uuid1": true, "uuid2": true }
-  // Distinguish from new format by absence of a "flagged" key that is an object
+  // Old flat format: every key that is not a meta key and has a truthy value
   if (raw && typeof raw === 'object') {
     var flagged = {};
     Object.keys(raw).forEach(function(k) {
-      // Skip meta keys
       if (k === 'updatedAt') return;
       if (raw[k] === true || raw[k] === 1 || raw[k] === '1') {
         flagged[k] = true;
@@ -138,17 +195,11 @@ function normaliseFlags(raw) {
   return { flagged: {}, updatedAt: '' };
 }
 
-// Accepts any of:
-//   { notifications: [...] }   ← standard format
-//   [...]                      ← bare array
-// Always returns { notifications: [...] }
+// ── Normalise: notifications ───────────────────────────────────────────────
+
 function normaliseNotifs(raw) {
-  if (Array.isArray(raw)) {
-    return { notifications: raw };
-  }
-  if (raw && Array.isArray(raw.notifications)) {
-    return raw;
-  }
+  if (Array.isArray(raw))                         return { notifications: raw };
+  if (raw && Array.isArray(raw.notifications))    return raw;
   return { notifications: [] };
 }
 
@@ -227,20 +278,16 @@ const handler = async (req, res) => {
       // ── Bulk: all flags ──────────────────────────────────────────────────
       if (allFlags) {
         const { content } = await loadFlags();
-        // Always return normalised new format to frontend
         return res.status(200).json(content);
       }
 
       // ── Single task: comments + flag state ───────────────────────────────
       if (taskId) {
         const [commentsRes, flagsRes] = await Promise.all([loadComments(), loadFlags()]);
-
         const comments = commentsRes.content.comments
           .filter(function(c) { return c.taskId === taskId; })
           .sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp); });
-
         const flagged = !!flagsRes.content.flagged[taskId];
-
         return res.status(200).json({ taskId, comments, flagged });
       }
 
@@ -282,6 +329,8 @@ const handler = async (req, res) => {
           commentsRes.content.comments = commentsRes.content.comments.slice(-2000);
         }
 
+        // Write back in new normalised format — this migrates the file
+        // permanently from the old keyed format to the new flat array format
         await putFile(PATH_COMMENTS, commentsRes.content, commentsRes.sha, 'Add task comment');
         return res.status(201).json({ ok: true, comment });
       }
@@ -346,7 +395,6 @@ const handler = async (req, res) => {
 
         flags.updatedAt = nowIso();
 
-        // Always write back in new normalised format
         await putFile(PATH_FLAGS, flags, flagsRes.sha, 'Update flagged tasks');
         return res.status(200).json({ ok: true, flagged: !!flags.flagged[taskId] });
       }
