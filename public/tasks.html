@@ -903,7 +903,6 @@ function toggleNotifDropdown(e) {
 }
 function onNotifClick(notifId, taskId) {
   document.getElementById('notif-dropdown').classList.remove('open');
-  dismissNotification(null, notifId);
   var t = tasksData.find(function(x) { return x._id === taskId; });
   if (t) openEdit(taskId);
 }
