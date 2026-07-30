@@ -1181,7 +1181,20 @@ function extractMentions(text) {
   return found;
 }
 
-function renderCommentText(text)
+function renderCommentText(text) {
+  if (!text) return '';
+  return esc(String(text)).replace(/@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g, function(match, name) {
+    var staff = null;
+    for (var i = 0; i < staffList.length; i++) {
+      if (staffList[i].name.toLowerCase() === name.trim().toLowerCase()) {
+        staff = staffList[i];
+        break;
+      }
+    }
+    return staff ? '<span class="mention-chip">@' + esc(staff.name) + '</span>' : match;
+  });
+}
+
 
 // ── Reassign ───────────────────────────────────────────
 function populateReassignDropdown(currentStaffUuid) {
