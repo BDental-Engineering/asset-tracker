@@ -1166,18 +1166,20 @@ function dispatchCommentNotification(taskId, commentText) {
   var allTasks = tasksData.concat(completedData);
   var t = allTasks.find(function(x) { return x._id === taskId; });
   if (!t) return;
+  var sender = currentUser || 'Unknown';
   var toNotify = {};
-  if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== currentUser)
+  if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== sender)
     toNotify[t.staffName] = true;
   (commentsCache[taskId] || []).forEach(function(c) {
-    if (c.author && c.author !== currentUser) toNotify[c.author] = true;
+    if (c.author && c.author !== sender) toNotify[c.author] = true;
   });
   extractMentions(commentText).forEach(function(name) {
-    if (name !== currentUser) toNotify[name] = true;
+    if (name !== sender) toNotify[name] = true;
   });
   Object.keys(toNotify).forEach(function(recipient) {
     engagementPost({
-      action:'notify', forUser:recipient, fromUser:currentUser || 'Someone',
+      action:'notify', forUser:recipient, fromUser:sender,
+  
       taskId:taskId, taskName:t.name, commentText:commentText
     }).catch(function() {});
   });
@@ -1300,39 +1302,39 @@ function closeMentionDropdown(dropdownEl) {
 
 function extractMentions(text) {
   var found = [];
-  var regex = /@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g;
-  var match;
-  while ((match = regex.exec(text)) !== null) {
-    var name = match[1].trim();
-    for (var i = 0; i < staffList.length; i++) {
-      if (staffList[i].name.toLowerCase() === name.toLowerCase()) {
-        if (found.indexOf(staffList[i].name) === -1) found.push(staffList[i].name);
-        break;
-      }
+  if (!text) return found;
+  // Try to match every @Word or @First Last against the staff list,
+  // longest match first so "John Smith" beats "John"
+  var sorted = staffList.slice().sort(function(a, b) {
+    return b.name.length - a.name.length;
+  });
+  sorted.forEach(function(s) {
+    var escaped = s.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var re = new RegExp('@' + escaped + '(?:\\s|$|[^A-Za-z])', 'i');
+    if (re.test(text) && found.indexOf(s.name) === -1) {
+      found.push(s.name);
     }
-  }
+  });
   return found;
 }
-
+  
 function renderCommentText(text) {
   if (!text) return '';
-  var escaped = esc(String(text));
-  return escaped.replace(/@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g, function(match, raw) {
-    var name = raw.trim();
-    if (!name) return match;
-    for (var i = 0; i < staffList.length; i++) {
-      if (staffList[i].name.toLowerCase() === name.toLowerCase()) {
-        return '<span class="mention-chip">@' + esc(staffList[i].name) + '</span>';
-      }
-    }
-    // Partial match fallback
-    for (var i = 0; i < staffList.length; i++) {
-      if (name.length >= 3 && staffList[i].name.toLowerCase().indexOf(name.toLowerCase()) === 0) {
-        return '<span class="mention-chip">@' + esc(staffList[i].name) + '</span>';
-      }
-    }
-    return match;
+  var result = esc(String(text));
+  // Replace longest staff name matches first to avoid partial replacements
+  var sorted = staffList.slice().sort(function(a, b) {
+    return b.name.length - a.name.length;
   });
+  sorted.forEach(function(s) {
+    var escapedName    = s.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var escapedForHtml = esc(s.name);
+    // Match @Name followed by space, end of string, or non-alpha
+    var re = new RegExp('@' + escapedName + '(?=\\s|$|[^A-Za-z])', 'gi');
+    result = result.replace(re,
+      '<span class="mention-chip">@' + escapedForHtml + '</span>'
+    );
+  });
+  return result;
 }
 
 // ══════════════════════════════════════════════════════
