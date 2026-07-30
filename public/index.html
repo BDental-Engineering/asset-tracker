@@ -829,12 +829,13 @@ function checkSession(){
         showScreen('loading');document.getElementById('loading-msg').textContent='Loading your assets\u2026';
         fetchAll().then(function(){saveLocal();loadMakeModelFromServer();loadHistory();showDashboard();toast('Loaded '+assets.length+' assets.');}).catch(handleFetchError);
       }
-    }).catch(function(){
+       }).catch(function(){
       loadLocal();
       if(assets.length>0){showDashboard();document.getElementById('sync-status').textContent='Offline \u2014 cached data';}
-      startNotifPolling();
       else showScreen('auth');
+      startNotifPolling();
     });
+
 }
 function handleFetchError(e){
   if(e.message==='SESSION_EXPIRED'){
