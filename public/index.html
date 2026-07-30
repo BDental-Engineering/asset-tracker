@@ -1873,8 +1873,7 @@ function toggleNotifDropdown(e){
 }
 function onNotifClick(notifId,taskId){
   document.getElementById('notif-dropdown').classList.remove('open');
-  dismissNotif(null,notifId);
-  if(taskId) window.location.href='tasks.html#task='+taskId;
+    if(taskId) window.location.href='tasks.html#task='+taskId;
 }
 function dismissNotif(e,notifId){
   if(e) e.stopPropagation();
