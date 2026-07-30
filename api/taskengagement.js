@@ -161,38 +161,42 @@ function normaliseComments(raw) {
 //  New:       { "flagged": { "uuid1": true }, "updatedAt": "..." }
 
 function normaliseFlags(raw) {
-  // New format — has a "flagged" key that is a plain object
-  if (
-    raw &&
-    typeof raw === 'object' &&
-    !Array.isArray(raw) &&
-    raw.flagged &&
-    typeof raw.flagged === 'object' &&
-    !Array.isArray(raw.flagged)
-  ) {
-    return raw;
+  // Nothing to work with
+  if (!raw || typeof raw !== 'object') {
+    return { flagged: {}, updatedAt: '' };
   }
 
-  // Old array format
+  // Old array format: ["uuid1", "uuid2"]
   if (Array.isArray(raw)) {
     var flagged = {};
     raw.forEach(function(id) { if (typeof id === 'string') flagged[id] = true; });
     return { flagged: flagged, updatedAt: '' };
   }
 
-  // Old flat format: every key that is not a meta key and has a truthy value
-  if (raw && typeof raw === 'object') {
-    var flagged = {};
-    Object.keys(raw).forEach(function(k) {
-      if (k === 'updatedAt') return;
-      if (raw[k] === true || raw[k] === 1 || raw[k] === '1') {
+  // Object format — could be pure old flat, pure new, or MIXED
+  // Strategy: collect ALL truthy UUID keys at the top level AND
+  // everything already inside raw.flagged, then merge them together.
+  var flagged = {};
+
+  // First pull in anything already inside the nested flagged object
+  if (raw.flagged && typeof raw.flagged === 'object' && !Array.isArray(raw.flagged)) {
+    Object.keys(raw.flagged).forEach(function(k) {
+      if (raw.flagged[k] === true || raw.flagged[k] === 1 || raw.flagged[k] === '1') {
         flagged[k] = true;
       }
     });
-    return { flagged: flagged, updatedAt: raw.updatedAt || '' };
   }
 
-  return { flagged: {}, updatedAt: '' };
+  // Then pull in any old flat top-level keys (skip meta keys)
+  var META_KEYS = { flagged: true, updatedAt: true };
+  Object.keys(raw).forEach(function(k) {
+    if (META_KEYS[k]) return;
+    if (raw[k] === true || raw[k] === 1 || raw[k] === '1') {
+      flagged[k] = true;
+    }
+  });
+
+  return { flagged: flagged, updatedAt: raw.updatedAt || '' };
 }
 
 // ── Normalise: notifications ───────────────────────────────────────────────
