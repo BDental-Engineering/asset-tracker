@@ -1162,20 +1162,26 @@ function closeMentionDropdown(dropdownEl) {
   mentionState.active = false; mentionState.matches = [];
 }
 function extractMentions(text) {
-  var found = []; var regex = /@([\w ]+?)(?=\s@|\s*$|[^a-zA-Z\s])/g; var match;
+  var found = [];
+  var regex = /@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g;
+  var match;
   while ((match = regex.exec(text)) !== null) {
     var name = match[1].trim();
-    var staff = staffList.find(function(s){ return s.name.toLowerCase() === name.toLowerCase(); });
-    if (staff && found.indexOf(staff.name) === -1) found.push(staff.name);
+    var staff = null;
+    for (var i = 0; i < staffList.length; i++) {
+      if (staffList[i].name.toLowerCase() === name.toLowerCase()) {
+        staff = staffList[i];
+        break;
+      }
+    }
+    if (staff && found.indexOf(staff.name) === -1) {
+      found.push(staff.name);
+    }
   }
   return found;
 }
-function renderCommentText(text) {
-  return esc(text).replace(/@([\w ]+)/g, function(match, name) {
-    var staff = staffList.find(function(s){ return s.name.toLowerCase() === name.trim().toLowerCase(); });
-    return staff ? '<span class="mention-chip">@' + esc(staff.name) + '</span>' : match;
-  });
-}
+
+function renderCommentText(text)
 
 // ── Reassign ───────────────────────────────────────────
 function populateReassignDropdown(currentStaffUuid) {
