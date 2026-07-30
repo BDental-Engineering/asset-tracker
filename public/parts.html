@@ -454,8 +454,7 @@ function toggleNotifDropdown(e) {
 // Notifications on parts.html navigate to tasks.html with the deep-link hash
 function onNotifClick(notifId, taskId) {
   document.getElementById('notif-dropdown').classList.remove('open');
-  dismissNotification(null, notifId);
-  if (taskId) {
+   if (taskId) {
     window.location.href = 'tasks.html#task=' + taskId;
   }
 }
