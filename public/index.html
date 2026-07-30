@@ -373,8 +373,20 @@ td{padding:10px 14px;font-size:0.85rem;vertical-align:middle;}
     <span id="user-badge" style="font-size:0.78rem;color:var(--muted);display:none"></span>
     <span id="sync-status" style="font-size:0.8rem;color:var(--muted);display:none"></span>
     <button class="btn-ghost btn-sm" id="btn-sync" onclick="syncAssets()" style="display:none">&#8635; Sync</button>
-        <!-- Bell injected here by initBell() -->
-    <div id="notif-bell-mount"></div>
+    <div style="position:relative;">
+  <button class="notif-btn" onclick="toggleNotifDropdown(event)" id="notif-btn">
+    &#128276;
+    <span class="notif-badge" id="notif-badge"></span>
+  </button>
+  <div class="notif-dropdown" id="notif-dropdown">
+    <div class="notif-header">
+      &#128276; Notifications
+      <button class="notif-clear-btn" onclick="clearAllNotifications()">Clear all</button>
+    </div>
+    <div id="notif-list"><div class="notif-empty">No notifications</div></div>
+  </div>
+</div>
+
     <a href="/api/logout" class="btn-danger btn-sm" id="btn-logout" style="display:none;text-decoration:none;padding:5px 11px;border-radius:8px;font-size:0.78rem;font-weight:600;">Sign Out</a>
   </div>
 </header>
@@ -656,7 +668,11 @@ var CHECK_TYPES=[
 var STATUS_RANK={'elapsed':0,'overdue':1,'due-soon':2,'ok':3,'no-date':4};
 var COMPLIANCE_OPTIONS=['Active','Expired','Quoted','Scheduled','Query','Gone With Third Party'];
 var COMPLIANCE_HIDDEN=['Decommissioned','Unknown'];
+// ── Notification state ────────────────────────────────
+var notificationsData = [];
+var notifPollTimer = null;
 
+  
 // ── Boot ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',function(){
   initCompliancePills();
@@ -807,6 +823,7 @@ function checkSession(){
       loadLocal();
       if(assets.length>0){
         showDashboard();document.getElementById('sync-status').textContent='Loaded from cache';
+        startNotifPolling();
         loadMakeModelFromServer();loadHistory();backgroundSync();
       } else {
         showScreen('loading');document.getElementById('loading-msg').textContent='Loading your assets\u2026';
@@ -815,6 +832,7 @@ function checkSession(){
     }).catch(function(){
       loadLocal();
       if(assets.length>0){showDashboard();document.getElementById('sync-status').textContent='Offline \u2014 cached data';}
+      startNotifPolling();
       else showScreen('auth');
     });
 }
@@ -1793,6 +1811,105 @@ function setView(v){
   document.getElementById('btn-kanban').classList.toggle('active',v==='kanban');
   document.getElementById('btn-list').classList.toggle('active',v==='list');
 }
+// ── Notifications ─────────────────────────────────────
+function startNotifPolling(){
+  loadNotifications();
+  if(notifPollTimer) clearInterval(notifPollTimer);
+  notifPollTimer = setInterval(loadNotifications, 30000);
+}
+function loadNotifications(){
+  if(!currentUser || currentUser==='Unknown User') return;
+  fetch('/api/taskengagement?user='+encodeURIComponent(currentUser),{credentials:'include'})
+    .then(function(r){return r.ok?r.json():[];})
+    .then(function(d){
+      notificationsData = Array.isArray(d)?d:[];
+      renderNotifBadge();
+      renderNotifList();
+    })
+    .catch(function(){notificationsData=[];});
+}
+function renderNotifBadge(){
+  var badge = document.getElementById('notif-badge');
+  if(!badge) return;
+  var count = notificationsData.length;
+  badge.textContent = count > 9 ? '9+' : String(count);
+  badge.classList.toggle('show', count > 0);
+}
+function renderNotifList(){
+  var el = document.getElementById('notif-list');
+  if(!el) return;
+  if(!notificationsData.length){
+    el.innerHTML = '<div class="notif-empty">&#10003; All caught up!</div>';
+    return;
+  }
+  el.innerHTML = notificationsData.map(function(n){
+    return '<div class="notif-item" onclick="onNotifClick(\''+ne(n.id)+'\',\''+ne(n.taskId)+'\')">'
+      +'<span class="notif-icon">&#128172;</span>'
+      +'<div class="notif-body">'
+      +  '<div class="notif-task">'+ne(n.taskName||'Task')+'</div>'
+      +  '<div class="notif-msg"><strong>'+ne(n.fromUser||'')+'</strong> commented: &ldquo;'
+      +    ne((n.commentText||'').substring(0,80))
+      +    (n.commentText&&n.commentText.length>80?'&hellip;':'')
+      +  '&rdquo;</div>'
+      +  '<div class="notif-time">&#128336; '+fmtNdt(n.timestamp)+'</div>'
+      +'</div>'
+      +'<button class="notif-dismiss" onclick="dismissNotif(event,\''+ne(n.id)+'\')">&#10005;</button>'
+      +'</div>';
+  }).join('');
+}
+function toggleNotifDropdown(e){
+  e.stopPropagation();
+  document.getElementById('notif-dropdown').classList.toggle('open');
+}
+function onNotifClick(notifId,taskId){
+  document.getElementById('notif-dropdown').classList.remove('open');
+  dismissNotif(null,notifId);
+  if(taskId) window.location.href='tasks.html#task='+taskId;
+}
+function dismissNotif(e,notifId){
+  if(e) e.stopPropagation();
+  fetch('/api/taskengagement',{
+    method:'DELETE',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'notify',id:notifId})
+  }).then(function(){
+    notificationsData = notificationsData.filter(function(n){return n.id!==notifId;});
+    renderNotifBadge();
+    renderNotifList();
+  }).catch(function(){});
+}
+function clearAllNotifications(){
+  if(!currentUser) return;
+  fetch('/api/taskengagement',{
+    method:'DELETE',credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'notify',clearAll:true,user:currentUser})
+  }).then(function(){
+    notificationsData = [];
+    renderNotifBadge();
+    renderNotifList();
+    document.getElementById('notif-dropdown').classList.remove('open');
+  }).catch(function(){});
+}
+// Close dropdown on outside click
+document.addEventListener('click',function(e){
+  var dd = document.getElementById('notif-dropdown');
+  if(dd && dd.classList.contains('open')){
+    if(!dd.contains(e.target) && e.target.id !== 'notif-btn'){
+      dd.classList.remove('open');
+    }
+  }
+});
+// Notif-safe escape helpers (avoids collision with existing esc())
+function ne(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function fmtNdt(str){
+  if(!str) return '';
+  var d = new Date(str);
+  if(isNaN(d.getTime())) return str;
+  return d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'})
+    +' '+d.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+}
+
 </script>
 </body>
 </html>
