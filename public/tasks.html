@@ -95,7 +95,7 @@ button:hover{opacity:0.87;}
   background:var(--surface);border:1px solid var(--border);border-radius:12px;
   padding:15px 18px;display:flex;gap:13px;align-items:flex-start;
   transition:border-color 0.18s,transform 0.15s,box-shadow 0.15s;
-  position:relative;overflow:hidden;cursor:pointer;
+  position:relative;cursor:pointer;
 }
 .task-card::before{
   content:'';position:absolute;left:0;top:0;bottom:0;
@@ -317,11 +317,15 @@ button:hover{opacity:0.87;}
 
 /* ── @mention ── */
 .mention-dropdown{
-  position:fixed;background:var(--surface);border:1px solid var(--border);
+  background:var(--surface);border:1px solid var(--border);
   border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.35);
-  z-index:600;min-width:200px;max-height:220px;overflow-y:auto;display:none;
+  z-index:9999;min-width:200px;max-height:220px;overflow-y:auto;display:none;
 }
 .mention-dropdown.open{display:block;}
+/* Global mention dropdown is fixed-positioned via JS */
+#global-mention-drop{position:fixed;}
+/* Modal mention dropdown is absolute within modal */
+#m-modal-mention-drop{position:absolute;bottom:100%;left:0;margin-bottom:4px;}
 .mention-item{
   display:flex;align-items:center;gap:8px;padding:8px 12px;
   cursor:pointer;font-size:0.82rem;font-weight:600;transition:background 0.12s;
@@ -574,7 +578,7 @@ button:hover{opacity:0.87;}
     <div class="frow">
       <label>&#128172; Comments</label>
       <div class="tc-list" id="m-tc-list" style="margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
-      <div class="tc-compose">
+      <div class="tc-compose" style="position:relative;">
         <div class="mention-dropdown" id="m-modal-mention-drop"></div>
         <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment… type @ to mention someone"></textarea>
         <div class="tc-compose-row">
@@ -623,42 +627,48 @@ button:hover{opacity:0.87;}
   </div>
 </div>
 
+<!-- Global mention dropdown — lives in body so it's never clipped -->
+<div class="mention-dropdown" id="global-mention-drop"></div>
+
 <div id="toast"></div>
 
 <!-- ══ SCRIPT ═════════════════════════════════════════════════════════════ -->
 <script>
+'use strict';
+
 // ── Constants ──────────────────────────────────────────
 var ENGAGEMENT_API     = '/api/taskengagement';
 var DEFAULT_JOB_NUMBER = '1146';
 
 // ── State ──────────────────────────────────────────────
-var tasksData       = [];
-var completedData   = [];
-var rawDebugData    = [];
-var rawCategoryData = [];
-var rawCatNameMap   = {};
-var staffList       = [];
-var staffMap        = {};
-var staffColorMap   = {};
-var jobMap          = {};
-var categoryMap     = {};
-var flaggedIds      = {};
-var assetList       = [];
-var clientMap       = {};
-var tasksLoaded     = false;
-var tScope          = 'mine';
-var sortMode        = 'due';
-var selectedIds     = {};
-var currentUser     = '';
-var currentUserUuid = '';
-var editRecord      = null;
-var debugVisible    = false;
-var completedMode   = false;
-var commentsCache   = {};
+var tasksData         = [];
+var completedData     = [];
+var rawDebugData      = [];
+var rawCategoryData   = [];
+var rawCatNameMap     = {};
+var staffList         = [];
+var staffMap          = {};
+var staffColorMap     = {};
+var jobMap            = {};
+var categoryMap       = {};
+var flaggedIds        = {};
+var assetList         = [];
+var clientMap         = {};
+var tasksLoaded       = false;
+var tScope            = 'mine';
+var sortMode          = 'due';
+var selectedIds       = {};
+var currentUser       = '';
+var currentUserUuid   = '';
+var editRecord        = null;
+var debugVisible      = false;
+var completedMode     = false;
+var commentsCache     = {};
 var notificationsData = [];
-var notifPollTimer  = null;
+var notifPollTimer    = null;
+var toastTimer        = null;
 
-var STATUS_ORDER = { 'Work Order':0,'Quote':1,'Unsuccessful':2,'Completed':3 };
+var STATUS_ORDER = { 'Work Order':0, 'Quote':1, 'Unsuccessful':2, 'Completed':3 };
 var STAFF_COLORS = [
   '#4f6ef7','#22c55e','#f59e0b','#ef4444','#a78bfa',
   '#06b6d4','#f97316','#ec4899','#84cc16','#14b8a6',
@@ -671,21 +681,34 @@ var mentionState = {
   targetEl:null, dropEl:null, cursor:0, matches:[]
 };
 
-// ── Boot ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', function() {
-  try { assetList = JSON.parse(localStorage.getItem('sm8_assets')  || '[]'); } catch(e){ assetList=[]; }
-  try { clientMap = JSON.parse(localStorage.getItem('sm8_clients') || '{}'); } catch(e){ clientMap={}; }
+  try { assetList = JSON.parse(localStorage.getItem('sm8_assets')  || '[]'); } catch(e){ assetList = []; }
+  try { clientMap = JSON.parse(localStorage.getItem('sm8_clients') || '{}'); } catch(e){ clientMap = {}; }
+
   var id = readCookies();
   currentUser     = id.name || '';
   currentUserUuid = id.uuid || '';
   if (currentUser) document.getElementById('user-badge').textContent = '\uD83D\uDC64 ' + currentUser;
+
   initStatusPills();
   checkSession();
+
   document.addEventListener('click', function(e) {
+    // Close notification dropdown
     var dd = document.getElementById('notif-dropdown');
     if (dd && dd.classList.contains('open')) {
       if (!dd.contains(e.target) && e.target.id !== 'notif-btn') {
         dd.classList.remove('open');
+      }
+    }
+    // Close global mention dropdown
+    var gmd = document.getElementById('global-mention-drop');
+    if (gmd && gmd.classList.contains('open')) {
+      if (!gmd.contains(e.target)) {
+        closeMentionDropdown(gmd);
       }
     }
   });
@@ -695,14 +718,17 @@ function readCookies() {
   var r = { name:'', uuid:'' };
   document.cookie.split(';').forEach(function(c) {
     var p = c.trim().split('=');
-    var k = p[0]; var v = decodeURIComponent(p.slice(1).join('='));
+    var k = p[0];
+    var v = decodeURIComponent(p.slice(1).join('='));
     if (k === 'sm8_user_name') r.name = v;
     if (k === 'sm8_user_uuid') r.uuid = v;
   });
   return r;
 }
 
-// ── Status pills ───────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// STATUS PILLS
+// ══════════════════════════════════════════════════════
 function initStatusPills() {
   document.querySelectorAll('#q-status-pills .status-pill').forEach(function(pill) {
     pill.addEventListener('click', function(e) {
@@ -722,11 +748,16 @@ function getStatusFilter() {
   return active;
 }
 
-// ── Session ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// SESSION
+// ══════════════════════════════════════════════════════
 function checkSession() {
   fetch('/api/proxy?path=' + encodeURIComponent('/staff.json'), { credentials:'include' })
-    .then(function(r){ if (r.status===401){ showAuth(); return null; } return r.json(); })
-    .then(function(d){
+    .then(function(r) {
+      if (r.status === 401) { showAuth(); return null; }
+      return r.json();
+    })
+    .then(function(d) {
       if (d) {
         showMain();
         loadEngagementData().then(function() {
@@ -735,7 +766,7 @@ function checkSession() {
         });
       }
     })
-    .catch(function(){ showAuth(); });
+    .catch(function() { showAuth(); });
 }
 function showAuth() {
   document.getElementById('auth-screen').classList.add('show');
@@ -746,72 +777,94 @@ function showMain() {
   document.getElementById('main-page').style.display = 'block';
 }
 
-// ── Proxy helpers ──────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// PROXY / API HELPERS
+// ══════════════════════════════════════════════════════
 function sm8Get(path) {
   return fetch('/api/proxy?path=' + encodeURIComponent(path), {
-    credentials:'include', headers:{'Accept':'application/json'}
-  }).then(function(r){
-    if (r.status===401) throw new Error('SESSION_EXPIRED');
-    return r.json().then(function(d){ if (!r.ok) throw new Error(d.message||('HTTP '+r.status)); return d; });
+    credentials:'include',
+    headers:{ 'Accept':'application/json' }
+  }).then(function(r) {
+    if (r.status === 401) throw new Error('SESSION_EXPIRED');
+    return r.json().then(function(d) {
+      if (!r.ok) throw new Error(d.message || ('HTTP ' + r.status));
+      return d;
+    });
   });
 }
 function sm8Put(path, payload) {
   return fetch('/api/proxy?path=' + encodeURIComponent(path), {
     method:'POST', credentials:'include',
-    headers:{'Accept':'application/json','Content-Type':'application/json','X-HTTP-Method-Override':'PUT'},
+    headers:{
+      'Accept':'application/json',
+      'Content-Type':'application/json',
+      'X-HTTP-Method-Override':'PUT'
+    },
     body: JSON.stringify(payload)
   });
 }
 function engagementPost(body) {
   return fetch(ENGAGEMENT_API, {
     method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
+    headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify(body)
-  }).then(function(r){ return r.json(); });
+  }).then(function(r) { return r.json(); });
 }
 function engagementDelete(body) {
   return fetch(ENGAGEMENT_API, {
     method:'DELETE', credentials:'include',
-    headers:{'Content-Type':'application/json'},
+    headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify(body)
-  }).then(function(r){ return r.json(); });
+  }).then(function(r) { return r.json(); });
 }
 
-// ── Load engagement data (comments + flags) ────────────
+// ══════════════════════════════════════════════════════
+// ENGAGEMENT DATA (comments + flags)
+// ══════════════════════════════════════════════════════
 function loadEngagementData() {
-  // Load all comments via bulk GET and flags
   return Promise.all([
     fetch(ENGAGEMENT_API + '?allComments=1', { credentials:'include' })
-      .then(function(r){ return r.ok ? r.json() : {}; })
-      .catch(function(){ return {}; }),
+      .then(function(r) { return r.ok ? r.json() : []; })
+      .catch(function() { return []; }),
     fetch(ENGAGEMENT_API + '?allFlags=1', { credentials:'include' })
-      .then(function(r){ return r.ok ? r.json() : {}; })
-      .catch(function(){ return {}; })
+      .then(function(r) { return r.ok ? r.json() : {}; })
+      .catch(function() { return {}; })
   ]).then(function(res) {
     // Build commentsCache keyed by taskId
-    var rawComments = Array.isArray(res[0]) ? res[0] : (res[0].comments || []);
+    var rawComments = Array.isArray(res[0]) ? res[0] : [];
     commentsCache = {};
     rawComments.forEach(function(c) {
+      if (!c || !c.taskId) return;
       if (!commentsCache[c.taskId]) commentsCache[c.taskId] = [];
       commentsCache[c.taskId].push(c);
     });
-    // Build flaggedIds
+    // Sort each task's comments by timestamp ascending
+    Object.keys(commentsCache).forEach(function(tid) {
+      commentsCache[tid].sort(function(a, b) {
+        return new Date(a.timestamp || 0) - new Date(b.timestamp || 0);
+      });
+    });
+    // Build flaggedIds — handle both { flagged:{...} } and flat { uuid:true }
     var flags = (res[1] && typeof res[1] === 'object') ? res[1] : {};
-    flaggedIds = flags.flagged || flags || {};
+    flaggedIds = (flags.flagged && typeof flags.flagged === 'object') ? flags.flagged : flags;
+    // Strip meta keys that aren't UUIDs
+    ['updatedAt'].forEach(function(k) { delete flaggedIds[k]; });
   });
 }
 
-// ── Notifications ──────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════════════════════
 function loadNotifications() {
   if (!currentUser) return Promise.resolve();
   return fetch(ENGAGEMENT_API + '?user=' + encodeURIComponent(currentUser), { credentials:'include' })
-    .then(function(r){ return r.ok ? r.json() : []; })
-    .then(function(d){
+    .then(function(r) { return r.ok ? r.json() : []; })
+    .then(function(d) {
       notificationsData = Array.isArray(d) ? d : [];
       renderNotifBadge();
       renderNotifList();
     })
-    .catch(function(){ notificationsData = []; });
+    .catch(function() { notificationsData = []; });
 }
 function startNotifPolling() {
   loadNotifications();
@@ -836,7 +889,7 @@ function renderNotifList() {
       + '<span class="notif-icon">&#128172;</span>'
       + '<div class="notif-body">'
       +   '<div class="notif-task">' + esc(n.taskName || 'Task') + '</div>'
-      +   '<div class="notif-msg"><strong>' + esc(n.fromUser) + '</strong> commented: &ldquo;'
+      +   '<div class="notif-msg"><strong>' + esc(n.fromUser || '') + '</strong> commented: &ldquo;'
       +     esc((n.commentText || '').substring(0, 80))
       +     (n.commentText && n.commentText.length > 80 ? '&hellip;' : '')
       +   '&rdquo;</div>'
@@ -853,174 +906,216 @@ function toggleNotifDropdown(e) {
 function onNotifClick(notifId, taskId) {
   document.getElementById('notif-dropdown').classList.remove('open');
   dismissNotification(null, notifId);
-  var t = tasksData.find(function(x){ return x._id === taskId; });
+  var t = tasksData.find(function(x) { return x._id === taskId; });
   if (t) openEdit(taskId);
 }
 function dismissNotification(e, notifId) {
   if (e) e.stopPropagation();
-  engagementDelete({ action:'notify', id: notifId }).then(function() {
-    notificationsData = notificationsData.filter(function(n){ return n.id !== notifId; });
-    renderNotifBadge();
-    renderNotifList();
-  }).catch(function(){});
+  engagementDelete({ action:'notify', id: notifId })
+    .then(function() {
+      notificationsData = notificationsData.filter(function(n) { return n.id !== notifId; });
+      renderNotifBadge();
+      renderNotifList();
+    })
+    .catch(function() {});
 }
 function clearAllNotifications() {
   if (!currentUser) return;
-  engagementDelete({ action:'notify', clearAll: true, user: currentUser }).then(function() {
-    notificationsData = [];
-    renderNotifBadge();
-    renderNotifList();
-    document.getElementById('notif-dropdown').classList.remove('open');
-  }).catch(function(){});
+  engagementDelete({ action:'notify', clearAll: true, user: currentUser })
+    .then(function() {
+      notificationsData = [];
+      renderNotifBadge();
+      renderNotifList();
+      document.getElementById('notif-dropdown').classList.remove('open');
+    })
+    .catch(function() {});
 }
 
-// ── Flags ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// FLAGS
+// ══════════════════════════════════════════════════════
 function toggleFlag(id, event) {
   if (event) event.stopPropagation();
   var newVal = !flaggedIds[id];
-  if (newVal) flaggedIds[id] = true; else delete flaggedIds[id];
-  var t = tasksData.find(function(x){ return x._id === id; });
+  if (newVal) flaggedIds[id] = true;
+  else        delete flaggedIds[id];
+  var t = tasksData.find(function(x) { return x._id === id; });
   if (t) t.flagged = newVal;
   engagementPost({ action:'flag', taskId: id, flagged: newVal })
-    .catch(function(){ toast('Flag save failed', true); });
+    .catch(function() { toast('Flag save failed', true); });
   render();
 }
 function toggleModalFlag() {
   if (!editRecord) return;
-  var id = editRecord._id;
+  var id     = editRecord._id;
   var newVal = !flaggedIds[id];
-  if (newVal) flaggedIds[id] = true; else delete flaggedIds[id];
+  if (newVal) flaggedIds[id] = true;
+  else        delete flaggedIds[id];
   editRecord.flagged = newVal;
   engagementPost({ action:'flag', taskId: id, flagged: newVal })
-    .catch(function(){ toast('Flag save failed', true); });
+    .catch(function() { toast('Flag save failed', true); });
   var cb  = document.getElementById('m-flag-cb');
   var row = document.getElementById('m-flag-row');
-  cb.checked = newVal;
-  row.classList.toggle('flagged', newVal);
+  if (cb)  cb.checked = newVal;
+  if (row) row.classList.toggle('flagged', newVal);
   render();
 }
 
-// ── Comments cache helpers ─────────────────────────────
+// ══════════════════════════════════════════════════════
+// COMMENT CACHE HELPERS
+// ══════════════════════════════════════════════════════
 function getCommentCount(taskId) {
   return Array.isArray(commentsCache[taskId]) ? commentsCache[taskId].length : 0;
 }
 function updateCommentBadge(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  var safeId = safeTaskId(taskId);
   var count  = getCommentCount(taskId);
   var badge  = document.getElementById('tc-count-' + safeId);
   if (badge) badge.textContent = count;
   var btn = document.getElementById('tc-btn-' + safeId);
   if (btn) btn.classList.toggle('has-comments', count > 0);
 }
+function safeTaskId(id) {
+  return String(id).replace(/[^a-zA-Z0-9_-]/g, '_');
+}
 
-// ── Comment panel (card) ───────────────────────────────
+// ══════════════════════════════════════════════════════
+// COMMENT PANEL — CARD
+// ══════════════════════════════════════════════════════
 function buildCommentPanel(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var count  = getCommentCount(taskId);
+  var sid   = safeTaskId(taskId);
+  var count = getCommentCount(taskId);
   return '<div class="tc-wrap" onclick="event.stopPropagation()">'
     + '<button class="tc-btn' + (count > 0 ? ' has-comments' : '') + '" '
-    +   'id="tc-btn-' + safeId + '" '
+    +   'id="tc-btn-' + sid + '" '
     +   'onclick="toggleCommentPanel(\'' + esc(taskId) + '\')">'
-    + '&#128172; <span class="tc-count" id="tc-count-' + safeId + '">' + count + '</span>'
+    + '&#128172; <span class="tc-count" id="tc-count-' + sid + '">' + count + '</span>'
     + '</button>'
-    + '<div class="tc-panel" id="tc-panel-' + safeId + '">'
-    +   '<div class="tc-list" id="tc-list-' + safeId + '"></div>'
+    + '<div class="tc-panel" id="tc-panel-' + sid + '">'
+    +   '<div class="tc-list" id="tc-list-' + sid + '"></div>'
     +   '<div class="tc-compose">'
-    +     '<div class="mention-dropdown" id="tc-md-' + safeId + '"></div>'
-    +     '<textarea class="tc-textarea" id="tc-ta-' + safeId + '" placeholder="Add a comment… type @ to mention someone"></textarea>'
+    +     '<textarea class="tc-textarea" id="tc-ta-' + sid + '" '
+    +       'placeholder="Add a comment\u2026 type @ to mention someone"></textarea>'
     +     '<div class="tc-compose-row">'
     +       '<button class="tc-submit" onclick="postCardComment(\'' + esc(taskId) + '\')">Post</button>'
-    +       '<span class="tc-status" id="tc-st-' + safeId + '"></span>'
+    +       '<span class="tc-status" id="tc-st-' + sid + '"></span>'
     +     '</div>'
     +   '</div>'
     + '</div>'
     + '</div>';
 }
+
 function toggleCommentPanel(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var panel  = document.getElementById('tc-panel-' + safeId);
+  var sid   = safeTaskId(taskId);
+  var panel = document.getElementById('tc-panel-' + sid);
   if (!panel) return;
   var isOpen = panel.classList.contains('open');
-  document.querySelectorAll('.tc-panel.open').forEach(function(p){ p.classList.remove('open'); });
+  // Close all open panels
+  document.querySelectorAll('.tc-panel.open').forEach(function(p) {
+    p.classList.remove('open');
+  });
+  closeMentionDropdown(document.getElementById('global-mention-drop'));
   if (!isOpen) {
     panel.classList.add('open');
     renderCardCommentList(taskId);
-    var ta = document.getElementById('tc-ta-' + safeId);
-    var md = document.getElementById('tc-md-' + safeId);
-    if (ta && md) attachMentionListener(ta, md);
+    var ta = document.getElementById('tc-ta-' + sid);
+    if (ta) {
+      // Attach mention listener using the global body-level dropdown
+      attachMentionListener(ta, document.getElementById('global-mention-drop'));
+      setTimeout(function() { ta.focus(); }, 50);
+    }
   }
 }
+
 function renderCardCommentList(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var listEl = document.getElementById('tc-list-' + safeId);
+  var sid    = safeTaskId(taskId);
+  var listEl = document.getElementById('tc-list-' + sid);
   if (!listEl) return;
   var comments = commentsCache[taskId] || [];
-  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
+  if (!comments.length) {
+    listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>';
+    return;
+  }
   listEl.innerHTML = comments.map(function(c) {
     return '<div class="tc-item" id="tc-c-' + esc(c.id) + '">'
       + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
       + '<div class="tc-item-text">' + renderCommentText(c.text) + '</div>'
       + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
-      + '<button class="tc-item-del" onclick="deleteCardComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
+      + '<button class="tc-item-del" onclick="deleteCardComment(\''
+      +   esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
       + '</div>';
   }).join('');
   listEl.scrollTop = listEl.scrollHeight;
 }
+
 function postCardComment(taskId) {
-  var safeId = taskId.replace(/[^a-zA-Z0-9_-]/g, '_');
-  var ta  = document.getElementById('tc-ta-'  + safeId);
-  var st  = document.getElementById('tc-st-'  + safeId);
-  var sub = document.querySelector('#tc-panel-' + safeId + ' .tc-submit');
+  var sid = safeTaskId(taskId);
+  var ta  = document.getElementById('tc-ta-' + sid);
+  var st  = document.getElementById('tc-st-' + sid);
+  var sub = document.querySelector('#tc-panel-' + sid + ' .tc-submit');
   if (!ta || !st || !sub) return;
   var text = (ta.value || '').trim();
   if (!text) { st.textContent = 'Please enter a comment.'; return; }
-  sub.disabled = true; st.textContent = 'Saving\u2026';
-  engagementPost({ action:'comment', taskId:taskId, text:text, author:currentUser||'Unknown' })
+  sub.disabled = true;
+  st.textContent = 'Saving\u2026';
+  engagementPost({ action:'comment', taskId:taskId, text:text, author:currentUser || 'Unknown' })
     .then(function(data) {
       sub.disabled = false;
       if (data.error) { st.textContent = 'Error: ' + data.error; return; }
-      ta.value = ''; st.textContent = '\u2713 Posted';
-      setTimeout(function(){ st.textContent = ''; }, 2500);
+      ta.value = '';
+      st.textContent = '\u2713 Posted';
+      setTimeout(function() { st.textContent = ''; }, 2500);
       if (!commentsCache[taskId]) commentsCache[taskId] = [];
       commentsCache[taskId].push(data.comment);
       renderCardCommentList(taskId);
       updateCommentBadge(taskId);
       dispatchCommentNotification(taskId, text);
     })
-    .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
+    .catch(function(e) {
+      sub.disabled = false;
+      st.textContent = 'Error: ' + e.message;
+    });
 }
+
 function deleteCardComment(taskId, commentId) {
   if (!confirm('Delete this comment?')) return;
   engagementDelete({ action:'comment', taskId:taskId, commentId:commentId })
     .then(function(data) {
       if (data.error) { toast('Delete failed: ' + data.error, true); return; }
       if (commentsCache[taskId])
-        commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
+        commentsCache[taskId] = commentsCache[taskId].filter(function(c) { return c.id !== commentId; });
       var el = document.getElementById('tc-c-' + commentId);
       if (el) el.remove();
       updateCommentBadge(taskId);
       if (editRecord && editRecord._id === taskId) renderModalCommentList(taskId);
       toast('Comment deleted.');
     })
-    .catch(function(e){ toast('Delete failed: ' + e.message, true); });
+    .catch(function(e) { toast('Delete failed: ' + e.message, true); });
 }
 
-// ── Comment panel (modal) ──────────────────────────────
+// ══════════════════════════════════════════════════════
+// COMMENT PANEL — MODAL
+// ══════════════════════════════════════════════════════
 function renderModalCommentList(taskId) {
   var listEl = document.getElementById('m-tc-list');
   if (!listEl) return;
   var comments = commentsCache[taskId] || [];
-  if (!comments.length) { listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>'; return; }
+  if (!comments.length) {
+    listEl.innerHTML = '<div class="tc-empty">No comments yet.</div>';
+    return;
+  }
   listEl.innerHTML = comments.map(function(c) {
     return '<div class="tc-item" id="m-tc-c-' + esc(c.id) + '">'
       + '<div class="tc-item-author">&#128100; ' + esc(c.author || 'Unknown') + '</div>'
       + '<div class="tc-item-text">' + renderCommentText(c.text) + '</div>'
       + '<div class="tc-item-time">&#128336; ' + fmtDateTime(c.timestamp) + '</div>'
-      + '<button class="tc-item-del" onclick="deleteModalComment(\'' + esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
+      + '<button class="tc-item-del" onclick="deleteModalComment(\''
+      +   esc(taskId) + '\',\'' + esc(c.id) + '\')">&#10005;</button>'
       + '</div>';
   }).join('');
   listEl.scrollTop = listEl.scrollHeight;
 }
+
 function postModalComment() {
   if (!editRecord) return;
   var taskId = editRecord._id;
@@ -1029,41 +1124,49 @@ function postModalComment() {
   var sub = document.getElementById('m-tc-submit');
   var text = (ta.value || '').trim();
   if (!text) { st.textContent = 'Please enter a comment.'; return; }
-  sub.disabled = true; st.textContent = 'Saving\u2026';
-  engagementPost({ action:'comment', taskId:taskId, text:text, author:currentUser||'Unknown' })
+  sub.disabled = true;
+  st.textContent = 'Saving\u2026';
+  engagementPost({ action:'comment', taskId:taskId, text:text, author:currentUser || 'Unknown' })
     .then(function(data) {
       sub.disabled = false;
       if (data.error) { st.textContent = 'Error: ' + data.error; return; }
-      ta.value = ''; st.textContent = '\u2713 Posted';
-      setTimeout(function(){ st.textContent = ''; }, 2500);
+      ta.value = '';
+      st.textContent = '\u2713 Posted';
+      setTimeout(function() { st.textContent = ''; }, 2500);
       if (!commentsCache[taskId]) commentsCache[taskId] = [];
       commentsCache[taskId].push(data.comment);
       renderModalCommentList(taskId);
       updateCommentBadge(taskId);
       dispatchCommentNotification(taskId, text);
     })
-    .catch(function(e){ sub.disabled = false; st.textContent = 'Error: ' + e.message; });
+    .catch(function(e) {
+      sub.disabled = false;
+      st.textContent = 'Error: ' + e.message;
+    });
 }
+
 function deleteModalComment(taskId, commentId) {
   if (!confirm('Delete this comment?')) return;
   engagementDelete({ action:'comment', taskId:taskId, commentId:commentId })
     .then(function(data) {
       if (data.error) { toast('Delete failed: ' + data.error, true); return; }
       if (commentsCache[taskId])
-        commentsCache[taskId] = commentsCache[taskId].filter(function(c){ return c.id !== commentId; });
+        commentsCache[taskId] = commentsCache[taskId].filter(function(c) { return c.id !== commentId; });
       var el = document.getElementById('m-tc-c-' + commentId);
       if (el) el.remove();
       updateCommentBadge(taskId);
       renderCardCommentList(taskId);
       toast('Comment deleted.');
     })
-    .catch(function(e){ toast('Delete failed: ' + e.message, true); });
+    .catch(function(e) { toast('Delete failed: ' + e.message, true); });
 }
 
-// ── Notification dispatch ──────────────────────────────
+// ══════════════════════════════════════════════════════
+// NOTIFICATION DISPATCH
+// ══════════════════════════════════════════════════════
 function dispatchCommentNotification(taskId, commentText) {
   var allTasks = tasksData.concat(completedData);
-  var t = allTasks.find(function(x){ return x._id === taskId; });
+  var t = allTasks.find(function(x) { return x._id === taskId; });
   if (!t) return;
   var toNotify = {};
   if (t.staffName && t.staffName !== 'Unassigned' && t.staffName !== currentUser)
@@ -1076,40 +1179,46 @@ function dispatchCommentNotification(taskId, commentText) {
   });
   Object.keys(toNotify).forEach(function(recipient) {
     engagementPost({
-      action:'notify', forUser:recipient, fromUser:currentUser||'Someone',
+      action:'notify', forUser:recipient, fromUser:currentUser || 'Someone',
       taskId:taskId, taskName:t.name, commentText:commentText
-    }).catch(function(){});
+    }).catch(function() {});
   });
 }
 
-// ── @mention engine ────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// @MENTION ENGINE
+// ══════════════════════════════════════════════════════
 function attachMentionListener(textarea, dropdownEl) {
   textarea.addEventListener('keydown', function(e) {
     if (!mentionState.active) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       mentionState.cursor = Math.min(mentionState.cursor + 1, mentionState.matches.length - 1);
-      highlightMentionItem(dropdownEl);
+      highlightMentionItem(mentionState.dropEl);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       mentionState.cursor = Math.max(mentionState.cursor - 1, 0);
-      highlightMentionItem(dropdownEl);
+      highlightMentionItem(mentionState.dropEl);
     } else if (e.key === 'Enter' || e.key === 'Tab') {
-      if (mentionState.matches.length) {
+      if (mentionState.active && mentionState.matches.length) {
         e.preventDefault();
-        selectMention(mentionState.matches[mentionState.cursor], textarea, dropdownEl);
+        selectMention(mentionState.matches[mentionState.cursor], mentionState.targetEl, mentionState.dropEl);
       }
     } else if (e.key === 'Escape') {
-      closeMentionDropdown(dropdownEl);
+      closeMentionDropdown(mentionState.dropEl);
     }
   });
+
   textarea.addEventListener('input', function() {
     handleMentionInput(textarea, dropdownEl);
   });
+
   textarea.addEventListener('blur', function() {
-    setTimeout(function(){ closeMentionDropdown(dropdownEl); }, 150);
+    // Delay so mousedown on a mention item fires first
+    setTimeout(function() { closeMentionDropdown(mentionState.dropEl); }, 200);
   });
 }
+
 function handleMentionInput(textarea, dropdownEl) {
   var val   = textarea.value;
   var pos   = textarea.selectionStart;
@@ -1117,35 +1226,61 @@ function handleMentionInput(textarea, dropdownEl) {
   var atIdx = slice.lastIndexOf('@');
   if (atIdx === -1) { closeMentionDropdown(dropdownEl); return; }
   var between = slice.substring(atIdx + 1);
+  // Close if a space was typed (user finished the word without selecting)
   if (/\s/.test(between)) { closeMentionDropdown(dropdownEl); return; }
-  var query = between.toLowerCase();
+  var query   = between.toLowerCase();
   var matches = staffList.filter(function(s) {
     return s.name.toLowerCase().indexOf(query) !== -1;
   }).slice(0, 8);
   if (!matches.length) { closeMentionDropdown(dropdownEl); return; }
-  mentionState.active = true; mentionState.query = query;
-  mentionState.startPos = atIdx; mentionState.targetEl = textarea;
-  mentionState.dropEl = dropdownEl; mentionState.matches = matches; mentionState.cursor = 0;
-  renderMentionDropdown(matches, dropdownEl, textarea);
+
+  // Card rows always use the global body-level dropdown
+  var isModal      = (dropdownEl && dropdownEl.id === 'm-modal-mention-drop');
+  var activeDropEl = isModal ? dropdownEl : document.getElementById('global-mention-drop');
+
+  mentionState.active   = true;
+  mentionState.query    = query;
+  mentionState.startPos = atIdx;
+  mentionState.targetEl = textarea;
+  mentionState.dropEl   = activeDropEl;
+  mentionState.matches  = matches;
+  mentionState.cursor   = 0;
+
+  renderMentionDropdown(matches, activeDropEl, textarea);
 }
+
 function renderMentionDropdown(matches, dropdownEl, textarea) {
   dropdownEl.innerHTML = matches.map(function(s, i) {
     var color = staffColorMap[s.uuid] || '#8892b0';
     return '<div class="mention-item' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" '
-      + 'onmousedown="selectMention(mentionState.matches[' + i + '],mentionState.targetEl,mentionState.dropEl)">'
+      + 'onmousedown="event.preventDefault();selectMention(mentionState.matches[' + i + '],'
+      + 'mentionState.targetEl,mentionState.dropEl)">'
       + '<span class="mention-dot" style="background:' + color + '"></span>'
-      + esc(s.name) + '</div>';
+      + esc(s.name)
+      + '</div>';
   }).join('');
-  var rect = textarea.getBoundingClientRect();
-  dropdownEl.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
-  dropdownEl.style.left = (rect.left + window.scrollX) + 'px';
+
+  // Position using fixed coords relative to textarea
+  var rect      = textarea.getBoundingClientRect();
+  var dropH     = Math.min(matches.length * 40, 220);
+  var spaceBelow = window.innerHeight - rect.bottom;
+  var top = spaceBelow >= dropH + 8 ? rect.bottom + 4 : rect.top - dropH - 4;
+
+  dropdownEl.style.position = 'fixed';
+  dropdownEl.style.top      = top + 'px';
+  dropdownEl.style.left     = rect.left + 'px';
+  dropdownEl.style.width    = Math.max(rect.width, 200) + 'px';
+  dropdownEl.style.zIndex   = '9999';
   dropdownEl.classList.add('open');
 }
+
 function highlightMentionItem(dropdownEl) {
+  if (!dropdownEl) return;
   dropdownEl.querySelectorAll('.mention-item').forEach(function(el, i) {
     el.classList.toggle('active', i === mentionState.cursor);
   });
 }
+
 function selectMention(staff, textarea, dropdownEl) {
   if (!staff || !textarea) return;
   var val    = textarea.value;
@@ -1157,25 +1292,25 @@ function selectMention(staff, textarea, dropdownEl) {
   textarea.focus();
   closeMentionDropdown(dropdownEl);
 }
+
 function closeMentionDropdown(dropdownEl) {
   if (dropdownEl) dropdownEl.classList.remove('open');
-  mentionState.active = false; mentionState.matches = [];
+  mentionState.active  = false;
+  mentionState.matches = [];
+  mentionState.dropEl  = null;
 }
+
 function extractMentions(text) {
   var found = [];
   var regex = /@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g;
   var match;
   while ((match = regex.exec(text)) !== null) {
     var name = match[1].trim();
-    var staff = null;
     for (var i = 0; i < staffList.length; i++) {
       if (staffList[i].name.toLowerCase() === name.toLowerCase()) {
-        staff = staffList[i];
+        if (found.indexOf(staffList[i].name) === -1) found.push(staffList[i].name);
         break;
       }
-    }
-    if (staff && found.indexOf(staff.name) === -1) {
-      found.push(staff.name);
     }
   }
   return found;
@@ -1183,42 +1318,58 @@ function extractMentions(text) {
 
 function renderCommentText(text) {
   if (!text) return '';
-  return esc(String(text)).replace(/@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g, function(match, name) {
-    var staff = null;
+  var escaped = esc(String(text));
+  return escaped.replace(/@([A-Za-z][A-Za-z ]{0,40}?)(?=\s{2,}|[^A-Za-z ]|$)/g, function(match, raw) {
+    var name = raw.trim();
+    if (!name) return match;
     for (var i = 0; i < staffList.length; i++) {
-      if (staffList[i].name.toLowerCase() === name.trim().toLowerCase()) {
-        staff = staffList[i];
-        break;
+      if (staffList[i].name.toLowerCase() === name.toLowerCase()) {
+        return '<span class="mention-chip">@' + esc(staffList[i].name) + '</span>';
       }
     }
-    return staff ? '<span class="mention-chip">@' + esc(staff.name) + '</span>' : match;
+    // Partial match fallback
+    for (var i = 0; i < staffList.length; i++) {
+      if (name.length >= 3 && staffList[i].name.toLowerCase().indexOf(name.toLowerCase()) === 0) {
+        return '<span class="mention-chip">@' + esc(staffList[i].name) + '</span>';
+      }
+    }
+    return match;
   });
 }
 
-
-// ── Reassign ───────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// REASSIGN
+// ══════════════════════════════════════════════════════
 function populateReassignDropdown(currentStaffUuid) {
   var sel = document.getElementById('m-reassign-select');
   if (!sel) return;
   sel.innerHTML = '<option value="">— Reassign to… —</option>';
   staffList.forEach(function(s) {
     var o = document.createElement('option');
-    o.value = s.uuid; o.textContent = s.name;
+    o.value = s.uuid;
+    o.textContent = s.name;
     if (s.uuid === currentStaffUuid) o.disabled = true;
     sel.appendChild(o);
   });
   sel.value = '';
 }
+
 function reassignTask() {
   if (!editRecord) return;
-  var sel = document.getElementById('m-reassign-select');
-  var msg = document.getElementById('m-reassign-msg');
+  var sel          = document.getElementById('m-reassign-select');
+  var msg          = document.getElementById('m-reassign-msg');
   var newStaffUuid = sel.value;
-  if (!newStaffUuid) { msg.style.color='var(--red)'; msg.textContent='Please select a staff member.'; return; }
+  if (!newStaffUuid) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Please select a staff member.';
+    return;
+  }
   var newStaffName = staffMap[newStaffUuid] || 'Unknown';
   var oldStaffName = editRecord.staffName || 'Unassigned';
-  var t = editRecord; var raw = t._raw;
-  msg.style.color = 'var(--amber)'; msg.textContent = 'Saving\u2026';
+  var t   = editRecord;
+  var raw = t._raw;
+  msg.style.color = 'var(--amber)';
+  msg.textContent = 'Saving\u2026';
   var payload = {
     uuid:t._id, job_uuid:raw.job_uuid||'', name:raw.name||'',
     section_name:raw.section_name||'', item_type:raw.item_type||'Todo',
@@ -1226,7 +1377,7 @@ function reassignTask() {
     completed_by_staff_uuid:raw.completed_by_staff_uuid||'',
     completed_during_checkin_uuid:raw.completed_during_checkin_uuid||'',
     reminder_type:raw.reminder_type||'',
-    reminder_data:(raw.reminder_data&&!Array.isArray(raw.reminder_data))?raw.reminder_data:null,
+    reminder_data:(raw.reminder_data && !Array.isArray(raw.reminder_data)) ? raw.reminder_data : null,
     regarding_object:raw.regarding_object||'', regarding_object_uuid:raw.regarding_object_uuid||'',
     fulfilled_by_object_name:raw.fulfilled_by_object_name||'',
     fulfilled_by_object_uuid:raw.fulfilled_by_object_uuid||'',
@@ -1235,21 +1386,24 @@ function reassignTask() {
   sm8Put('/jobchecklist/' + t._id + '.json', payload)
     .then(function(r) {
       return r.text().then(function(txt) {
-        if (r.status===200||r.status===201||r.status===204) return txt;
-        throw new Error('HTTP ' + r.status + ': ' + txt.substring(0,120));
+        if (r.status === 200 || r.status === 201 || r.status === 204) return txt;
+        throw new Error('HTTP ' + r.status + ': ' + txt.substring(0, 120));
       });
     })
     .then(function() {
-      t.staffUuid = newStaffUuid; t.staffName = newStaffName;
+      t.staffUuid  = newStaffUuid;
+      t.staffName  = newStaffName;
       t.staffColor = staffColorMap[newStaffUuid] || '#8892b0';
       raw.assigned_to_staff_uuids = [newStaffUuid];
       document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
       populateReassignDropdown(newStaffUuid);
       msg.style.color = 'var(--green)';
       msg.textContent = '\u2713 Reassigned to ' + newStaffName;
-      setTimeout(function(){ msg.textContent = ''; }, 3000);
-      var commentText = '\uD83D\uDD04 Reassigned from ' + oldStaffName + ' to ' + newStaffName + ' by ' + (currentUser||'Unknown');
-      engagementPost({ action:'comment', taskId:t._id, text:commentText, author:currentUser||'Unknown' })
+      setTimeout(function() { msg.textContent = ''; }, 3000);
+      // Post reassignment comment
+      var commentText = '\uD83D\uDD04 Reassigned from ' + oldStaffName + ' to ' + newStaffName
+                      + ' by ' + (currentUser || 'Unknown');
+      engagementPost({ action:'comment', taskId:t._id, text:commentText, author:currentUser || 'Unknown' })
         .then(function(data) {
           if (data.comment) {
             if (!commentsCache[t._id]) commentsCache[t._id] = [];
@@ -1257,22 +1411,27 @@ function reassignTask() {
             renderModalCommentList(t._id);
             updateCommentBadge(t._id);
           }
-        }).catch(function(){});
+        })
+        .catch(function() {});
       render();
       toast('Task reassigned to ' + newStaffName + '.');
     })
     .catch(function(e) {
-      msg.style.color = 'var(--red)'; msg.textContent = 'Failed: ' + e.message;
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'Failed: ' + e.message;
       toast('Reassign failed: ' + e.message, true);
     });
 }
+
 function staffChipHTML(color, name) {
   return '<span class="staff-chip" style="background:' + esc(color) + '22;border-color:' + esc(color) + '55;">'
     + '<span class="staff-chip-dot" style="background:' + esc(color) + '"></span>'
     + esc(name) + '</span>';
 }
 
-// ── Completed mode ─────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// COMPLETED MODE
+// ══════════════════════════════════════════════════════
 function toggleCompletedMode() {
   completedMode = !completedMode;
   var btn    = document.getElementById('completed-toggle-btn');
@@ -1283,23 +1442,32 @@ function toggleCompletedMode() {
     btn.innerHTML = '&#9003; Show Incomplete';
     document.getElementById('page-title').textContent = '\u2713 Completed Tasks';
     document.getElementById('page-subtitle').textContent = 'Recently completed checklist tasks from ServiceM8.';
-    sortGp.style.display = 'none'; bulkB.style.display = 'none';
-    selectedIds = {}; banner.style.display = 'flex';
+    sortGp.style.display = 'none';
+    bulkB.style.display  = 'none';
+    selectedIds = {};
+    banner.style.display = 'flex';
   } else {
     btn.innerHTML = '&#10003; Show Completed';
     document.getElementById('page-title').innerHTML = '&#10003; Tasks';
     document.getElementById('page-subtitle').textContent = 'Incomplete checklist tasks from ServiceM8.';
-    sortGp.style.display = ''; banner.style.display = 'none';
+    sortGp.style.display = '';
+    banner.style.display = 'none';
   }
   render();
 }
 
-// ── Load tasks ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// LOAD TASKS
+// ══════════════════════════════════════════════════════
 function loadTasks(force) {
   if (tasksLoaded && !force) return;
-  tasksLoaded = false; selectedIds = {}; updateBulkBar();
-  setBody('<div class="loading-wrap"><span class="loader"></span><p style="margin-top:14px">Loading tasks&hellip;</p></div>');
+  tasksLoaded = false;
+  selectedIds = {};
+  updateBulkBar();
+  setBody('<div class="loading-wrap"><span class="loader"></span>'
+        + '<p style="margin-top:14px">Loading tasks&hellip;</p></div>');
   setSyncMsg('Loading&hellip;');
+
   Promise.all([
     sm8Get('/staff.json'),
     sm8Get('/job.json'),
@@ -1310,93 +1478,118 @@ function loadTasks(force) {
     var rawJobs       = Array.isArray(res[1]) ? res[1] : [];
     var rawItems      = Array.isArray(res[2]) ? res[2] : [];
     var rawCategories = Array.isArray(res[3]) ? res[3] : [];
-    rawDebugData = rawItems; rawCategoryData = rawCategories;
+    rawDebugData    = rawItems;
+    rawCategoryData = rawCategories;
 
-    staffList = rawStaff.filter(function(s){ return String(s.active)==='1'; })
-      .map(function(s){ return { uuid:s.uuid, name:((s.first||'')+' '+(s.last||'')).trim()||s.email||s.uuid }; });
+    // Staff
+    staffList = rawStaff
+      .filter(function(s) { return String(s.active) === '1'; })
+      .map(function(s) {
+        return { uuid:s.uuid, name:((s.first||'') + ' ' + (s.last||'')).trim() || s.email || s.uuid };
+      });
     staffMap = {}; staffColorMap = {};
-    staffList.forEach(function(s,idx){
+    staffList.forEach(function(s, idx) {
       staffMap[s.uuid]      = s.name;
       staffColorMap[s.uuid] = STAFF_COLORS[idx % STAFF_COLORS.length];
     });
 
+    // Jobs
     jobMap = {};
-    rawJobs.filter(function(j){ return String(j.active)==='1'; }).forEach(function(j){
-      jobMap[j.uuid] = { _raw:j, uuid:j.uuid, number:j.generated_job_id||'',
-                         desc:j.job_description||'', clientUuid:j.company_uuid||'',
-                         status:j.status||'', catUuid:j.category_uuid||'' };
+    rawJobs.filter(function(j) { return String(j.active) === '1'; }).forEach(function(j) {
+      jobMap[j.uuid] = {
+        _raw:j, uuid:j.uuid,
+        number:j.generated_job_id || '',
+        desc:j.job_description || '',
+        clientUuid:j.company_uuid || '',
+        status:j.status || '',
+        catUuid:j.category_uuid || ''
+      };
     });
 
+    // Categories
     rawCatNameMap = {};
-    rawCategories.filter(function(c){ return String(c.active)==='1'; })
-      .forEach(function(c){ rawCatNameMap[c.uuid]=c.name; });
+    rawCategories.filter(function(c) { return String(c.active) === '1'; })
+      .forEach(function(c) { rawCatNameMap[c.uuid] = c.name; });
     categoryMap = {};
-    rawJobs.filter(function(j){ return String(j.active)==='1'; }).forEach(function(j){
-      var cu = j.category_uuid||j.job_category_uuid||'';
+    rawJobs.filter(function(j) { return String(j.active) === '1'; }).forEach(function(j) {
+      var cu = j.category_uuid || j.job_category_uuid || '';
       if (cu && rawCatNameMap[cu]) categoryMap[j.uuid] = rawCatNameMap[cu];
     });
 
     function mapItem(i) {
-      var job = jobMap[i.job_uuid] || {};
+      var job        = jobMap[i.job_uuid] || {};
       var clientUuid = job.clientUuid || '';
-      var clientName = clientUuid ? (clientMap[clientUuid]||'') : '';
+      var clientName = clientUuid ? (clientMap[clientUuid] || '') : '';
       var staffUuid  = '';
       if (Array.isArray(i.assigned_to_staff_uuids) && i.assigned_to_staff_uuids.length)
         staffUuid = i.assigned_to_staff_uuids[0];
       var dueDate = '';
-      if (i.reminder_type==='ABSOLUTE_DATETIME' && i.reminder_data &&
-          typeof i.reminder_data==='object' && i.reminder_data.absoluteDateTime)
-        dueDate = String(i.reminder_data.absoluteDateTime).substring(0,10);
+      if (i.reminder_type === 'ABSOLUTE_DATETIME' && i.reminder_data &&
+          typeof i.reminder_data === 'object' && i.reminder_data.absoluteDateTime)
+        dueDate = String(i.reminder_data.absoluteDateTime).substring(0, 10);
       var reminderData = '';
       if (i.reminder_data) {
-        if (typeof i.reminder_data==='object') {
-          if (i.reminder_data.absoluteDateTime)      reminderData = i.reminder_data.absoluteDateTime;
-          else if (i.reminder_data.relativeDateTime) reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
-          else                                        reminderData = JSON.stringify(i.reminder_data);
+        if (typeof i.reminder_data === 'object') {
+          if (i.reminder_data.absoluteDateTime)       reminderData = i.reminder_data.absoluteDateTime;
+          else if (i.reminder_data.relativeDateTime)  reminderData = JSON.stringify(i.reminder_data.relativeDateTime);
+          else                                         reminderData = JSON.stringify(i.reminder_data);
         } else { reminderData = String(i.reminder_data); }
       }
-      var ts = String(i.completed_timestamp||'').trim();
-      var isCompleted = ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
+      var ts          = String(i.completed_timestamp || '').trim();
+      var isCompleted = ts !== '' && ts !== '0000-00-00 00:00:00' && ts !== '0000-00-00';
       return {
         _id:i.uuid, _raw:i,
-        name:i.name||'Unnamed Task', section:i.section_name||'', itemType:i.item_type||'',
-        staffUuid:staffUuid, staffName:staffMap[staffUuid]||'Unassigned',
-        staffColor:staffColorMap[staffUuid]||'#8892b0',
-        dueDate:dueDate, reminderType:i.reminder_type||'', reminderData:reminderData,
-        jobUuid:i.job_uuid||'', jobNumber:job.number||'', jobDesc:job.desc||'',
-        jobUuidSm8:job.uuid||'', jobStatus:job.status||'',
-        clientName:clientName, clientUuid:clientUuid,
-        category:categoryMap[i.job_uuid]||'',
+        name:i.name || 'Unnamed Task',
+        section:i.section_name || '',
+        itemType:i.item_type || '',
+        staffUuid:staffUuid,
+        staffName:staffMap[staffUuid] || 'Unassigned',
+        staffColor:staffColorMap[staffUuid] || '#8892b0',
+        dueDate:dueDate,
+        reminderType:i.reminder_type || '',
+        reminderData:reminderData,
+        jobUuid:i.job_uuid || '',
+        jobNumber:job.number || '',
+        jobDesc:job.desc || '',
+        jobUuidSm8:job.uuid || '',
+        jobStatus:job.status || '',
+        clientName:clientName,
+        clientUuid:clientUuid,
+        category:categoryMap[i.job_uuid] || '',
         flagged:!!flaggedIds[i.uuid],
-        completedTs:isCompleted?ts:'', isCompleted:isCompleted
+        completedTs:isCompleted ? ts : '',
+        isCompleted:isCompleted
       };
     }
 
-    var activeTodos = rawItems.filter(function(i){
-      if (String(i.active)!=='1') return false;
-      if (i.item_type && String(i.item_type).toLowerCase()!=='todo') return false;
-      var ts=String(i.completed_timestamp||'').trim();
-      return ts===''||ts==='0000-00-00 00:00:00'||ts==='0000-00-00';
+    function isCompletedTs(i) {
+      var ts = String(i.completed_timestamp || '').trim();
+      return ts !== '' && ts !== '0000-00-00 00:00:00' && ts !== '0000-00-00';
+    }
+
+    var activeTodos = rawItems.filter(function(i) {
+      if (String(i.active) !== '1') return false;
+      if (i.item_type && String(i.item_type).toLowerCase() !== 'todo') return false;
+      return !isCompletedTs(i);
     });
-    var completedTodos = rawItems.filter(function(i){
-      if (String(i.active)!=='1') return false;
-      if (i.item_type && String(i.item_type).toLowerCase()!=='todo') return false;
-      var ts=String(i.completed_timestamp||'').trim();
-      return ts!==''&&ts!=='0000-00-00 00:00:00'&&ts!=='0000-00-00';
+    var completedTodos = rawItems.filter(function(i) {
+      if (String(i.active) !== '1') return false;
+      if (i.item_type && String(i.item_type).toLowerCase() !== 'todo') return false;
+      return isCompletedTs(i);
     });
 
     tasksData     = activeTodos.map(mapItem);
     completedData = completedTodos.map(mapItem)
-      .sort(function(a,b){ return b.completedTs.localeCompare(a.completedTs); });
+      .sort(function(a, b) { return b.completedTs.localeCompare(a.completedTs); });
     tasksLoaded   = true;
 
-    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString() +
-               ' \u2014 ' + tasksData.length + ' incomplete, ' + completedData.length + ' completed');
+    setSyncMsg('Last synced: ' + new Date().toLocaleTimeString()
+      + ' \u2014 ' + tasksData.length + ' incomplete, ' + completedData.length + ' completed');
     updateDebugPanel();
     populateFilters();
     render();
-  }).catch(function(e){
-    if (e.message==='SESSION_EXPIRED'){ showAuth(); return; }
+  }).catch(function(e) {
+    if (e.message === 'SESSION_EXPIRED') { showAuth(); return; }
     setBody('<div class="empty-wrap"><div class="empty-icon">&#9888;</div>'
           + '<p>Failed to load: ' + esc(e.message) + '</p><br/>'
           + '<button class="btn-ghost" onclick="loadTasks(true)">Retry</button></div>');
@@ -1404,7 +1597,9 @@ function loadTasks(force) {
   });
 }
 
-// ── Debug ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// DEBUG
+// ══════════════════════════════════════════════════════
 function toggleDebug() {
   debugVisible = !debugVisible;
   document.getElementById('debug-panel').classList.toggle('show', debugVisible);
@@ -1414,489 +1609,643 @@ function updateDebugPanel() {
   if (!debugVisible) return;
   var panel = document.getElementById('debug-panel');
   var typeCounts = {};
-  rawDebugData.forEach(function(i){ var t=i.item_type||'(none)'; typeCounts[t]=(typeCounts[t]||0)+1; });
-  var activeCount   = rawDebugData.filter(function(i){ return String(i.active)==='1'; }).length;
-  var flaggedCount  = Object.keys(flaggedIds).length;
-  var commentCount  = Object.keys(commentsCache).filter(function(k){ return (commentsCache[k]||[]).length>0; }).length;
+  rawDebugData.forEach(function(i) {
+    var t = i.item_type || '(none)';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+  var activeCount  = rawDebugData.filter(function(i) { return String(i.active) === '1'; }).length;
+  var flaggedCount = Object.keys(flaggedIds).length;
+  var commentCount = Object.keys(commentsCache).filter(function(k) {
+    return (commentsCache[k] || []).length > 0;
+  }).length;
   panel.textContent =
     '── CHECKLIST ──────────────────────────\n'
-    + 'Total raw: '+rawDebugData.length+'  active: '+activeCount+'\n'
-    + 'Incomplete: '+tasksData.length+'  Completed: '+completedData.length+'\n'
-    + 'Flagged: '+flaggedCount+'  Tasks with comments: '+commentCount+'\n\n'
+    + 'Total raw: ' + rawDebugData.length + '  active: ' + activeCount + '\n'
+    + 'Incomplete: ' + tasksData.length + '  Completed: ' + completedData.length + '\n'
+    + 'Flagged: ' + flaggedCount + '  Tasks with comments: ' + commentCount + '\n\n'
     + 'item_type breakdown:\n'
-    + Object.keys(typeCounts).map(function(k){ return '  '+k+': '+typeCounts[k]; }).join('\n');
+    + Object.keys(typeCounts).map(function(k) { return '  ' + k + ': ' + typeCounts[k]; }).join('\n');
 }
 
-// ── Filters ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════
 function populateFilters() {
-  var ss=document.getElementById('q-staff'); var sv=ss.value;
-  ss.innerHTML='<option value="">All Staff</option>';
-  var uo=document.createElement('option'); uo.value='__unassigned__'; uo.textContent='Unassigned';
-  if (sv==='__unassigned__') uo.selected=true; ss.appendChild(uo);
-  staffList.forEach(function(s){
-    var o=document.createElement('option'); o.value=s.uuid; o.textContent=s.name;
-    if (s.uuid===sv) o.selected=true; ss.appendChild(o);
+  // Staff
+  var ss = document.getElementById('q-staff');
+  var sv = ss.value;
+  ss.innerHTML = '<option value="">All Staff</option>';
+  var uo = document.createElement('option');
+  uo.value = '__unassigned__'; uo.textContent = 'Unassigned';
+  if (sv === '__unassigned__') uo.selected = true;
+  ss.appendChild(uo);
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid; o.textContent = s.name;
+    if (s.uuid === sv) o.selected = true;
+    ss.appendChild(o);
   });
-  var cs=document.getElementById('q-client'); var cv=cs.value; var seenC={};
-  tasksData.forEach(function(t){ if(t.clientUuid&&t.clientName) seenC[t.clientUuid]=t.clientName; });
-  cs.innerHTML='<option value="">All Clients</option>';
-  Object.keys(seenC).sort(function(a,b){ return seenC[a].localeCompare(seenC[b]); }).forEach(function(u){
-    var o=document.createElement('option'); o.value=u; o.textContent=seenC[u];
-    if(u===cv) o.selected=true; cs.appendChild(o);
+  // Clients
+  var cs = document.getElementById('q-client');
+  var cv = cs.value;
+  var seenC = {};
+  tasksData.forEach(function(t) { if (t.clientUuid && t.clientName) seenC[t.clientUuid] = t.clientName; });
+  cs.innerHTML = '<option value="">All Clients</option>';
+  Object.keys(seenC).sort(function(a, b) { return seenC[a].localeCompare(seenC[b]); }).forEach(function(u) {
+    var o = document.createElement('option');
+    o.value = u; o.textContent = seenC[u];
+    if (u === cv) o.selected = true;
+    cs.appendChild(o);
   });
-  var qs=document.getElementById('q-category'); var qv=qs.value; var seenQ={};
-  tasksData.forEach(function(t){ if(t.category) seenQ[t.category]=true; });
-  qs.innerHTML='<option value="">All Categories</option>';
-  Object.keys(seenQ).sort().forEach(function(c){
-    var o=document.createElement('option'); o.value=c; o.textContent=c;
-    if(c===qv) o.selected=true; qs.appendChild(o);
+  // Categories
+  var qs = document.getElementById('q-category');
+  var qv = qs.value;
+  var seenQ = {};
+  tasksData.forEach(function(t) { if (t.category) seenQ[t.category] = true; });
+  qs.innerHTML = '<option value="">All Categories</option>';
+  Object.keys(seenQ).sort().forEach(function(c) {
+    var o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    if (c === qv) o.selected = true;
+    qs.appendChild(o);
   });
 }
+
 function setScope(s) {
   tScope = s;
-  document.getElementById('ts-mine').className = 'seg-btn'+(s==='mine'?' active':'');
-  document.getElementById('ts-all').className  = 'seg-btn'+(s==='all' ?' active':'');
-  selectedIds = {}; updateBulkBar(); render();
+  document.getElementById('ts-mine').className = 'seg-btn' + (s === 'mine' ? ' active' : '');
+  document.getElementById('ts-all').className  = 'seg-btn' + (s === 'all'  ? ' active' : '');
+  selectedIds = {};
+  updateBulkBar();
+  render();
 }
+
 function setSort(s) {
   sortMode = s;
-  ['due','staff','job','status','name','flagged'].forEach(function(k){
-    document.getElementById('sort-'+k).className = 'seg-btn'+(s===k?' active':'');
+  ['due','staff','job','status','name','flagged'].forEach(function(k) {
+    document.getElementById('sort-' + k).className = 'seg-btn' + (s === k ? ' active' : '');
   });
   render();
 }
+
 function getFiltered() {
   var source    = completedMode ? completedData : tasksData;
-  var q         = (document.getElementById('q-search').value||'').toLowerCase();
+  var q         = (document.getElementById('q-search').value || '').toLowerCase();
   var staffF    = document.getElementById('q-staff').value;
   var clientF   = document.getElementById('q-client').value;
   var categoryF = document.getElementById('q-category').value;
   var statusF   = getStatusFilter();
   return source.filter(function(t) {
-    if (!completedMode && tScope==='mine') {
-      var isMe = (currentUserUuid && t.staffUuid===currentUserUuid) ||
-                 (!currentUserUuid && currentUser && t.staffName.toLowerCase()===currentUser.toLowerCase());
+    if (!completedMode && tScope === 'mine') {
+      var isMe = (currentUserUuid && t.staffUuid === currentUserUuid) ||
+                 (!currentUserUuid && currentUser && t.staffName.toLowerCase() === currentUser.toLowerCase());
       if (!isMe) return false;
     }
     if (staffF) {
-      if (staffF==='__unassigned__'){ if (t.staffUuid) return false; }
-      else { if (t.staffUuid!==staffF) return false; }
+      if (staffF === '__unassigned__') { if (t.staffUuid) return false; }
+      else { if (t.staffUuid !== staffF) return false; }
     }
-    if (clientF   && t.clientUuid!==clientF)   return false;
-    if (categoryF && t.category!==categoryF)   return false;
+    if (clientF   && t.clientUuid !== clientF)   return false;
+    if (categoryF && t.category   !== categoryF) return false;
     if (statusF.length) {
       var key = t.jobStatus || '__none__';
-      if (statusF.indexOf(key)===-1) return false;
+      if (statusF.indexOf(key) === -1) return false;
     }
     if (q) {
-      var hay=[t.name,t.jobNumber,t.clientName].join(' ').toLowerCase();
-      if (hay.indexOf(q)===-1) return false;
+      var hay = [t.name, t.jobNumber, t.clientName].join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
     }
     return true;
   });
 }
+
 function sortTasks(arr) {
   var copy = arr.slice();
-  if (sortMode==='due') {
-    copy.sort(function(a,b){
-      var da=a.dueDate||''; var db=b.dueDate||'';
-      if(da&&!db) return -1; if(!da&&db) return 1;
-      if(da&&db) return da.localeCompare(db);
-      return a.staffName.localeCompare(b.staffName)||a.name.localeCompare(b.name);
+  if (sortMode === 'due') {
+    copy.sort(function(a, b) {
+      var da = a.dueDate || ''; var db = b.dueDate || '';
+      if (da && !db) return -1; if (!da && db) return 1;
+      if (da && db) return da.localeCompare(db);
+      return a.staffName.localeCompare(b.staffName) || a.name.localeCompare(b.name);
     });
-  } else if (sortMode==='staff') {
-    copy.sort(function(a,b){
-      var sa=a.staffName==='Unassigned'?'zzz':a.staffName;
-      var sb=b.staffName==='Unassigned'?'zzz':b.staffName;
-      return sa.localeCompare(sb)||(a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
+  } else if (sortMode === 'staff') {
+    copy.sort(function(a, b) {
+      var sa = a.staffName === 'Unassigned' ? 'zzz' : a.staffName;
+      var sb = b.staffName === 'Unassigned' ? 'zzz' : b.staffName;
+      return sa.localeCompare(sb) || (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz');
     });
-  } else if (sortMode==='job') {
-    copy.sort(function(a,b){
-      return (a.jobNumber||'').localeCompare(b.jobNumber||'')||(a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
+  } else if (sortMode === 'job') {
+    copy.sort(function(a, b) {
+      return (a.jobNumber || '').localeCompare(b.jobNumber || '')
+           || (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz');
     });
-  } else if (sortMode==='status') {
-    copy.sort(function(a,b){
-      var oa=STATUS_ORDER[a.jobStatus]!==undefined?STATUS_ORDER[a.jobStatus]:99;
-      var ob=STATUS_ORDER[b.jobStatus]!==undefined?STATUS_ORDER[b.jobStatus]:99;
-      return oa-ob||(a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz')||a.name.localeCompare(b.name);
+  } else if (sortMode === 'status') {
+    copy.sort(function(a, b) {
+      var oa = STATUS_ORDER[a.jobStatus] !== undefined ? STATUS_ORDER[a.jobStatus] : 99;
+      var ob = STATUS_ORDER[b.jobStatus] !== undefined ? STATUS_ORDER[b.jobStatus] : 99;
+      return oa - ob
+           || (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz')
+           || a.name.localeCompare(b.name);
     });
-  } else if (sortMode==='name') {
-    copy.sort(function(a,b){
-      return a.name.localeCompare(b.name)||(a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz');
+  } else if (sortMode === 'name') {
+    copy.sort(function(a, b) {
+      return a.name.localeCompare(b.name)
+           || (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz');
     });
-  } else if (sortMode==='flagged') {
-    copy.sort(function(a,b){
-      var fa=a.flagged?0:1; var fb=b.flagged?0:1;
-      return fa-fb||(a.dueDate||'zzzz').localeCompare(b.dueDate||'zzzz')||a.name.localeCompare(b.name);
+  } else if (sortMode === 'flagged') {
+    copy.sort(function(a, b) {
+      var fa = a.flagged ? 0 : 1; var fb = b.flagged ? 0 : 1;
+      return fa - fb
+           || (a.dueDate || 'zzzz').localeCompare(b.dueDate || 'zzzz')
+           || a.name.localeCompare(b.name);
     });
   }
   return copy;
 }
 
-// ── Bulk ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// BULK ACTIONS
+// ══════════════════════════════════════════════════════
 function toggleSelect(id, checked, event) {
   if (event) event.stopPropagation();
-  if (checked) selectedIds[id]=true; else delete selectedIds[id];
-  var card=document.querySelector('.task-card[data-id="'+id+'"]');
+  if (checked) selectedIds[id] = true; else delete selectedIds[id];
+  var card = document.querySelector('.task-card[data-id="' + id + '"]');
   if (card) card.classList.toggle('selected', !!checked);
   updateBulkBar();
 }
 function toggleSelectAll(checked) {
-  getFiltered().forEach(function(t){ if(checked) selectedIds[t._id]=true; else delete selectedIds[t._id]; });
-  document.querySelectorAll('.task-card[data-id]').forEach(function(card){
+  getFiltered().forEach(function(t) {
+    if (checked) selectedIds[t._id] = true; else delete selectedIds[t._id];
+  });
+  document.querySelectorAll('.task-card[data-id]').forEach(function(card) {
     card.classList.toggle('selected', !!selectedIds[card.dataset.id]);
-    var cb=card.querySelector('.bulk-cb'); if(cb) cb.checked=!!selectedIds[card.dataset.id];
+    var cb = card.querySelector('.bulk-cb');
+    if (cb) cb.checked = !!selectedIds[card.dataset.id];
   });
   updateBulkBar();
 }
 function clearSelection() {
-  selectedIds={};
-  document.querySelectorAll('.task-card').forEach(function(c){ c.classList.remove('selected'); });
-  document.querySelectorAll('.bulk-cb').forEach(function(cb){ cb.checked=false; });
-  var sa=document.getElementById('bulk-select-all'); if(sa) sa.checked=false;
+  selectedIds = {};
+  document.querySelectorAll('.task-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.querySelectorAll('.bulk-cb').forEach(function(cb) { cb.checked = false; });
+  var sa = document.getElementById('bulk-select-all');
+  if (sa) sa.checked = false;
   updateBulkBar();
 }
 function updateBulkBar() {
-  var count=Object.keys(selectedIds).length;
-  var bar=document.getElementById('bulk-bar');
-  var label=document.getElementById('bulk-count');
+  var count = Object.keys(selectedIds).length;
+  var bar   = document.getElementById('bulk-bar');
+  var label = document.getElementById('bulk-count');
   if (!bar) return;
-  bar.style.display=(!completedMode&&count>0)?'block':'none';
-  if (label) label.textContent=count+' task'+(count===1?'':'s')+' selected';
-  var filtered=getFiltered();
-  var sa=document.getElementById('bulk-select-all');
-  if (sa){ sa.indeterminate=count>0&&count<filtered.length; sa.checked=count>0&&count===filtered.length; }
+  bar.style.display = (!completedMode && count > 0) ? 'block' : 'none';
+  if (label) label.textContent = count + ' task' + (count === 1 ? '' : 's') + ' selected';
+  var filtered = getFiltered();
+  var sa = document.getElementById('bulk-select-all');
+  if (sa) {
+    sa.indeterminate = count > 0 && count < filtered.length;
+    sa.checked       = count > 0 && count === filtered.length;
+  }
 }
 function bulkComplete() {
-  var ids=Object.keys(selectedIds);
+  var ids = Object.keys(selectedIds);
   if (!ids.length) return;
-  if (!confirm('Mark '+ids.length+' task'+(ids.length===1?'':'s')+' as completed in ServiceM8?')) return;
-  var now=new Date();
-  var ts=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+
-         ' '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
-  var toComplete=ids.map(function(id){ return tasksData.find(function(t){ return t._id===id; }); }).filter(Boolean);
-  var label=document.getElementById('bulk-count');
-  var done=0,failed=0;
-  function updateProgress(){ if(label) label.textContent='Completing '+(done+failed)+' / '+toComplete.length+'\u2026'; }
-  Promise.all(toComplete.map(function(t){
-    return sm8Put('/jobchecklist/'+t._id+'.json', buildPayload(t,ts)).then(function(r){
-      if(r.status===200||r.status===201||r.status===204){
-        done++; t.completedTs=ts; t.isCompleted=true;
-        completedData.unshift(t);
-        tasksData=tasksData.filter(function(x){ return x._id!==t._id; });
-      } else { failed++; }
-      updateProgress();
-    }).catch(function(){ failed++; updateProgress(); });
-  })).then(function(){
-    selectedIds={}; populateFilters(); render();
-    toast(failed===0?done+' task'+(done===1?'':'s')+' marked complete.':done+' completed, '+failed+' failed.', failed>0);
+  if (!confirm('Mark ' + ids.length + ' task' + (ids.length === 1 ? '' : 's') + ' as completed in ServiceM8?')) return;
+  var now = new Date();
+  var ts  = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+          + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  var toComplete = ids.map(function(id) {
+    return tasksData.find(function(t) { return t._id === id; });
+  }).filter(Boolean);
+  var label = document.getElementById('bulk-count');
+  var done = 0, failed = 0;
+  function updateProgress() {
+    if (label) label.textContent = 'Completing ' + (done + failed) + ' / ' + toComplete.length + '\u2026';
+  }
+  Promise.all(toComplete.map(function(t) {
+    return sm8Put('/jobchecklist/' + t._id + '.json', buildPayload(t, ts))
+      .then(function(r) {
+        if (r.status === 200 || r.status === 201 || r.status === 204) {
+          done++;
+          t.completedTs  = ts;
+          t.isCompleted  = true;
+          completedData.unshift(t);
+          tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
+        } else { failed++; }
+        updateProgress();
+      })
+      .catch(function() { failed++; updateProgress(); });
+  })).then(function() {
+    selectedIds = {};
+    populateFilters();
+    render();
+    toast(
+      failed === 0
+        ? done + ' task' + (done === 1 ? '' : 's') + ' marked complete.'
+        : done + ' completed, ' + failed + ' failed.',
+      failed > 0
+    );
   });
 }
 function buildPayload(t, ts) {
-  var raw=t._raw;
+  var raw = t._raw;
   return {
     uuid:t._id, job_uuid:raw.job_uuid||'', name:raw.name||'',
     section_name:raw.section_name||'', item_type:raw.item_type||'Todo',
     sort_order:raw.sort_order||0, completed_timestamp:ts,
-    completed_by_staff_uuid:currentUserUuid||t.staffUuid||'',
+    completed_by_staff_uuid:currentUserUuid || t.staffUuid || '',
     completed_during_checkin_uuid:raw.completed_during_checkin_uuid||'',
     reminder_type:raw.reminder_type||'',
-    reminder_data:(raw.reminder_data&&!Array.isArray(raw.reminder_data))?raw.reminder_data:null,
+    reminder_data:(raw.reminder_data && !Array.isArray(raw.reminder_data)) ? raw.reminder_data : null,
     regarding_object:raw.regarding_object||'', regarding_object_uuid:raw.regarding_object_uuid||'',
     fulfilled_by_object_name:raw.fulfilled_by_object_name||'',
     fulfilled_by_object_uuid:raw.fulfilled_by_object_uuid||'',
-    assigned_to_staff_uuids:Array.isArray(raw.assigned_to_staff_uuids)?raw.assigned_to_staff_uuids:[],
+    assigned_to_staff_uuids:Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
     is_locked:raw.is_locked||'0'
   };
 }
 
-// ── Render ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
 function render() {
   if (!tasksLoaded) return;
-  var filtered=getFiltered();
+  var filtered = getFiltered();
   if (completedMode)
-    document.getElementById('completed-banner-count').textContent=filtered.length+' task'+(filtered.length===1?'':'s');
+    document.getElementById('completed-banner-count').textContent =
+      filtered.length + ' task' + (filtered.length === 1 ? '' : 's');
   renderStats(filtered);
   if (!filtered.length) {
     updateBulkBar();
-    setBody('<div class="empty-wrap"><div class="empty-icon">'+(completedMode?'&#10003;':'&#9998;')+'</div>'
-      + '<p>'+(completedMode?'No completed tasks found.'
-          :(tScope==='mine'?'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
-                           :'No tasks match the current filters.'))+'</p></div>');
+    setBody('<div class="empty-wrap"><div class="empty-icon">'
+      + (completedMode ? '&#10003;' : '&#9998;') + '</div>'
+      + '<p>' + (completedMode
+          ? 'No completed tasks found.'
+          : (tScope === 'mine'
+              ? 'No incomplete tasks assigned to you. Try switching to <strong>All Staff</strong>.'
+              : 'No tasks match the current filters.'))
+      + '</p></div>');
     return;
   }
-  var sorted=completedMode?filtered:sortTasks(filtered);
-  var html='';
-  if (!completedMode && sortMode==='staff' && tScope==='all') {
-    var groups=[]; var groupMap={};
-    sorted.forEach(function(t){
-      var key=t.staffUuid||'__unassigned__';
-      if(!groupMap[key]){ groupMap[key]={staffName:t.staffName,staffColor:t.staffColor,tasks:[]}; groups.push(groupMap[key]); }
+  var sorted = completedMode ? filtered : sortTasks(filtered);
+  var html = '';
+
+  if (!completedMode && sortMode === 'staff' && tScope === 'all') {
+    var groups = []; var groupMap = {};
+    sorted.forEach(function(t) {
+      var key = t.staffUuid || '__unassigned__';
+      if (!groupMap[key]) {
+        groupMap[key] = { staffName:t.staffName, staffColor:t.staffColor, tasks:[] };
+        groups.push(groupMap[key]);
+      }
       groupMap[key].tasks.push(t);
     });
-    groups.forEach(function(g){
-      html+='<div class="staff-group"><div class="staff-group-hdr">'
-        +'<span class="staff-avatar" style="background:'+esc(g.staffColor)+'">'+esc(initials(g.staffName))+'</span>'
-        +'<span class="staff-group-name">'+esc(g.staffName)+'</span>'
-        +'<span class="staff-group-ct">'+g.tasks.length+'</span>'
-        +'</div><div class="task-list">';
-      g.tasks.forEach(function(t){ html+=taskCard(t); });
-      html+='</div></div>';
+    groups.forEach(function(g) {
+      html += '<div class="staff-group"><div class="staff-group-hdr">'
+        + '<span class="staff-avatar" style="background:' + esc(g.staffColor) + '">'
+        + esc(initials(g.staffName)) + '</span>'
+        + '<span class="staff-group-name">' + esc(g.staffName) + '</span>'
+        + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
+        + '</div><div class="task-list">';
+      g.tasks.forEach(function(t) { html += taskCard(t); });
+      html += '</div></div>';
     });
-  } else if (!completedMode && sortMode==='status') {
-    var groups=[]; var groupMap={};
-    sorted.forEach(function(t){
-      var key=t.jobStatus||'__none__';
-      if(!groupMap[key]){ groupMap[key]={status:t.jobStatus||'No Status',tasks:[]}; groups.push(groupMap[key]); }
+
+  } else if (!completedMode && sortMode === 'status') {
+    var groups = []; var groupMap = {};
+    sorted.forEach(function(t) {
+      var key = t.jobStatus || '__none__';
+      if (!groupMap[key]) {
+        groupMap[key] = { status:t.jobStatus || 'No Status', tasks:[] };
+        groups.push(groupMap[key]);
+      }
       groupMap[key].tasks.push(t);
     });
-    groups.forEach(function(g){
-      html+='<div class="staff-group"><div class="staff-group-hdr">'
-        +'<span class="group-icon">'+statusIcon(g.status)+'</span>'
-        +'<span class="staff-group-name">'+esc(g.status)+'</span>'
-        +'<span class="staff-group-ct">'+g.tasks.length+'</span>'
-        +'</div><div class="task-list">';
-      g.tasks.forEach(function(t){ html+=taskCard(t); });
-      html+='</div></div>';
+    groups.forEach(function(g) {
+      html += '<div class="staff-group"><div class="staff-group-hdr">'
+        + '<span class="group-icon">' + statusIcon(g.status) + '</span>'
+        + '<span class="staff-group-name">' + esc(g.status) + '</span>'
+        + '<span class="staff-group-ct">' + g.tasks.length + '</span>'
+        + '</div><div class="task-list">';
+      g.tasks.forEach(function(t) { html += taskCard(t); });
+      html += '</div></div>';
     });
-  } else if (!completedMode && sortMode==='flagged') {
-    var flaggedTasks  =sorted.filter(function(t){ return  t.flagged; });
-    var unflaggedTasks=sorted.filter(function(t){ return !t.flagged; });
+
+  } else if (!completedMode && sortMode === 'flagged') {
+    var flaggedTasks   = sorted.filter(function(t) { return  t.flagged; });
+    var unflaggedTasks = sorted.filter(function(t) { return !t.flagged; });
     if (flaggedTasks.length) {
-      html+='<div class="staff-group"><div class="staff-group-hdr">'
-        +'<span class="group-icon">&#9873;</span><span class="staff-group-name">Flagged</span>'
-        +'<span class="staff-group-ct">'+flaggedTasks.length+'</span>'
-        +'</div><div class="task-list">';
-      flaggedTasks.forEach(function(t){ html+=taskCard(t); });
-      html+='</div></div>';
+      html += '<div class="staff-group"><div class="staff-group-hdr">'
+        + '<span class="group-icon">&#9873;</span>'
+        + '<span class="staff-group-name">Flagged</span>'
+        + '<span class="staff-group-ct">' + flaggedTasks.length + '</span>'
+        + '</div><div class="task-list">';
+      flaggedTasks.forEach(function(t) { html += taskCard(t); });
+      html += '</div></div>';
     }
     if (unflaggedTasks.length) {
-      html+='<div class="staff-group"><div class="staff-group-hdr">'
-        +'<span class="group-icon">&#9711;</span><span class="staff-group-name">Not Flagged</span>'
-        +'<span class="staff-group-ct">'+unflaggedTasks.length+'</span>'
-        +'</div><div class="task-list">';
-      unflaggedTasks.forEach(function(t){ html+=taskCard(t); });
-      html+='</div></div>';
+      html += '<div class="staff-group"><div class="staff-group-hdr">'
+        + '<span class="group-icon">&#9711;</span>'
+        + '<span class="staff-group-name">Not Flagged</span>'
+        + '<span class="staff-group-ct">' + unflaggedTasks.length + '</span>'
+        + '</div><div class="task-list">';
+      unflaggedTasks.forEach(function(t) { html += taskCard(t); });
+      html += '</div></div>';
     }
+
   } else {
-    html='<div class="task-list">';
-    sorted.forEach(function(t){ html+=taskCard(t); });
-    html+='</div>';
+    html = '<div class="task-list">';
+    sorted.forEach(function(t) { html += taskCard(t); });
+    html += '</div>';
   }
+
   setBody(html);
   updateBulkBar();
 }
 
 function renderStats(scope) {
   if (completedMode) {
-    document.getElementById('stats-bar').innerHTML=
-      stat(scope.length,'Completed','var(--green)')+
-      stat(scope.filter(function(t){ return  t.staffUuid; }).length,'Assigned','var(--text)')+
-      stat(scope.filter(function(t){ return !t.staffUuid; }).length,'Unassigned','var(--muted)');
+    document.getElementById('stats-bar').innerHTML =
+      stat(scope.length, 'Completed', 'var(--green)') +
+      stat(scope.filter(function(t) { return  t.staffUuid; }).length, 'Assigned',   'var(--text)') +
+      stat(scope.filter(function(t) { return !t.staffUuid; }).length, 'Unassigned', 'var(--muted)');
     return;
   }
-  var total     =scope.length;
-  var unassigned=scope.filter(function(t){ return !t.staffUuid; }).length;
-  var overdue   =scope.filter(function(t){ return t.dueDate&&daysUntil(t.dueDate)<0; }).length;
-  var dueToday  =scope.filter(function(t){ return t.dueDate&&daysUntil(t.dueDate)===0; }).length;
-  var dueSoon   =scope.filter(function(t){ var d=t.dueDate?daysUntil(t.dueDate):null; return d!==null&&d>0&&d<=7; }).length;
-  var flagged   =scope.filter(function(t){ return t.flagged; }).length;
-  var commented =scope.filter(function(t){ return getCommentCount(t._id)>0; }).length;
-  document.getElementById('stats-bar').innerHTML=
-    stat(total,     'Tasks',     'var(--text)')+
-    stat(unassigned,'Unassigned','var(--muted)')+
-    stat(overdue,   'Overdue',   'var(--red)')+
-    stat(dueToday,  'Due Today', 'var(--amber)')+
-    stat(dueSoon,   'Due Soon',  'var(--accent)')+
-    stat(flagged,   'Flagged',   'var(--amber)')+
-    stat(commented, 'Commented', 'var(--accent)');
+  var total      = scope.length;
+  var unassigned = scope.filter(function(t) { return !t.staffUuid; }).length;
+  var overdue    = scope.filter(function(t) { return t.dueDate && daysUntil(t.dueDate) < 0; }).length;
+  var dueToday   = scope.filter(function(t) { return t.dueDate && daysUntil(t.dueDate) === 0; }).length;
+  var dueSoon    = scope.filter(function(t) {
+    var d = t.dueDate ? daysUntil(t.dueDate) : null;
+    return d !== null && d > 0 && d <= 7;
+  }).length;
+  var flagged    = scope.filter(function(t) { return t.flagged; }).length;
+  var commented  = scope.filter(function(t) { return getCommentCount(t._id) > 0; }).length;
+  document.getElementById('stats-bar').innerHTML =
+    stat(total,      'Tasks',     'var(--text)')   +
+    stat(unassigned, 'Unassigned','var(--muted)')  +
+    stat(overdue,    'Overdue',   'var(--red)')    +
+    stat(dueToday,   'Due Today', 'var(--amber)')  +
+    stat(dueSoon,    'Due Soon',  'var(--accent)') +
+    stat(flagged,    'Flagged',   'var(--amber)')  +
+    stat(commented,  'Commented', 'var(--accent)');
 }
-function stat(v,l,c){
-  return '<div class="stat-card"><div class="stat-val" style="color:'+c+'">'+v+'</div><div class="stat-lbl">'+l+'</div></div>';
+function stat(v, l, c) {
+  return '<div class="stat-card">'
+    + '<div class="stat-val" style="color:' + c + '">' + v + '</div>'
+    + '<div class="stat-lbl">' + l + '</div>'
+    + '</div>';
 }
 
-// ── Task card ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// TASK CARD
+// ══════════════════════════════════════════════════════
 function statusBadge(status) {
   if (!status) return '';
-  var cls = status==='Quote'?'status-quote':status==='Completed'?'status-completed':status==='Unsuccessful'?'status-unsuccessful':'status-wo';
-  return '<span class="badge '+cls+'">'+esc(status)+'</span>';
+  var cls = status === 'Quote'        ? 'status-quote'
+          : status === 'Completed'    ? 'status-completed'
+          : status === 'Unsuccessful' ? 'status-unsuccessful'
+          : 'status-wo';
+  return '<span class="badge ' + cls + '">' + esc(status) + '</span>';
 }
 function statusIcon(status) {
-  if (status==='Work Order')   return '&#127959;';
-  if (status==='Quote')        return '&#128203;';
-  if (status==='Completed')    return '&#10003;';
-  if (status==='Unsuccessful') return '&#10007;';
+  if (status === 'Work Order')   return '&#127959;';
+  if (status === 'Quote')        return '&#128203;';
+  if (status === 'Completed')    return '&#10003;';
+  if (status === 'Unsuccessful') return '&#10007;';
   return '&#9679;';
 }
+
 function taskCard(t) {
-  var d=t.dueDate?daysUntil(t.dueDate):null;
-  var isOverdue=!t.isCompleted&&d!==null&&d<0;
-  var colorCls=t.isCompleted?'c-completed':(t.flagged?'c-flagged':(isOverdue?'c-overdue':'c-active'));
-  var isSelected=!!selectedIds[t._id];
-  var sm8Btn=t.jobUuidSm8
-    ?'<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/'+esc(t.jobUuidSm8)+
-      '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>':'';
-  var flagBtn=!t.isCompleted
-    ?'<button class="flag-btn'+(t.flagged?' flagged':'')+'" onclick="toggleFlag(\''+esc(t._id)+'\',event)">&#9873;</button>':'';
-  var commentCount=getCommentCount(t._id);
-  var checkboxHtml=!t.isCompleted
-    ?'<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" onchange="toggleSelect(\''+esc(t._id)+'\',this.checked,event)"'+(isSelected?' checked':'')+'/>':
-     '<span style="width:17px;flex-shrink:0;"></span>';
-  return '<div class="task-card '+colorCls+(isSelected?' selected':'')+'" data-id="'+esc(t._id)+'" onclick="openEdit(\''+esc(t._id)+'\')">'
-    +checkboxHtml
-    +'<div class="task-body">'
-    +'<div class="title-row">'
-    +'<span class="task-title'+(t.isCompleted?' completed-title':'')+'">'+esc(t.name)+'</span>'
-    +(t.isCompleted?'<span class="badge completed-badge">&#10003; Done</span>':'<span class="badge task">Task</span>')
-    +statusBadge(t.jobStatus)
-    +(t.flagged&&!t.isCompleted?'<span class="badge flagged">&#9873; Flagged</span>':'')
-    +(t.section?'<span class="badge section">'+esc(t.section)+'</span>':'')
-    +(isOverdue?'<span class="badge overdue">Overdue</span>':'')
-    +(commentCount>0?'<span class="badge commented">&#128172; '+commentCount+'</span>':'')
-    +'</div>'
-    +'<div class="meta-row">'
-    +'<span class="staff-chip" style="background:'+esc(t.staffColor)+'22;border-color:'+esc(t.staffColor)+'55;">'
-    +'<span class="staff-chip-dot" style="background:'+esc(t.staffColor)+'"></span>'+esc(t.staffName)+'</span>'
-    +(t.category  ?'<span>&#127991; '+esc(t.category)+'</span>':'')
-    +(t.clientName?'<span>&#128205; '+esc(t.clientName)+'</span>':'')
-    +(t.jobNumber ?'<span>&#128188; Job #'+esc(t.jobNumber)+(t.jobDesc?' &mdash; '+esc(t.jobDesc.substring(0,40)):'')+' </span>':'')
-    +(t.dueDate   ?'<span>&#128336; Due '+fmtDate(t.dueDate)+'</span>':'')
-    +(t.isCompleted&&t.completedTs?'<span>&#10003; Completed '+fmtDate(t.completedTs)+'</span>':'')
-    +'</div>'
-    +buildCommentPanel(t._id)
-    +'</div>'
-    +'<div class="task-right">'+(!t.isCompleted?duePill(t):'')+flagBtn+sm8Btn+'</div>'
-    +'</div>';
+  var d          = t.dueDate ? daysUntil(t.dueDate) : null;
+  var isOverdue  = !t.isCompleted && d !== null && d < 0;
+  var colorCls   = t.isCompleted ? 'c-completed'
+                 : t.flagged     ? 'c-flagged'
+                 : isOverdue     ? 'c-overdue'
+                 : 'c-active';
+  var isSelected = !!selectedIds[t._id];
+  var sm8Btn = t.jobUuidSm8
+    ? '<a class="open-sm8-btn" href="https://go.servicem8.com/openjob/' + esc(t.jobUuidSm8)
+      + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128279; Open Job</a>'
+    : '';
+  var flagBtn = !t.isCompleted
+    ? '<button class="flag-btn' + (t.flagged ? ' flagged' : '') + '" '
+      + 'onclick="toggleFlag(\'' + esc(t._id) + '\',event)">&#9873;</button>'
+    : '';
+  var commentCount = getCommentCount(t._id);
+  var checkboxHtml = !t.isCompleted
+    ? '<input type="checkbox" class="bulk-cb task-cb" onclick="event.stopPropagation()" '
+      + 'onchange="toggleSelect(\'' + esc(t._id) + '\',this.checked,event)"'
+      + (isSelected ? ' checked' : '') + '/>'
+    : '<span style="width:17px;flex-shrink:0;"></span>';
+
+  return '<div class="task-card ' + colorCls + (isSelected ? ' selected' : '') + '" '
+    + 'data-id="' + esc(t._id) + '" onclick="openEdit(\'' + esc(t._id) + '\')">'
+    + checkboxHtml
+    + '<div class="task-body">'
+    +   '<div class="title-row">'
+    +     '<span class="task-title' + (t.isCompleted ? ' completed-title' : '') + '">' + esc(t.name) + '</span>'
+    +     (t.isCompleted ? '<span class="badge completed-badge">&#10003; Done</span>'
+                         : '<span class="badge task">Task</span>')
+    +     statusBadge(t.jobStatus)
+    +     (t.flagged && !t.isCompleted ? '<span class="badge flagged">&#9873; Flagged</span>' : '')
+    +     (t.section ? '<span class="badge section">' + esc(t.section) + '</span>' : '')
+    +     (isOverdue ? '<span class="badge overdue">Overdue</span>' : '')
+    +     (commentCount > 0 ? '<span class="badge commented">&#128172; ' + commentCount + '</span>' : '')
+    +   '</div>'
+    +   '<div class="meta-row">'
+    +     '<span class="staff-chip" style="background:' + esc(t.staffColor) + '22;border-color:' + esc(t.staffColor) + '55;">'
+    +       '<span class="staff-chip-dot" style="background:' + esc(t.staffColor) + '"></span>'
+    +       esc(t.staffName)
+    +     '</span>'
+    +     (t.category   ? '<span>&#127991; ' + esc(t.category)   + '</span>' : '')
+    +     (t.clientName ? '<span>&#128205; ' + esc(t.clientName) + '</span>' : '')
+    +     (t.jobNumber  ? '<span>&#128188; Job #' + esc(t.jobNumber)
+                          + (t.jobDesc ? ' &mdash; ' + esc(t.jobDesc.substring(0, 40)) : '')
+                          + '</span>' : '')
+    +     (t.dueDate    ? '<span>&#128336; Due ' + fmtDate(t.dueDate) + '</span>' : '')
+    +     (t.isCompleted && t.completedTs
+                        ? '<span>&#10003; Completed ' + fmtDate(t.completedTs) + '</span>' : '')
+    +   '</div>'
+    +   buildCommentPanel(t._id)
+    + '</div>'
+    + '<div class="task-right">'
+    +   (!t.isCompleted ? duePill(t) : '')
+    +   flagBtn
+    +   sm8Btn
+    + '</div>'
+    + '</div>';
 }
+
 function duePill(t) {
   if (!t.dueDate) return '<span class="due-pill none">No date</span>';
-  var d=daysUntil(t.dueDate);
-  if (d===null) return '';
-  if (d<0)   return '<span class="due-pill overdue">&#9888; '+Math.abs(d)+'d overdue</span>';
-  if (d===0) return '<span class="due-pill today">Due today</span>';
-  if (d<=7)  return '<span class="due-pill soon">'+d+'d left</span>';
-  return '<span class="due-pill ok">'+fmtDate(t.dueDate)+'</span>';
+  var d = daysUntil(t.dueDate);
+  if (d === null) return '';
+  if (d < 0)   return '<span class="due-pill overdue">&#9888; ' + Math.abs(d) + 'd overdue</span>';
+  if (d === 0) return '<span class="due-pill today">Due today</span>';
+  if (d <= 7)  return '<span class="due-pill soon">' + d + 'd left</span>';
+  return '<span class="due-pill ok">' + fmtDate(t.dueDate) + '</span>';
 }
 
-// ── Mark complete ──────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// MARK COMPLETE
+// ══════════════════════════════════════════════════════
 function markComplete(t) {
-  var now=new Date();
-  var ts=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+
-         ' '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
-  sm8Put('/jobchecklist/'+t._id+'.json', buildPayload(t,ts)).then(function(r){
-    if(r.status===200||r.status===201||r.status===204){
-      t.completedTs=ts; t.isCompleted=true;
-      completedData.unshift(t);
-      tasksData=tasksData.filter(function(x){ return x._id!==t._id; });
-      delete selectedIds[t._id];
-      populateFilters(); closeModal(); render();
-      toast('Task marked as completed.');
-    } else {
-      r.text().then(function(txt){ toast('Save failed: HTTP '+r.status+' \u2014 '+txt.substring(0,120),true); });
-    }
-  }).catch(function(e){ toast('Save failed: '+e.message,true); });
+  var now = new Date();
+  var ts  = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+          + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  sm8Put('/jobchecklist/' + t._id + '.json', buildPayload(t, ts))
+    .then(function(r) {
+      if (r.status === 200 || r.status === 201 || r.status === 204) {
+        t.completedTs = ts;
+        t.isCompleted = true;
+        completedData.unshift(t);
+        tasksData = tasksData.filter(function(x) { return x._id !== t._id; });
+        delete selectedIds[t._id];
+        populateFilters();
+        closeModal();
+        render();
+        toast('Task marked as completed.');
+      } else {
+        r.text().then(function(txt) {
+          toast('Save failed: HTTP ' + r.status + ' \u2014 ' + txt.substring(0, 120), true);
+        });
+      }
+    })
+    .catch(function(e) { toast('Save failed: ' + e.message, true); });
 }
 
-// ── Edit modal ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// EDIT MODAL
+// ══════════════════════════════════════════════════════
 function openEdit(id) {
-  var source=completedMode?completedData:tasksData;
-  var t=source.find(function(x){ return x._id===id; });
+  var source = completedMode ? completedData : tasksData;
+  var t = source.find(function(x) { return x._id === id; });
   if (!t) return;
-  editRecord=t;
+  editRecord = t;
 
-  var sm8Link=document.getElementById('m-sm8-link');
-  if (t.jobUuidSm8){
-    sm8Link.href='https://go.servicem8.com/openjob/'+t.jobUuidSm8;
-    sm8Link.innerHTML='&#128279; Open Job #'+esc(t.jobNumber)+' in ServiceM8';
-    sm8Link.style.display='inline-flex';
-  } else { sm8Link.style.display='none'; }
+  // SM8 link
+  var sm8Link = document.getElementById('m-sm8-link');
+  if (t.jobUuidSm8) {
+    sm8Link.href      = 'https://go.servicem8.com/openjob/' + t.jobUuidSm8;
+    sm8Link.innerHTML = '&#128279; Open Job #' + esc(t.jobNumber) + ' in ServiceM8';
+    sm8Link.style.display = 'inline-flex';
+  } else {
+    sm8Link.style.display = 'none';
+  }
 
-  document.getElementById('m-name').value     = t.name;
-  document.getElementById('m-name').disabled  = t.isCompleted;
-  document.getElementById('m-due-date').value = t.dueDate||'';
+  document.getElementById('m-name').value    = t.name;
+  document.getElementById('m-name').disabled = t.isCompleted;
+  document.getElementById('m-due-date').value    = t.dueDate || '';
   document.getElementById('m-due-date').disabled = t.isCompleted;
   updateDuePreview();
 
-  var cb =document.getElementById('m-flag-cb');
-  var row=document.getElementById('m-flag-row');
-  cb.checked=!!t.flagged; cb.disabled=t.isCompleted;
-  row.classList.toggle('flagged',!!t.flagged);
-  row.style.opacity=t.isCompleted?'0.4':'1';
-  row.style.pointerEvents=t.isCompleted?'none':'';
+  var cb  = document.getElementById('m-flag-cb');
+  var row = document.getElementById('m-flag-row');
+  cb.checked  = !!t.flagged;
+  cb.disabled = t.isCompleted;
+  row.classList.toggle('flagged', !!t.flagged);
+  row.style.opacity       = t.isCompleted ? '0.4' : '1';
+  row.style.pointerEvents = t.isCompleted ? 'none' : '';
 
   populateReassignDropdown(t.staffUuid);
-  document.getElementById('m-staff-display').innerHTML=staffChipHTML(t.staffColor,t.staffName);
-  document.getElementById('m-reassign-msg').textContent='';
+  document.getElementById('m-staff-display').innerHTML = staffChipHTML(t.staffColor, t.staffName);
+  document.getElementById('m-reassign-msg').textContent = '';
 
   // Comments
   renderModalCommentList(t._id);
-  document.getElementById('m-tc-textarea').value='';
-  document.getElementById('m-tc-status').textContent='';
-  var mTa=document.getElementById('m-tc-textarea');
-  var mMd=document.getElementById('m-modal-mention-drop');
-  if (mTa&&mMd) attachMentionListener(mTa,mMd);
+  document.getElementById('m-tc-textarea').value       = '';
+  document.getElementById('m-tc-status').textContent   = '';
+  var mTa = document.getElementById('m-tc-textarea');
+  var mMd = document.getElementById('m-modal-mention-drop');
+  if (mTa && mMd) attachMentionListener(mTa, mMd);
 
   // Read-only fields
-  var statusRow=document.getElementById('m-status-row');
-  if(t.jobStatus){ statusRow.style.display=''; document.getElementById('m-status').innerHTML=statusBadge(t.jobStatus); }
-  else { statusRow.style.display='none'; }
-  var catRow=document.getElementById('m-category-row');
-  if(t.category){ catRow.style.display=''; document.getElementById('m-category').textContent=t.category; }
-  else { catRow.style.display='none'; }
-  var secRow=document.getElementById('m-section-row');
-  if(t.section){ secRow.style.display=''; document.getElementById('m-section').textContent=t.section; }
-  else { secRow.style.display='none'; }
-  var jobRow=document.getElementById('m-job-row');
-  if(t.jobNumber){
-    jobRow.style.display='';
-    document.getElementById('m-job-display').textContent='Job #'+t.jobNumber+(t.jobDesc?' \u2014 '+t.jobDesc:'');
-  } else { jobRow.style.display='none'; }
-  var remRow=document.getElementById('m-reminder-row');
-  if(t.reminderType){ remRow.style.display=''; document.getElementById('m-reminder').textContent=t.reminderType+(t.reminderData?': '+t.reminderData:''); }
-  else { remRow.style.display='none'; }
+  var statusRow = document.getElementById('m-status-row');
+  if (t.jobStatus) {
+    statusRow.style.display = '';
+    document.getElementById('m-status').innerHTML = statusBadge(t.jobStatus);
+  } else { statusRow.style.display = 'none'; }
 
-  document.getElementById('m-raw').value=JSON.stringify(t._raw,null,2);
-  document.getElementById('m-save-btn').style.display    =t.isCompleted?'none':'';
-  document.getElementById('m-complete-btn').style.display=t.isCompleted?'none':'';
-  setSaveMsg('','');
+  var catRow = document.getElementById('m-category-row');
+  if (t.category) {
+    catRow.style.display = '';
+    document.getElementById('m-category').textContent = t.category;
+  } else { catRow.style.display = 'none'; }
+
+  var secRow = document.getElementById('m-section-row');
+  if (t.section) {
+    secRow.style.display = '';
+    document.getElementById('m-section').textContent = t.section;
+  } else { secRow.style.display = 'none'; }
+
+  var jobRow = document.getElementById('m-job-row');
+  if (t.jobNumber) {
+    jobRow.style.display = '';
+    document.getElementById('m-job-display').textContent =
+      'Job #' + t.jobNumber + (t.jobDesc ? ' \u2014 ' + t.jobDesc : '');
+  } else { jobRow.style.display = 'none'; }
+
+  var remRow = document.getElementById('m-reminder-row');
+  if (t.reminderType) {
+    remRow.style.display = '';
+    document.getElementById('m-reminder').textContent =
+      t.reminderType + (t.reminderData ? ': ' + t.reminderData : '');
+  } else { remRow.style.display = 'none'; }
+
+  document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
+  document.getElementById('m-save-btn').style.display     = t.isCompleted ? 'none' : '';
+  document.getElementById('m-complete-btn').style.display = t.isCompleted ? 'none' : '';
+  setSaveMsg('', '');
   openModal();
 }
 
 function updateDuePreview() {
-  var val=document.getElementById('m-due-date').value;
-  var el =document.getElementById('m-due-preview');
-  if(!val){ el.textContent='No due date set'; return; }
-  var d=daysUntil(val);
-  if(d===null){ el.textContent=''; return; }
-  if(d<0)        el.textContent=Math.abs(d)+' day'+(Math.abs(d)===1?'':'s')+' overdue';
-  else if(d===0) el.textContent='Due today';
-  else           el.textContent='Due in '+d+' day'+(d===1?'':'s');
+  var val = document.getElementById('m-due-date').value;
+  var el  = document.getElementById('m-due-preview');
+  if (!val) { el.textContent = 'No due date set'; return; }
+  var d = daysUntil(val);
+  if (d === null) { el.textContent = ''; return; }
+  if (d < 0)       el.textContent = Math.abs(d) + ' day' + (Math.abs(d) === 1 ? '' : 's') + ' overdue';
+  else if (d === 0) el.textContent = 'Due today';
+  else              el.textContent = 'Due in ' + d + ' day' + (d === 1 ? '' : 's');
 }
-function clearDueDate(){ document.getElementById('m-due-date').value=''; updateDuePreview(); }
-function setSaveMsg(msg,type){
-  var el=document.getElementById('m-save-msg'); el.textContent=msg;
-  el.style.color=type==='error'?'var(--red)':type==='ok'?'var(--green)':type==='saving'?'var(--amber)':'transparent';
+function clearDueDate() {
+  document.getElementById('m-due-date').value = '';
+  updateDuePreview();
+}
+function setSaveMsg(msg, type) {
+  var el = document.getElementById('m-save-msg');
+  el.textContent = msg;
+  el.style.color = type === 'error'  ? 'var(--red)'
+                 : type === 'ok'     ? 'var(--green)'
+                 : type === 'saving' ? 'var(--amber)'
+                 : 'transparent';
 }
 
 function saveTaskEdits() {
   if (!editRecord) return;
-  var newName   =document.getElementById('m-name').value.trim();
-  var newDueDate=document.getElementById('m-due-date').value;
-  if (!newName){ setSaveMsg('Task name cannot be empty.','error'); return; }
-  setSaveMsg('Saving\u2026','saving');
-  document.getElementById('m-save-btn').disabled=true;
-  var t=editRecord; var raw=t._raw;
-  var reminderType=raw.reminder_type||'';
-  var reminderData=raw.reminder_data;
+  var newName    = document.getElementById('m-name').value.trim();
+  var newDueDate = document.getElementById('m-due-date').value;
+  if (!newName) { setSaveMsg('Task name cannot be empty.', 'error'); return; }
+  setSaveMsg('Saving\u2026', 'saving');
+  document.getElementById('m-save-btn').disabled = true;
+  var t   = editRecord;
+  var raw = t._raw;
+  var reminderType = raw.reminder_type || '';
+  var reminderData = raw.reminder_data;
   if (newDueDate) {
-    reminderType='ABSOLUTE_DATETIME';
-    var existingTime='08:00:00';
-    if(raw.reminder_data&&typeof raw.reminder_data==='object'&&raw.reminder_data.absoluteDateTime){
-      var tp=String(raw.reminder_data.absoluteDateTime).substring(11); if(tp) existingTime=tp;
+    reminderType = 'ABSOLUTE_DATETIME';
+    var existingTime = '08:00:00';
+    if (raw.reminder_data && typeof raw.reminder_data === 'object' && raw.reminder_data.absoluteDateTime) {
+      var tp = String(raw.reminder_data.absoluteDateTime).substring(11);
+      if (tp) existingTime = tp;
     }
-    reminderData={absoluteDateTime:newDueDate+' '+existingTime};
-  } else { reminderType=''; reminderData=null; }
-  var payload={
+    reminderData = { absoluteDateTime: newDueDate + ' ' + existingTime };
+  } else {
+    reminderType = '';
+    reminderData = null;
+  }
+  var payload = {
     uuid:t._id, job_uuid:raw.job_uuid||'', name:newName,
     section_name:raw.section_name||'', item_type:raw.item_type||'Todo',
     sort_order:raw.sort_order||0, completed_timestamp:raw.completed_timestamp||'',
@@ -1906,162 +2255,201 @@ function saveTaskEdits() {
     regarding_object:raw.regarding_object||'', regarding_object_uuid:raw.regarding_object_uuid||'',
     fulfilled_by_object_name:raw.fulfilled_by_object_name||'',
     fulfilled_by_object_uuid:raw.fulfilled_by_object_uuid||'',
-    assigned_to_staff_uuids:Array.isArray(raw.assigned_to_staff_uuids)?raw.assigned_to_staff_uuids:[],
+    assigned_to_staff_uuids:Array.isArray(raw.assigned_to_staff_uuids) ? raw.assigned_to_staff_uuids : [],
     is_locked:raw.is_locked||'0'
   };
-  sm8Put('/jobchecklist/'+t._id+'.json',payload).then(function(r){
-    document.getElementById('m-save-btn').disabled=false;
-    if(r.status===200||r.status===201||r.status===204){
-      t.name=newName; t.dueDate=newDueDate; t.reminderType=reminderType;
-      if(reminderData){ t._raw.reminder_data=reminderData; t._raw.reminder_type=reminderType; }
-      else { t._raw.reminder_data=null; t._raw.reminder_type=''; }
-      t._raw.name=newName;
-      document.getElementById('m-raw').value=JSON.stringify(t._raw,null,2);
-      setSaveMsg('Saved successfully.','ok'); render(); toast('Task updated.');
-    } else {
-      r.text().then(function(txt){ setSaveMsg('Save failed: '+txt.substring(0,80),'error'); toast('Save failed: HTTP '+r.status,true); });
-    }
-  }).catch(function(e){ document.getElementById('m-save-btn').disabled=false; setSaveMsg('Save failed: '+e.message,'error'); toast('Save failed: '+e.message,true); });
+  sm8Put('/jobchecklist/' + t._id + '.json', payload)
+    .then(function(r) {
+      document.getElementById('m-save-btn').disabled = false;
+      if (r.status === 200 || r.status === 201 || r.status === 204) {
+        t.name        = newName;
+        t.dueDate     = newDueDate;
+        t.reminderType = reminderType;
+        t._raw.name           = newName;
+        t._raw.reminder_data  = reminderData;
+        t._raw.reminder_type  = reminderType;
+        document.getElementById('m-raw').value = JSON.stringify(t._raw, null, 2);
+        setSaveMsg('Saved successfully.', 'ok');
+        render();
+        toast('Task updated.');
+      } else {
+        r.text().then(function(txt) {
+          setSaveMsg('Save failed: ' + txt.substring(0, 80), 'error');
+          toast('Save failed: HTTP ' + r.status, true);
+        });
+      }
+    })
+    .catch(function(e) {
+      document.getElementById('m-save-btn').disabled = false;
+      setSaveMsg('Save failed: ' + e.message, 'error');
+      toast('Save failed: ' + e.message, true);
+    });
 }
 
 function completeFromModal() {
   if (!editRecord) return;
-  if (!confirm('Mark "'+editRecord.name+'" as completed in ServiceM8?')) return;
+  if (!confirm('Mark "' + editRecord.name + '" as completed in ServiceM8?')) return;
   markComplete(editRecord);
 }
-function openModal() { document.getElementById('modal').classList.add('open'); }
-function closeModal(){ document.getElementById('modal').classList.remove('open'); editRecord=null; }
-function onOverlayClick(e){ if(e.target===document.getElementById('modal')) closeModal(); }
+function openModal()  { document.getElementById('modal').classList.add('open'); }
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editRecord = null;
+  closeMentionDropdown(document.getElementById('m-modal-mention-drop'));
+}
+function onOverlayClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
 
-// ── Add Task ───────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+// ADD TASK MODAL
+// ══════════════════════════════════════════════════════
 function openAddTask() {
-  document.getElementById('add-name').value='';
-  document.getElementById('add-job-number').value='';
-  document.getElementById('add-due-date').value='';
-  document.getElementById('add-job-preview').textContent='';
-  document.getElementById('add-save-msg').textContent='';
-  document.getElementById('add-save-btn').disabled=false;
-  var sel=document.getElementById('add-staff-select');
-  sel.innerHTML='<option value="">— Unassigned —</option>';
-  staffList.forEach(function(s){
-    var o=document.createElement('option');
-    o.value=s.uuid; o.textContent=s.name;
-    if (s.uuid===currentUserUuid) o.selected=true;
+  document.getElementById('add-name').value      = '';
+  document.getElementById('add-job-number').value = '';
+  document.getElementById('add-due-date').value  = '';
+  document.getElementById('add-job-preview').textContent = '';
+  document.getElementById('add-save-msg').textContent    = '';
+  document.getElementById('add-save-btn').disabled       = false;
+  var sel = document.getElementById('add-staff-select');
+  sel.innerHTML = '<option value="">— Unassigned —</option>';
+  staffList.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.uuid; o.textContent = s.name;
+    if (s.uuid === currentUserUuid) o.selected = true;
     sel.appendChild(o);
   });
   document.getElementById('add-modal').classList.add('open');
-  setTimeout(function(){ document.getElementById('add-name').focus(); },100);
+  setTimeout(function() { document.getElementById('add-name').focus(); }, 100);
 }
 function lookupAddJobNumber(num) {
-  var preview=document.getElementById('add-job-preview');
-  if (!num){ preview.textContent='Will use default job #'+DEFAULT_JOB_NUMBER; preview.style.color='var(--muted)'; return; }
-  var found=null;
-  Object.values(jobMap).forEach(function(j){ if(j.number===num) found=j; });
-  if (found){
-    preview.textContent='\u2713 '+(found.desc||'Job found')+(found.status?' \u2014 '+found.status:'');
-    preview.style.color='var(--green)';
+  var preview = document.getElementById('add-job-preview');
+  if (!num) {
+    preview.textContent  = 'Will use default job #' + DEFAULT_JOB_NUMBER;
+    preview.style.color  = 'var(--muted)';
+    return;
+  }
+  var found = null;
+  Object.values(jobMap).forEach(function(j) { if (j.number === num) found = j; });
+  if (found) {
+    preview.textContent = '\u2713 ' + (found.desc || 'Job found') + (found.status ? ' \u2014 ' + found.status : '');
+    preview.style.color = 'var(--green)';
   } else {
-    preview.textContent='\u26A0 Job #'+num+' not found';
-    preview.style.color='var(--amber)';
+    preview.textContent = '\u26A0 Job #' + num + ' not found';
+    preview.style.color = 'var(--amber)';
   }
 }
 function resolveJobUuid(num) {
-  var target=num||DEFAULT_JOB_NUMBER; var found=null;
-  Object.values(jobMap).forEach(function(j){ if(j.number===target) found=j; });
-  return found?found.uuid:null;
+  var target = num || DEFAULT_JOB_NUMBER;
+  var found  = null;
+  Object.values(jobMap).forEach(function(j) { if (j.number === target) found = j; });
+  return found ? found.uuid : null;
 }
-function setAddMsg(msg,type){
-  var el=document.getElementById('add-save-msg'); el.textContent=msg;
-  el.style.color=type==='error'?'var(--red)':type==='ok'?'var(--green)':type==='saving'?'var(--amber)':'transparent';
+function setAddMsg(msg, type) {
+  var el = document.getElementById('add-save-msg');
+  el.textContent = msg;
+  el.style.color = type === 'error'  ? 'var(--red)'
+                 : type === 'ok'     ? 'var(--green)'
+                 : type === 'saving' ? 'var(--amber)'
+                 : 'transparent';
 }
 function saveNewTask() {
-  var name     =(document.getElementById('add-name').value||'').trim();
-  var jobNum   =(document.getElementById('add-job-number').value||'').trim();
-  var staffUuid=document.getElementById('add-staff-select').value;
-  var dueDate  =document.getElementById('add-due-date').value;
-  if (!name){ setAddMsg('Task name cannot be empty.','error'); return; }
-  var jobUuid=resolveJobUuid(jobNum);
-  if (!jobUuid){ setAddMsg('\u26A0 Job #'+(jobNum||DEFAULT_JOB_NUMBER)+' not found.','error'); return; }
-  setAddMsg('Creating\u2026','saving');
-  document.getElementById('add-save-btn').disabled=true;
-  var reminderType=''; var reminderData=null;
-  if (dueDate){ reminderType='ABSOLUTE_DATETIME'; reminderData={absoluteDateTime:dueDate+' 08:00:00'}; }
-  var payload={
+  var name      = (document.getElementById('add-name').value || '').trim();
+  var jobNum    = (document.getElementById('add-job-number').value || '').trim();
+  var staffUuid = document.getElementById('add-staff-select').value;
+  var dueDate   = document.getElementById('add-due-date').value;
+  if (!name) { setAddMsg('Task name cannot be empty.', 'error'); return; }
+  var jobUuid = resolveJobUuid(jobNum);
+  if (!jobUuid) { setAddMsg('\u26A0 Job #' + (jobNum || DEFAULT_JOB_NUMBER) + ' not found.', 'error'); return; }
+  setAddMsg('Creating\u2026', 'saving');
+  document.getElementById('add-save-btn').disabled = true;
+  var reminderType = ''; var reminderData = null;
+  if (dueDate) { reminderType = 'ABSOLUTE_DATETIME'; reminderData = { absoluteDateTime: dueDate + ' 08:00:00' }; }
+  var payload = {
     job_uuid:jobUuid, name:name, section_name:'Comments', item_type:'Todo',
     sort_order:0, completed_timestamp:'', completed_by_staff_uuid:'',
     completed_during_checkin_uuid:'', reminder_type:reminderType, reminder_data:reminderData,
     regarding_object:'', regarding_object_uuid:'',
     fulfilled_by_object_name:'', fulfilled_by_object_uuid:'',
-    assigned_to_staff_uuids:staffUuid?[staffUuid]:[], is_locked:'0'
+    assigned_to_staff_uuids:staffUuid ? [staffUuid] : [], is_locked:'0'
   };
-  fetch('/api/proxy?path='+encodeURIComponent('/jobchecklist.json'),{
+  fetch('/api/proxy?path=' + encodeURIComponent('/jobchecklist.json'), {
     method:'POST', credentials:'include',
-    headers:{'Accept':'application/json','Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  }).then(function(r){
-    document.getElementById('add-save-btn').disabled=false;
-    r.text().then(function(txt){
-      if(r.status===200||r.status===201||r.status===204){
-        setAddMsg('\u2713 Task created!','ok');
-        toast('Task "'+name+'" created successfully.');
-        setTimeout(function(){ closeAddModal(); loadTasks(true); },800);
+    headers:{ 'Accept':'application/json', 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function(r) {
+    document.getElementById('add-save-btn').disabled = false;
+    r.text().then(function(txt) {
+      if (r.status === 200 || r.status === 201 || r.status === 204) {
+        setAddMsg('\u2713 Task created!', 'ok');
+        toast('Task "' + name + '" created successfully.');
+        setTimeout(function() { closeAddModal(); loadTasks(true); }, 800);
       } else {
-        setAddMsg('Failed: '+txt.substring(0,100),'error');
-        toast('Create failed: HTTP '+r.status,true);
+        setAddMsg('Failed: ' + txt.substring(0, 100), 'error');
+        toast('Create failed: HTTP ' + r.status, true);
       }
     });
-  }).catch(function(e){
-    document.getElementById('add-save-btn').disabled=false;
-    setAddMsg('Failed: '+e.message,'error');
-    toast('Create failed: '+e.message,true);
+  }).catch(function(e) {
+    document.getElementById('add-save-btn').disabled = false;
+    setAddMsg('Failed: ' + e.message, 'error');
+    toast('Create failed: ' + e.message, true);
   });
 }
-function closeAddModal(){ document.getElementById('add-modal').classList.remove('open'); }
-function onAddOverlayClick(e){ if(e.target===document.getElementById('add-modal')) closeAddModal(); }
+function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
+function onAddOverlayClick(e) {
+  if (e.target === document.getElementById('add-modal')) closeAddModal();
+}
 
-// ── Utilities ──────────────────────────────────────────
-function initials(name){
-  if(!name||name==='Unassigned') return '?';
-  var parts=name.trim().split(/\s+/);
-  if(parts.length===1) return parts[0].substring(0,2).toUpperCase();
-  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+// ══════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════
+function initials(name) {
+  if (!name || name === 'Unassigned') return '?';
+  var parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
-function daysUntil(str){
-  if(!str) return null;
-  var m=String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(!m) return null;
-  var d=new Date(+m[1],+m[2]-1,+m[3]);
-  var now=new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
-  return Math.round((d-now)/86400000);
+function daysUntil(str) {
+  if (!str) return null;
+  var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  var d   = new Date(+m[1], +m[2] - 1, +m[3]);
+  var now = new Date(); now.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  return Math.round((d - now) / 86400000);
 }
-function fmtDate(str){
-  if(!str) return '\u2014';
-  var m=String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(!m) return str;
-  return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+function fmtDate(str) {
+  if (!str) return '\u2014';
+  var m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return str;
+  return new Date(+m[1], +m[2] - 1, +m[3])
+    .toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' });
 }
-function fmtDateTime(str){
-  if(!str) return '';
-  var d=new Date(str); if(isNaN(d.getTime())) return str;
-  return d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'})+
-    ' '+d.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+function fmtDateTime(str) {
+  if (!str) return '';
+  var d = new Date(str);
+  if (isNaN(d.getTime())) return str;
+  return d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' })
+    + ' ' + d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
 }
-function pad(n){ return n<10?'0'+n:String(n); }
-function esc(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-                      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function pad(n) { return n < 10 ? '0' + n : String(n); }
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
-function setBody(html)   { document.getElementById('task-body').innerHTML=html; }
-function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML=html; }
-var toastTimer=null;
-function toast(msg,isError){
-  var el=document.getElementById('toast');
-  el.textContent=msg;
-  el.style.borderColor=isError?'var(--red)':'var(--green)';
-  el.style.color=isError?'var(--red)':'var(--text)';
+function setBody(html)    { document.getElementById('task-body').innerHTML = html; }
+function setSyncMsg(html) { document.getElementById('sync-detail').innerHTML = html; }
+function toast(msg, isError) {
+  var el = document.getElementById('toast');
+  el.textContent        = msg;
+  el.style.borderColor  = isError ? 'var(--red)'   : 'var(--green)';
+  el.style.color        = isError ? 'var(--red)'   : 'var(--text)';
   el.classList.add('show');
-  if(toastTimer) clearTimeout(toastTimer);
-  toastTimer=setTimeout(function(){ el.classList.remove('show'); },3500);
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 3500);
 }
 </script>
 </body>
