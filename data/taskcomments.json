@@ -370,6 +370,13 @@
       "text": "🔄 Reassigned from Unassigned to Rosie Buckingham by Rosie Buckingham",
       "author": "Rosie Buckingham",
       "timestamp": "2026-07-30T08:16:38.619Z"
+    },
+    {
+      "id": "a9bdfc15-80aa-44af-b365-d10446f9b3b9",
+      "taskId": "019f5cb2-8490-7f6f-ab24-8f88dfdc48bd",
+      "text": "@Rosie Buckingham try the notification by typing @ into the comments",
+      "author": "Richard Buckingham",
+      "timestamp": "2026-07-30T09:25:25.995Z"
     }
   ]
 }
