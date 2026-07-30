@@ -127,27 +127,28 @@ input[type=checkbox].cb-green{accent-color:var(--green);}
 .auth-card h2{margin-bottom:8px;}
 .auth-card p{color:var(--muted);font-size:0.9rem;margin-bottom:24px;}
 .auth-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 24px;background:var(--accent);color:#fff;border-radius:10px;font-size:1rem;font-weight:700;text-decoration:none;border:none;cursor:pointer;}
-/* ── Notification bell ── */
-.nb-btn{position:relative;display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);cursor:pointer;transition:border-color 0.15s;font-family:inherit;line-height:1;}
-.nb-btn:hover{border-color:var(--accent);}
-.nb-badge{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:0.65rem;font-weight:800;min-width:18px;text-align:center;line-height:16px;display:none;}
-.nb-badge.show{display:block;}
-.nb-drop{display:none;position:fixed;top:64px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;width:360px;max-height:480px;overflow-y:auto;z-index:9000;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
-.nb-drop.open{display:block;}
-.nb-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:0.88rem;position:sticky;top:0;background:var(--surface);z-index:1;}
-.nb-clear{font-size:0.72rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;font-weight:600;font-family:inherit;}
-.nb-clear:hover{color:var(--red);background:rgba(239,68,68,0.1);}
-.nb-empty{padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;}
-.nb-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;align-items:flex-start;}
-.nb-item:hover{background:rgba(79,110,247,0.06);}
-.nb-item:last-child{border-bottom:none;}
-.nb-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
-.nb-body{flex:1;min-width:0;}
-.nb-task{font-weight:700;font-size:0.82rem;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.nb-msg{font-size:0.75rem;color:var(--muted);line-height:1.4;}
-.nb-time{font-size:0.65rem;color:var(--muted);margin-top:4px;}
-.nb-dismiss{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:2px 5px;border-radius:4px;flex-shrink:0;font-family:inherit;}
-.nb-dismiss:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+
+/* ── Notification bell — identical to tasks.html ── */
+.notif-btn{position:relative;display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:600;color:var(--text);cursor:pointer;transition:border-color 0.15s;}
+.notif-btn:hover{border-color:var(--accent);}
+.notif-badge{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:0.65rem;font-weight:800;min-width:18px;text-align:center;line-height:16px;display:none;}
+.notif-badge.show{display:block;}
+.notif-dropdown{display:none;position:fixed;top:64px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:360px;max-height:480px;overflow-y:auto;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.notif-dropdown.open{display:block;}
+.notif-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:0.88rem;position:sticky;top:0;background:var(--surface);z-index:1;}
+.notif-clear-btn{font-size:0.72rem;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;font-weight:600;}
+.notif-clear-btn:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+.notif-empty{padding:24px;text-align:center;color:var(--muted);font-size:0.85rem;}
+.notif-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;align-items:flex-start;}
+.notif-item:hover{background:rgba(79,110,247,0.06);}
+.notif-item:last-child{border-bottom:none;}
+.notif-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.notif-body{flex:1;min-width:0;}
+.notif-task{font-weight:700;font-size:0.82rem;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notif-msg{font-size:0.75rem;color:var(--muted);line-height:1.4;}
+.notif-time{font-size:0.65rem;color:var(--muted);margin-top:4px;}
+.notif-dismiss{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:2px 5px;border-radius:4px;flex-shrink:0;}
+.notif-dismiss:hover{color:var(--red);background:rgba(239,68,68,0.1);}
 </style>
 </head>
 <body>
@@ -169,8 +170,20 @@ input[type=checkbox].cb-green{accent-color:var(--green);}
     <button class="btn-ghost btn-sm" onclick="openExclude()">&#128683; Exclusions</button>
     <button class="btn-ghost btn-sm" onclick="openDebug()">&#128027; Debug Materials</button>
     <button class="btn-ghost btn-sm" onclick="loadAll(true)">&#8635; Refresh</button>
-    <!-- Bell injected here by initBell() -->
-    <div id="notif-bell-mount"></div>
+    <!-- Bell — same pattern as tasks.html -->
+    <div style="position:relative;">
+      <button class="notif-btn" onclick="toggleNotifDropdown(event)" id="notif-btn">
+        &#128276;
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+      <div class="notif-dropdown" id="notif-dropdown">
+        <div class="notif-header">
+          &#128276; Notifications
+          <button class="notif-clear-btn" onclick="clearAllNotifications()">Clear all</button>
+        </div>
+        <div id="notif-list"><div class="notif-empty">No notifications</div></div>
+      </div>
+    </div>
     <a href="/api/logout" class="btn-ghost btn-sm" style="text-decoration:none;">Sign Out</a>
   </div>
 </header>
@@ -290,7 +303,10 @@ input[type=checkbox].cb-green{accent-color:var(--green);}
 
 <!-- ══ SCRIPT ══════════════════════════════════════════════════════════════ -->
 <script>
+'use strict';
+
 // ── Globals ────────────────────────────────────────────
+var ENGAGEMENT_API      = '/api/taskengagement';
 var partsData           = [];
 var suppliersData       = {};
 var statesData          = {};
@@ -302,16 +318,31 @@ var loaded              = false;
 var debugTab            = 'table';
 var sortField           = 'client';
 var sortDir             = 1;
+var toastTimer          = null;
 
 // PO modal state
 var pendingPoKey     = null;
 var pendingPoChecked = false;
+
+// Notification state
+var notificationsData = [];
+var notifPollTimer    = null;
 
 // ── Init ───────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   var r = readCookies();
   currentUser = r.name || 'Unknown';
   checkSession();
+
+  // Close notif dropdown on outside click
+  document.addEventListener('click', function(e) {
+    var dd = document.getElementById('notif-dropdown');
+    if (dd && dd.classList.contains('open')) {
+      if (!dd.contains(e.target) && e.target.id !== 'notif-btn') {
+        dd.classList.remove('open');
+      }
+    }
+  });
 });
 
 function readCookies() {
@@ -327,7 +358,14 @@ function readCookies() {
 function checkSession() {
   fetch('/api/proxy?path=' + encodeURIComponent('/staff.json'), { credentials:'include' })
     .then(function(r){ if (r.status===401){ showAuth(); return null; } return r.json(); })
-    .then(function(d){ if (d){ showMain(); loadAll(false); } })
+    .then(function(d){
+      if (d){
+        showMain();
+        loadNotifications();
+        notifPollTimer = setInterval(loadNotifications, 30000);
+        loadAll(false);
+      }
+    })
     .catch(function(){ showAuth(); });
 }
 function showAuth(){ document.getElementById('auth-screen').classList.add('show'); document.getElementById('main-page').style.display='none'; }
@@ -346,6 +384,103 @@ function apiGet(url) { return fetch(url).then(function(r){ return r.json(); }); 
 function apiPost(url, body) {
   return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
     .then(function(r){ return r.json(); });
+}
+function engagementPost(body) {
+  return fetch(ENGAGEMENT_API, {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  }).then(function(r){ return r.json(); });
+}
+function engagementDelete(body) {
+  return fetch(ENGAGEMENT_API, {
+    method:'DELETE', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  }).then(function(r){ return r.json(); });
+}
+
+// ══════════════════════════════════════════════════════
+// NOTIFICATIONS — identical logic to tasks.html
+// ══════════════════════════════════════════════════════
+function loadNotifications() {
+  if (!currentUser) return;
+  fetch(ENGAGEMENT_API + '?user=' + encodeURIComponent(currentUser), { credentials:'include' })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(d){
+      notificationsData = Array.isArray(d) ? d : [];
+      renderNotifBadge();
+      renderNotifList();
+    })
+    .catch(function(){ notificationsData = []; });
+}
+
+function renderNotifBadge() {
+  var badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  var count = notificationsData.length;
+  badge.textContent = count > 9 ? '9+' : String(count);
+  badge.classList.toggle('show', count > 0);
+}
+
+function renderNotifList() {
+  var el = document.getElementById('notif-list');
+  if (!el) return;
+  if (!notificationsData.length) {
+    el.innerHTML = '<div class="notif-empty">&#10003; All caught up!</div>';
+    return;
+  }
+  el.innerHTML = notificationsData.map(function(n) {
+    return '<div class="notif-item" onclick="onNotifClick(\'' + esc(n.id) + '\',\'' + esc(n.taskId) + '\')">'
+      + '<span class="notif-icon">&#128172;</span>'
+      + '<div class="notif-body">'
+      +   '<div class="notif-task">' + esc(n.taskName || 'Task') + '</div>'
+      +   '<div class="notif-msg"><strong>' + esc(n.fromUser || '') + '</strong> commented: &ldquo;'
+      +     esc((n.commentText || '').substring(0, 80))
+      +     (n.commentText && n.commentText.length > 80 ? '&hellip;' : '')
+      +   '&rdquo;</div>'
+      +   '<div class="notif-time">&#128336; ' + fmtDateTime(n.timestamp) + '</div>'
+      + '</div>'
+      + '<button class="notif-dismiss" onclick="dismissNotification(event,\'' + esc(n.id) + '\')">&#10005;</button>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleNotifDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('notif-dropdown').classList.toggle('open');
+}
+
+// Notifications on parts.html navigate to tasks.html with the deep-link hash
+function onNotifClick(notifId, taskId) {
+  document.getElementById('notif-dropdown').classList.remove('open');
+  dismissNotification(null, notifId);
+  if (taskId) {
+    window.location.href = 'tasks.html#task=' + taskId;
+  }
+}
+
+function dismissNotification(e, notifId) {
+  if (e) e.stopPropagation();
+  engagementDelete({ action:'notify', id:notifId })
+    .then(function(){
+      notificationsData = notificationsData.filter(function(n){ return n.id !== notifId; });
+      renderNotifBadge();
+      renderNotifList();
+    })
+    .catch(function(){});
+}
+
+function clearAllNotifications() {
+  if (!currentUser) return;
+  engagementDelete({ action:'notify', clearAll:true, user:currentUser })
+    .then(function(){
+      notificationsData = [];
+      renderNotifBadge();
+      renderNotifList();
+      document.getElementById('notif-dropdown').classList.remove('open');
+    })
+    .catch(function(){});
 }
 
 // ── Load all data ──────────────────────────────────────
@@ -383,7 +518,7 @@ function loadAll(force) {
 
     rawMaterialsAll = rawMaterials;
 
-    // Build bookings map: job_uuid → earliest future (or latest past) booking date
+    // Build bookings map
     var bookingsMap = {};
     var today = new Date(); today.setHours(0,0,0,0);
     rawActivities.forEach(function(a) {
@@ -428,14 +563,12 @@ function loadAll(force) {
       clientMap[c.uuid] = c.name || '';
     });
 
-    // Only Work Order jobs
     var woJobs = rawJobs.filter(function(j){
       return String(j.active)==='1' && j.status==='Work Order';
     });
     var woUuids = {};
     woJobs.forEach(function(j){ woUuids[j.uuid] = j; });
 
-    // Group materials by job, applying exclusion filter
     var matsByJob = {};
     rawMaterials.forEach(function(m){
       if (!m.job_uuid || !woUuids[m.job_uuid]) return;
@@ -446,7 +579,6 @@ function loadAll(force) {
       matsByJob[m.job_uuid].push(m);
     });
 
-    // Build client groups
     var clientGroups = {};
     Object.keys(matsByJob).forEach(function(jobUuid) {
       var job        = woUuids[jobUuid];
@@ -495,7 +627,6 @@ function loadAll(force) {
           jobDate:   jobDate
         });
 
-        // Track earliest scheduled date across all jobs for this part
         if (jobDate) {
           var cur = clientGroups[clientUuid].parts[normKey].earliestDate;
           if (!cur || jobDate < cur) {
@@ -635,7 +766,6 @@ function sortParts(parts) {
       var diff = statusOrder(a.key) - statusOrder(b.key);
       return diff !== 0 ? diff * sortDir : a.name.localeCompare(b.name);
     }
-    // default: client then name
     var cc = a.clientName.localeCompare(b.clientName);
     return cc !== 0 ? cc : a.name.localeCompare(b.name);
   });
@@ -684,15 +814,10 @@ function buildTableHeader(groupLabel, count) {
     + '<span class="client-job-count">' + count + ' part line' + (count===1?'':'s') + '</span>'
     + '</div>'
     + '<table class="parts-table">'
-        + '<colgroup>'
-    + '<col style="width:40%"/>'
-    + '<col style="width:4%"/>'
-    + '<col style="width:21%"/>'
-    + '<col style="width:7%"/>'
-    + '<col style="width:14%"/>'
-    + '<col style="width:3%"/>'
-    + '<col style="width:3%"/>'
-    + '<col style="width:3%"/>'
+    + '<colgroup>'
+    + '<col style="width:40%"/><col style="width:4%"/><col style="width:21%"/>'
+    + '<col style="width:7%"/><col style="width:14%"/>'
+    + '<col style="width:3%"/><col style="width:3%"/><col style="width:3%"/>'
     + '<col style="width:5%"/>'
     + '</colgroup>'
     + '<thead><tr>'
@@ -742,7 +867,6 @@ function buildRow(p) {
     stockHTML = '<span class="stock-badge ' + stockCls + '">&#128200; In stock: ' + p.qtyInStock + '</span>';
   }
 
-  // Format scheduled date
   var dateHTML = '<span style="color:var(--muted);font-size:0.72rem">\u2014</span>';
   if (p.earliestDate) {
     var d = new Date(p.earliestDate + 'T00:00:00');
@@ -811,7 +935,6 @@ function stat(v,l,c){ return '<div class="stat-card"><div class="stat-val" style
 function toggleState(key, field, value) {
   if (!statesData[key]) statesData[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
   statesData[key][field] = value;
-
   if (field === 'allocated' && value) {
     statesData[key].ordered  = true;
     statesData[key].received = true;
@@ -824,21 +947,18 @@ function toggleState(key, field, value) {
   if (field === 'received' && !value) {
     statesData[key].allocated = false;
   }
-
   var ordCb   = document.getElementById('ord-'   + key);
   var recCb   = document.getElementById('rec-'   + key);
   var allocCb = document.getElementById('alloc-' + key);
   if (ordCb)   ordCb.checked   = statesData[key].ordered;
   if (recCb)   recCb.checked   = statesData[key].received;
   if (allocCb) allocCb.checked = statesData[key].allocated;
-
   updateRowUI(key);
   saveState(key);
 }
 
 function updateRowUI(key) {
   var st = statesData[key] || { ordered: false, received: false, allocated: false, poNumber: '' };
-
   var statusPill = st.allocated
     ? '<span class="status-pill pill-allocated">&#10003; Allocated</span>'
     : st.received
@@ -846,19 +966,15 @@ function updateRowUI(key) {
       : st.ordered
         ? '<span class="status-pill pill-ordered">&#128230; Ordered</span>'
         : '<span class="status-pill pill-none">Needs Order</span>';
-
   var poHTML = (st.ordered && st.poNumber)
     ? '<div class="po-badge">PO: ' + esc(st.poNumber) + '</div>'
     : (st.ordered && !st.poNumber)
       ? '<div style="margin-top:3px"><button class="btn-ghost btn-sm" style="font-size:0.65rem;padding:2px 7px;" onclick="openPoEdit(\'' + esc(key) + '\')">+ Add PO#</button></div>'
       : '';
-
   var pill = document.getElementById('pill-' + key);
   if (pill) pill.innerHTML = statusPill + poHTML;
-
   var row = document.getElementById('row-' + key);
   if (row) row.className = st.allocated ? 'allocated-row' : '';
-
   var ordCb   = document.getElementById('ord-'   + key);
   var recCb   = document.getElementById('rec-'   + key);
   var allocCb = document.getElementById('alloc-' + key);
@@ -920,7 +1036,6 @@ function confirmPoModal() {
   var key      = pendingPoKey;
   var isNew    = pendingPoChecked === true;
   closePoModal();
-
   if (!statesData[key]) statesData[key] = { ordered: false, received: false, allocated: false, poNumber: '' };
   if (isNew) {
     statesData[key].ordered  = true;
@@ -959,7 +1074,6 @@ function saveExclusions() {
   msg.style.color = 'var(--amber)';
   msg.textContent = 'Saving\u2026';
   btn.disabled    = true;
-
   apiPost('/api/materials-exclude', { itemNumbers: items, updatedBy: currentUser })
     .then(function(data) {
       btn.disabled = false;
@@ -1005,7 +1119,6 @@ function renderDebugTab(tab) {
     return;
   }
   var uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
   if (tab === 'table') {
     var active   = data.filter(function(m){ return m.active===1||String(m.active)==='1'; }).length;
     var withUuid = data.filter(function(m){ return !!m.material_uuid; }).length;
@@ -1033,7 +1146,6 @@ function renderDebugTab(tab) {
     });
     html += '</tbody></table></div>';
     body.innerHTML = html;
-
   } else if (tab === 'fields') {
     var allKeys = {};
     data.forEach(function(m){ Object.keys(m).forEach(function(k){ allKeys[k]=true; }); });
@@ -1055,7 +1167,6 @@ function renderDebugTab(tab) {
     });
     html += '</tbody></table></div>';
     body.innerHTML = html;
-
   } else if (tab === 'raw') {
     body.innerHTML = '<div class="debug-raw">'+esc(JSON.stringify(data,null,2))+'</div>';
   }
@@ -1076,7 +1187,13 @@ function copyDebugData(){
 // ── Utilities ──────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function setSyncMsg(html){ document.getElementById('sync-detail').innerHTML=html; }
-var toastTimer=null;
+function fmtDateTime(str) {
+  if (!str) return '';
+  var d = new Date(str);
+  if (isNaN(d.getTime())) return str;
+  return d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' })
+    + ' ' + d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+}
 function toast(msg,isError){
   var el=document.getElementById('toast');
   el.textContent=msg;
