@@ -325,7 +325,6 @@ button:hover{opacity:0.87;}
 /* Global mention dropdown is fixed-positioned via JS */
 #global-mention-drop{position:fixed;}
 /* Modal mention dropdown is absolute within modal */
-#m-modal-mention-drop{position:absolute;bottom:100%;left:0;margin-bottom:4px;}
 .mention-item{
   display:flex;align-items:center;gap:8px;padding:8px 12px;
   cursor:pointer;font-size:0.82rem;font-weight:600;transition:background 0.12s;
@@ -579,7 +578,6 @@ button:hover{opacity:0.87;}
       <label>&#128172; Comments</label>
       <div class="tc-list" id="m-tc-list" style="margin-bottom:10px;max-height:200px;overflow-y:auto;"></div>
       <div class="tc-compose" style="position:relative;">
-        <div class="mention-dropdown" id="m-modal-mention-drop"></div>
         <textarea class="tc-textarea" id="m-tc-textarea" placeholder="Add a comment… type @ to mention someone"></textarea>
         <div class="tc-compose-row">
           <button class="tc-submit" id="m-tc-submit" onclick="postModalComment()">Post</button>
@@ -2156,8 +2154,7 @@ function openEdit(id) {
   document.getElementById('m-tc-textarea').value       = '';
   document.getElementById('m-tc-status').textContent   = '';
   var mTa = document.getElementById('m-tc-textarea');
-  var mMd = document.getElementById('m-modal-mention-drop');
-  if (mTa && mMd) attachMentionListener(mTa, mMd);
+  if (mTa) attachMentionListener(mTa, document.getElementById('global-mention-drop'));
 
   // Read-only fields
   var statusRow = document.getElementById('m-status-row');
@@ -2295,7 +2292,7 @@ function openModal()  { document.getElementById('modal').classList.add('open'); 
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
   editRecord = null;
-  closeMentionDropdown(document.getElementById('m-modal-mention-drop'));
+  closeMentionDropdown(document.getElementById('global-mention-drop'));
 }
 function onOverlayClick(e) {
   if (e.target === document.getElementById('modal')) closeModal();
