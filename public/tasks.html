@@ -2087,15 +2087,21 @@ function duePill(t) {
   return '<span class="due-pill ok">' + fmtDate(t.dueDate) + '</span>';
 }
 // ══════════════════════════════════════════════════════
-// SAVE COMMENTS TO JOB DIARY ON COMPLETE
-// ══════════════════════════════════════════════════════
-// ══════════════════════════════════════════════════════
 // SAVE COMMENTS TO JOB NOTE ON COMPLETE
 // ══════════════════════════════════════════════════════
 function saveCommentsToDiary(t) {
   var comments = commentsCache[t._id] || [];
   var jobUuid  = t.jobUuid || (t._raw && t._raw.job_uuid) || '';
-  if (!jobUuid) return Promise.resolve();
+
+  // Debug: show what we have before doing anything
+  toast('DEBUG note: jobUuid=' + (jobUuid || 'MISSING')
+    + ' comments=' + comments.length
+    + ' task=' + (t._id || 'MISSING'), false);
+
+  if (!jobUuid) {
+    toast('Note skipped: no jobUuid on task ' + (t.name || t._id), true);
+    return Promise.resolve();
+  }
 
   var lines = [
     '\u2713 Task completed: ' + (t.name || 'Unnamed Task'),
@@ -2130,7 +2136,12 @@ function saveCommentsToDiary(t) {
     action_required:     ''
   };
 
-  return fetch('/api/proxy?path=' + encodeURIComponent('/note.json'), {
+  // Debug: show exactly what we are sending
+  toast('Sending note POST: path=/note.json uuid=' + jobUuid.substring(0, 8) + '...', false);
+
+  var proxyUrl = '/api/proxy?path=' + encodeURIComponent('/note.json');
+
+  return fetch(proxyUrl, {
     method:      'POST',
     credentials: 'include',
     headers: {
@@ -2139,15 +2150,19 @@ function saveCommentsToDiary(t) {
     },
     body: JSON.stringify(payload)
   }).then(function(r) {
-    if (!r.ok) {
-      return r.text().then(function(txt) {
-        console.warn('Note save failed: HTTP ' + r.status + ' — ' + txt.substring(0, 200));
-      });
-    }
+    return r.text().then(function(txt) {
+      if (r.ok) {
+        toast('\u2713 Note saved to job diary (HTTP ' + r.status + ')', false);
+      } else {
+        toast('Note POST failed: HTTP ' + r.status + ' \u2014 ' + txt.substring(0, 120), true);
+      }
+    });
   }).catch(function(e) {
-    console.warn('Note save error:', e.message);
+    toast('Note fetch error: ' + e.message, true);
   });
 }
+
+
 
 
 // ══════════════════════════════════════════════════════
