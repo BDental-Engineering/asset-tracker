@@ -233,10 +233,10 @@
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__acteon - x-mind ac/dc timer keyboard": {
     "ordered": true,
-    "received": false,
+    "received": true,
     "allocated": false,
     "poNumber": "",
-    "updatedAt": "2026-08-01T18:48:06.999Z",
+    "updatedAt": "2026-08-01T18:50:01.978Z",
     "updatedBy": "Rosie Buckingham"
   }
 }
