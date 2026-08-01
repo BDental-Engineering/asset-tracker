@@ -2089,51 +2089,48 @@ function duePill(t) {
 // ══════════════════════════════════════════════════════
 // SAVE COMMENTS TO JOB DIARY ON COMPLETE
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// SAVE COMMENTS TO JOB NOTE ON COMPLETE
+// ══════════════════════════════════════════════════════
 function saveCommentsToDiary(t) {
   var comments = commentsCache[t._id] || [];
-  if (!comments.length) return Promise.resolve();
+  var jobUuid  = t.jobUuid || (t._raw && t._raw.job_uuid) || '';
+  if (!jobUuid) return Promise.resolve();
 
   var lines = [
-    '\u2713 Task completed: ' + t.name,
+    '\u2713 Task completed: ' + (t.name || 'Unnamed Task'),
     'Completed by: ' + (currentUser || 'Unknown'),
     'Job #' + (t.jobNumber || '\u2014'),
-    '',
-    '\u2500\u2500 Task Comments \u2500\u2500'
   ];
 
-  comments.forEach(function(c) {
-    var ts = '';
-    if (c.timestamp) {
-      var d = new Date(c.timestamp);
-      if (!isNaN(d.getTime())) {
-        ts = d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' })
-           + ' ' + d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
-      }
-    }
+  if (comments.length) {
     lines.push('');
-    lines.push('[' + esc(c.author || 'Unknown') + (ts ? '  \u2022  ' + ts : '') + ']');
-    lines.push(c.text || '');
-  });
+    lines.push('\u2500\u2500 Task Comments \u2500\u2500');
+    comments.forEach(function(c) {
+      var ts = '';
+      if (c.timestamp) {
+        var d = new Date(c.timestamp);
+        if (!isNaN(d.getTime())) {
+          ts = d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' })
+             + ' ' + d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+        }
+      }
+      lines.push('');
+      lines.push('[' + (c.author || 'Unknown') + (ts ? '  \u2022  ' + ts : '') + ']');
+      lines.push(c.text || '');
+    });
+  }
 
   var note = lines.join('\n');
 
-  var now = new Date();
-  var dateStr = now.getFullYear()
-    + '-' + pad(now.getMonth() + 1)
-    + '-' + pad(now.getDate());
-  var timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-
   var payload = {
-    job_uuid:   t.jobUuid || t._raw.job_uuid || '',
-    date:       dateStr,
-    start_time: timeStr,
-    end_time:   timeStr,
-    notes:      note,
-    staff_uuid: currentUserUuid || t.staffUuid || '',
-    activity_was_scheduled: '0'
+    related_object:      'job',
+    related_object_uuid: jobUuid,
+    note:                note,
+    action_required:     ''
   };
 
-  return fetch('/api/proxy?path=' + encodeURIComponent('/jobactivity.json'), {
+  return fetch('/api/proxy?path=' + encodeURIComponent('/note.json'), {
     method:      'POST',
     credentials: 'include',
     headers: {
@@ -2144,13 +2141,14 @@ function saveCommentsToDiary(t) {
   }).then(function(r) {
     if (!r.ok) {
       return r.text().then(function(txt) {
-        console.warn('Diary save failed: HTTP ' + r.status + ' ' + txt.substring(0, 120));
+        console.warn('Note save failed: HTTP ' + r.status + ' — ' + txt.substring(0, 200));
       });
     }
   }).catch(function(e) {
-    console.warn('Diary save error:', e.message);
+    console.warn('Note save error:', e.message);
   });
 }
+
 
 // ══════════════════════════════════════════════════════
 // MARK COMPLETE
