@@ -17,6 +17,15 @@
       "taskName": "Quote for this",
       "commentText": "@Richard Buckingham can you check my workings on this one pls!? Added some parts to billing. Are we quoting for the full service, or just the service kit? Also I can't find the bowl rinse valve, any suggestions what section that would be under on the parts list?",
       "timestamp": "2026-07-30T10:48:08.890Z"
+    },
+    {
+      "id": "0691c780-7e20-4915-a4ea-2b8bfd00c195",
+      "forUser": "Richard Buckingham",
+      "fromUser": "Rosie Buckingham",
+      "taskId": "019fc3f1-ee6b-7f6f-ab24-d5b2d2f152ed",
+      "taskName": "What was the part number for the hose, instead of 1P00J5B0 Saliva Ejector Hose Grey (1.7M) ? I've put image of options but have no idea",
+      "commentText": "SVE hose: FHFA47A0 not 1P00J5B0. Update billing - needs adding to QB (checking with Belmont)",
+      "timestamp": "2026-08-02T20:41:18.570Z"
     }
   ]
 }
