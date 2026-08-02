@@ -238,5 +238,13 @@
     "poNumber": "",
     "updatedAt": "2026-08-01T18:50:01.978Z",
     "updatedBy": "Rosie Buckingham"
+  },
+  "bb9b8449-12e8-4cd5-b235-220321cb109b__compression 90° pipe elbow 15mm": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "Screwfix",
+    "updatedAt": "2026-08-02T19:05:18.057Z",
+    "updatedBy": "Rosie Buckingham"
   }
 }
