@@ -254,5 +254,13 @@
     "poNumber": "Screwfix",
     "updatedAt": "2026-08-02T19:05:21.714Z",
     "updatedBy": "Rosie Buckingham"
+  },
+  "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__service kit eurus (1p07huc0)": {
+    "ordered": true,
+    "received": true,
+    "allocated": true,
+    "poNumber": "",
+    "updatedAt": "2026-08-02T19:14:01.223Z",
+    "updatedBy": "Rosie Buckingham"
   }
 }
