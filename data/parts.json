@@ -249,11 +249,11 @@
   },
   "bb9b8449-12e8-4cd5-b235-220321cb109b__copper pipe 15mm per metre": {
     "ordered": true,
-    "received": false,
+    "received": true,
     "allocated": false,
     "poNumber": "Screwfix",
-    "updatedAt": "2026-08-02T19:05:21.714Z",
-    "updatedBy": "Rosie Buckingham"
+    "updatedAt": "2026-08-04T20:26:45.901Z",
+    "updatedBy": "Richard Buckingham"
   },
   "890ac050-46ee-4b25-bcd2-21e9b7ff5c4b__service kit eurus (1p07huc0)": {
     "ordered": true,
