@@ -475,6 +475,13 @@
       "text": "booked in",
       "author": "Richard Buckingham",
       "timestamp": "2026-08-04T20:13:46.203Z"
+    },
+    {
+      "id": "32e13521-4cf2-4deb-892b-61eb0ff9ff04",
+      "taskId": "019fc926-3abd-7f6f-ab25-e8a2ff5682fb",
+      "text": "spoken to issar this was a light not working and has now been fixed",
+      "author": "Richard Buckingham",
+      "timestamp": "2026-08-04T20:14:36.672Z"
     }
   ]
 }
