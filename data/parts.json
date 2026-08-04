@@ -242,9 +242,9 @@
   "bb9b8449-12e8-4cd5-b235-220321cb109b__compression 90° pipe elbow 15mm": {
     "ordered": true,
     "received": true,
-    "allocated": false,
+    "allocated": true,
     "poNumber": "Screwfix",
-    "updatedAt": "2026-08-04T20:26:47.864Z",
+    "updatedAt": "2026-08-04T20:26:49.256Z",
     "updatedBy": "Richard Buckingham"
   },
   "bb9b8449-12e8-4cd5-b235-220321cb109b__copper pipe 15mm per metre": {
