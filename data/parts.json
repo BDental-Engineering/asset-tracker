@@ -318,5 +318,13 @@
     "poNumber": "DW 30/07/26",
     "updatedAt": "2026-08-04T05:37:50.755Z",
     "updatedBy": "Rosie Buckingham"
+  },
+  "bf182002-1e6f-4be3-aff2-214e0c583d8b__recommended remedials": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "",
+    "updatedAt": "2026-08-04T05:37:54.091Z",
+    "updatedBy": "Rosie Buckingham"
   }
 }
