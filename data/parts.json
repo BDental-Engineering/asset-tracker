@@ -321,10 +321,10 @@
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__recommended remedials": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "",
-    "updatedAt": "2026-08-04T05:37:54.091Z",
+    "updatedAt": "2026-08-06T07:22:55.196Z",
     "updatedBy": "Rosie Buckingham"
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__advisory remedials": {
