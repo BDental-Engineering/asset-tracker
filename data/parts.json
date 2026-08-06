@@ -329,10 +329,10 @@
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__advisory remedials": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "",
-    "updatedAt": "2026-08-04T05:37:57.297Z",
+    "updatedAt": "2026-08-06T07:20:37.219Z",
     "updatedBy": "Rosie Buckingham"
   },
   "f4750bc3-8c86-4b06-920b-21a25c035b5b__service kit for 3 cylinder compressor (annual)": {
