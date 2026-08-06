@@ -281,10 +281,10 @@
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__belmont vacuum handpiece assembly id. 8": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "1187",
-    "updatedAt": "2026-08-04T05:37:03.093Z",
+    "updatedAt": "2026-08-06T07:18:00.605Z",
     "updatedBy": "Rosie Buckingham"
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__belmont water needle valve delivery unit ass": {
