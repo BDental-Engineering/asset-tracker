@@ -234,9 +234,9 @@
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__acteon - x-mind ac/dc timer keyboard": {
     "ordered": true,
     "received": true,
-    "allocated": false,
+    "allocated": true,
     "poNumber": "",
-    "updatedAt": "2026-08-01T18:50:01.978Z",
+    "updatedAt": "2026-08-06T07:23:37.869Z",
     "updatedBy": "Rosie Buckingham"
   },
   "bb9b8449-12e8-4cd5-b235-220321cb109b__compression 90° pipe elbow 15mm": {
