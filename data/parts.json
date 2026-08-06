@@ -265,10 +265,10 @@
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__belmont mini-needle valve assembly with blue knob cap": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "1187",
-    "updatedAt": "2026-08-04T05:36:53.635Z",
+    "updatedAt": "2026-08-06T07:16:52.656Z",
     "updatedBy": "Rosie Buckingham"
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__belmont tip adaptor (id15.7) for vh-18 vacuum handpiece": {
