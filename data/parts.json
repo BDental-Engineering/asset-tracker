@@ -289,10 +289,10 @@
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__belmont water needle valve delivery unit ass": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "1187",
-    "updatedAt": "2026-08-04T05:37:05.813Z",
+    "updatedAt": "2026-08-06T07:19:07.533Z",
     "updatedBy": "Rosie Buckingham"
   },
   "bf182002-1e6f-4be3-aff2-214e0c583d8b__belmont water relay valve for voyager-ii l/iii": {
