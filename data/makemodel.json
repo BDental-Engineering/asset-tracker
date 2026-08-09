@@ -208,5 +208,14 @@
     "validation": "",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Acteon",
+    "model": "X-mind 3D",
+    "service": "",
+    "pvi": "",
+    "validation": "",
+    "performance": "1",
+    "emc": "1"
   }
 ]
