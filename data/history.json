@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "c08d2bc4-312e-490f-8f30-22be4313312a",
+    "asset_name": "Surgery 3 - AC21F0120",
+    "client_name": "Bury House Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:03:13.243Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "3cb5ee9d-54bd-471f-8f97-22be467431da",
     "asset_name": "Basement - 07395",
     "client_name": "Bury House Dental Practice",
