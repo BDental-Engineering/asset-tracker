@@ -8,6 +8,17 @@
     "old_value": "2026-06-19",
     "new_value": "2025-06-19",
     "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:48:06.457Z"
+  },
+  {
+    "type": "date_change",
+    "asset_uuid": "4b769eb3-3b5e-4b87-a4ed-24540ac9459a",
+    "asset_name": "Surgery 1 - F56470",
+    "client_name": "Leiston Dental Care",
+    "field": "Performance Due",
+    "old_value": "2026-06-19",
+    "new_value": "2025-06-19",
+    "changed_by": "Richard Buckingham",
     "timestamp": "2026-08-09T20:48:05.500Z"
   },
   {
