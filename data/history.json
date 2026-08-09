@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "056a2b13-7984-4d66-9523-22c374aecb4a",
+    "asset_name": "Plant room - 2121526",
+    "client_name": "The Hamptons Dental Care",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Gone With Third Party",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:52:50.825Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "f5ce93b3-2f1a-40c4-95f5-245987aab9ea",
     "asset_name": "Plant - WP350991",
