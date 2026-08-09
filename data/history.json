@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "118f82d3-63dd-4472-8612-24585dac88fa",
+    "asset_name": "Surgery 2 - Unknown",
+    "client_name": "Yaxley Dental Clinic",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:04:25.643Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "410bc62b-53b9-434e-accd-246c1b23571a",
     "asset_name": "Surgery 1 - EH21H0195",
