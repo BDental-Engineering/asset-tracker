@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "b014579a-089e-4404-8f97-2431caa3d8ba",
+    "asset_name": "Surgery 2 - AC08J0081",
+    "client_name": "The Dental Design Studio North Walsham",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:44:59.593Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "97e69032-0419-4e1d-92f3-2302f79111ba",
     "asset_name": "Surgery 3 - AC22L0302",
     "client_name": "Terrace Dental Centre",
