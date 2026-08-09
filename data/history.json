@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "fde4044f-023d-4d80-8dec-22d19cf297da",
+    "asset_name": "Plant - C3119708",
+    "client_name": "Simply Smile Hopvine House Ltd",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:36:06.569Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "1bd595b3-8e21-4594-810b-244963fa13fa",
     "asset_name": "Surgery 1 - AD11A0228",
