@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "e1338f5d-0850-4861-89f2-24585ef95c2a",
+    "asset_name": "Surgery 2 - AU09F0063",
+    "client_name": "The Green Pepper Clinic",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:03:22.007Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "c08d2bc4-312e-490f-8f30-22be4313312a",
     "asset_name": "Surgery 3 - AC21F0120",
     "client_name": "Bury House Dental Practice",
