@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "15025cbd-8646-4771-8235-22cc79d7897a",
+    "asset_name": "Surgery 1 - D17065",
+    "client_name": "Mile End Dental Clinic",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:13:33.016Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "285d21be-8bd9-47df-a178-22cc766e2aba",
     "asset_name": "Surgery 2 - XD64081S",
     "client_name": "Mile End Dental Clinic",
