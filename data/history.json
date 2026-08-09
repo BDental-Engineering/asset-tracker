@@ -8,6 +8,17 @@
     "old_value": "2026-05-08",
     "new_value": "2025-05-08",
     "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:43:05.302Z"
+  },
+  {
+    "type": "date_change",
+    "asset_uuid": "f98e6911-b910-4268-8626-242aa0e24bca",
+    "asset_name": "Surgery 1 - EH21K0429",
+    "client_name": "Sycamore House Dental Practice",
+    "field": "Performance Due",
+    "old_value": "2026-05-08",
+    "new_value": "2025-05-08",
+    "changed_by": "Richard Buckingham",
     "timestamp": "2026-08-09T20:43:04.005Z"
   },
   {
