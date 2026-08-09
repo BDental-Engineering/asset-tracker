@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "dc5031dd-e22d-4be1-b48a-24383adec11a",
+    "asset_name": "Surgery 2 - W011653",
+    "client_name": "Saxon Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:14:19.599Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "15fd3c23-59fa-4959-ac33-2434f961d48a",
     "asset_name": "Surgery 2 - XL101045",
     "client_name": "Red Lodge Dental Surgery",
