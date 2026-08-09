@@ -8,6 +8,17 @@
     "old_value": "2026-05-28",
     "new_value": "2027-05-31",
     "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:39:04.293Z"
+  },
+  {
+    "type": "date_change",
+    "asset_uuid": "fde4044f-023d-4d80-8dec-22d19cf297da",
+    "asset_name": "Plant - C3119708",
+    "client_name": "Simply Smile Hopvine House Ltd",
+    "field": "Service Due",
+    "old_value": "2026-05-28",
+    "new_value": "2027-05-31",
+    "changed_by": "Richard Buckingham",
     "timestamp": "2026-08-09T20:39:03.416Z"
   },
   {
