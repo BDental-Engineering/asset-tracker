@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "daf56aa7-bf0b-4e34-99bc-22d19da231aa",
+    "asset_name": "Decommissioned Decon - LCB-7E-5343",
+    "client_name": "Simply Smile Hopvine House Ltd",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Decommissioned",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:36:20.342Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "ef005963-984d-4e97-aa17-244bd72d2f1a",
     "asset_name": "OPG - GO1702307B",
     "client_name": "Simply Smile Hopvine House Ltd",
