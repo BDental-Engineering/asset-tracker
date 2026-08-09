@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "374636ad-2055-4133-bc98-24585b27ca7a",
+    "asset_name": "Surgery 3 - N457901058",
+    "client_name": "The Green Pepper Clinic",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:03:25.027Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "e1338f5d-0850-4861-89f2-24585ef95c2a",
     "asset_name": "Surgery 2 - AU09F0063",
     "client_name": "The Green Pepper Clinic",
