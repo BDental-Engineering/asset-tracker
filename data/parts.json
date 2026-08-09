@@ -337,10 +337,10 @@
   },
   "f4750bc3-8c86-4b06-920b-21a25c035b5b__service kit for 3 cylinder compressor (annual)": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "1189",
-    "updatedAt": "2026-08-06T07:13:19.971Z",
+    "updatedAt": "2026-08-09T16:53:01.948Z",
     "updatedBy": "Rosie Buckingham"
   }
 }
