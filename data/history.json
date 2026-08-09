@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "b7657c1e-54ca-4797-8f6a-227b6d227cda",
+    "asset_name": "Decon - 310721A00010",
+    "client_name": "Botesdale Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:02:37.066Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "6fab4637-4c10-4440-831d-225c22e4f44a",
     "asset_name": "C234969109",
     "client_name": "A W Brown Dental Practice",
