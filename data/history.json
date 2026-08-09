@@ -1,5 +1,16 @@
 [
   {
+    "type": "date_change",
+    "asset_uuid": "f5ce93b3-2f1a-40c4-95f5-245987aab9ea",
+    "asset_name": "Plant - WP350991",
+    "client_name": "West Mersea Dental Practice",
+    "field": "Service Due",
+    "old_value": "2026-06-24",
+    "new_value": "2025-06-24",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:52:31.938Z"
+  },
+  {
     "type": "compliance",
     "asset_uuid": "f5ce93b3-2f1a-40c4-95f5-245987aab9ea",
     "asset_name": "Plant - WP350991",
