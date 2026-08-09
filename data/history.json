@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "9a435d2b-2ce4-484a-ad26-232564b6327a",
+    "asset_name": "CBCT room - 2104577",
+    "client_name": "Station Yard Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:00:15.099Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "a26dcaf9-b0b0-49ff-8820-2334767c60da",
     "asset_name": "Plant - WP417660",
     "client_name": "Simply Smile Netherton Ltd",
