@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "f6801729-8ad8-487e-93af-24538e5ebc0a",
+    "asset_name": "X-ray - EH08L1272",
+    "client_name": "Dr A M Tabrizi Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:12:22.900Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "06842128-7d0c-46c3-873c-22fc3102816a",
     "asset_name": "Surgery 1 - 2017-04-10001980",
     "client_name": "Cygnet Clinic",
