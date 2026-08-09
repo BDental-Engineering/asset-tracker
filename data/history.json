@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "54f58bbf-b4b5-4bbd-9503-231c3688dd0a",
+    "asset_name": "Plant - CH203190",
+    "client_name": "Hingham Dental Practice",
+    "field": "Compliance",
+    "old_value": "Quoted",
+    "new_value": "Scheduled",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:11:29.598Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "6283ab62-90d6-43c8-ba98-246f191b640a",
     "asset_name": "Surgery 2 - AV09D0318",
