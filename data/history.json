@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "be4b835f-93d3-4d9d-a9c6-2365976cbe5a",
+    "asset_name": "Surgery 1 - D254997089",
+    "client_name": "A W Brown Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:01:58.247Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "73fe3154-81be-40e3-be5e-2338b72a108a",
     "asset_name": "Decon - 1040000894-z4f-01-0017",
     "client_name": "Wargrave Dental Clinic",
