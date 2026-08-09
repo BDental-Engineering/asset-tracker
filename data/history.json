@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "410bc62b-53b9-434e-accd-246c1b23571a",
+    "asset_name": "Surgery 1 - EH21H0195",
+    "client_name": "Woodbridge Dental Care",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:04:08.701Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "2334e932-dc8e-438f-a8b2-246c1035b65a",
     "asset_name": "Surgery 3 - EH21H0188",
