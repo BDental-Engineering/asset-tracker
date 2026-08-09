@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "73fe3154-81be-40e3-be5e-2338b72a108a",
+    "asset_name": "Decon - 1040000894-z4f-01-0017",
+    "client_name": "Wargrave Dental Clinic",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Gone With Third Party",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:00:21.206Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "9a435d2b-2ce4-484a-ad26-232564b6327a",
     "asset_name": "CBCT room - 2104577",
     "client_name": "Station Yard Dental Practice",
