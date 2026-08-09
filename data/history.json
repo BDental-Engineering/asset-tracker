@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "f98e6911-b910-4268-8626-242aa0e24bca",
+    "asset_name": "Surgery 1 - EH21K0429",
+    "client_name": "Sycamore House Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:42:58.181Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "5f35935e-fc6f-4571-9f4f-24667842433a",
     "asset_name": "Decon - 310219F00003",
