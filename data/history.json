@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "ab4b85dc-3b19-4ebf-bf78-236599d98bca",
+    "asset_name": "Surgery 3 - D254997093",
+    "client_name": "A W Brown Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:02:01.302Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "be4b835f-93d3-4d9d-a9c6-2365976cbe5a",
     "asset_name": "Surgery 1 - D254997089",
     "client_name": "A W Brown Dental Practice",
