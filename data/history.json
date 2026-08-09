@@ -1,6 +1,17 @@
 [
   {
     "type": "date_change",
+    "asset_uuid": "285d21be-8bd9-47df-a178-22cc766e2aba",
+    "asset_name": "Surgery 2 - XD64081S",
+    "client_name": "Mile End Dental Clinic",
+    "field": "EMC Due",
+    "old_value": "2026-05-23",
+    "new_value": "2027-05-01",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:31:00.562Z"
+  },
+  {
+    "type": "date_change",
     "asset_uuid": "06842128-7d0c-46c3-873c-22fc3102816a",
     "asset_name": "Surgery 1 - 2017-04-10001980",
     "client_name": "Cygnet Clinic",
