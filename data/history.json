@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "cb852f90-351b-40ba-97ff-24462009842a",
+    "asset_name": "Gordon - AU23F0278",
+    "client_name": "West Mersea Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:03:37.094Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "7f04c515-d6d0-4c01-bb35-243cd6beb80a",
     "asset_name": "Surgery 5 - R487911060",
     "client_name": "The Thatch Dental Practice",
