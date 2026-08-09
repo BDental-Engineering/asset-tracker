@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "5541f836-f5f0-4958-9d51-243cd2acee0a",
+    "asset_name": "Surgery 1 - EH21G0156",
+    "client_name": "The Dental Emporium",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:53:15.308Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "056a2b13-7984-4d66-9523-22c374aecb4a",
     "asset_name": "Plant room - 2121526",
     "client_name": "The Hamptons Dental Care",
