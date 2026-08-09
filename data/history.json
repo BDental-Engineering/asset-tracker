@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "ef005963-984d-4e97-aa17-244bd72d2f1a",
+    "asset_name": "OPG - GO1702307B",
+    "client_name": "Simply Smile Hopvine House Ltd",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:36:13.014Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "32b77247-bac6-477f-acf6-22d198ff43fa",
     "asset_name": "Decon - EXD180187",
     "client_name": "Simply Smile Hopvine House Ltd",
