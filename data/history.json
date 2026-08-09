@@ -5,6 +5,17 @@
     "asset_name": "Decon - 1231-b2385",
     "client_name": "Station Yard Dental Practice",
     "field": "Compliance",
+    "old_value": "Expired",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:41:59.304Z"
+  },
+  {
+    "type": "compliance",
+    "asset_uuid": "d37c02ce-c22e-436a-a0c6-24432e5f9bda",
+    "asset_name": "Decon - 1231-b2385",
+    "client_name": "Station Yard Dental Practice",
+    "field": "Compliance",
     "old_value": "",
     "new_value": "Expired",
     "changed_by": "Richard Buckingham",
