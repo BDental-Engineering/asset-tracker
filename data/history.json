@@ -8,6 +8,17 @@
     "old_value": "2026-05-23",
     "new_value": "2027-05-01",
     "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:32:11.709Z"
+  },
+  {
+    "type": "date_change",
+    "asset_uuid": "fd75fb18-5f69-4fdb-9cc2-22cc7466ac0a",
+    "asset_name": "Surgery 6 - D38597",
+    "client_name": "Mile End Dental Clinic",
+    "field": "EMC Due",
+    "old_value": "2026-05-23",
+    "new_value": "2027-05-01",
+    "changed_by": "Richard Buckingham",
     "timestamp": "2026-08-09T20:32:10.710Z"
   },
   {
