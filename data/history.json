@@ -8,6 +8,17 @@
     "old_value": "2026-05-18",
     "new_value": "2027-06-09",
     "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:34:23.036Z"
+  },
+  {
+    "type": "date_change",
+    "asset_uuid": "15fd3c23-59fa-4959-ac33-2434f961d48a",
+    "asset_name": "Surgery 2 - XL101045",
+    "client_name": "Red Lodge Dental Surgery",
+    "field": "Service Due",
+    "old_value": "2026-05-18",
+    "new_value": "2027-06-09",
+    "changed_by": "Richard Buckingham",
     "timestamp": "2026-08-09T20:34:22.139Z"
   },
   {
