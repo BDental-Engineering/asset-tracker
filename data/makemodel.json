@@ -217,5 +217,14 @@
     "validation": "",
     "performance": "1",
     "emc": "1"
+  },
+  {
+    "make": "Belmont",
+    "model": "Eurus S6",
+    "service": "1.5",
+    "pvi": "",
+    "validation": "",
+    "performance": "",
+    "emc": ""
   }
 ]
