@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "12de2c4b-68fa-4790-a440-242aa2fef4ba",
+    "asset_name": "Surgery 4 - EH11E0158",
+    "client_name": "Sycamore House Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:43:35.234Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "993bd534-e4b3-41dd-b67e-242aa1d52fea",
     "asset_name": "CBCT - 22052842",
     "client_name": "Sycamore House Dental Practice",
