@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "c60a9911-eb15-4ff4-83b6-2442617f23fa",
+    "asset_name": "Surgery 2 - AU06I0032",
+    "client_name": "Simply Smile Station House Dental Ltd",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:40:13.496Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "fde4044f-023d-4d80-8dec-22d19cf297da",
     "asset_name": "Plant - C3119708",
