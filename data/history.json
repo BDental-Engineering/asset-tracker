@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "a26dcaf9-b0b0-49ff-8820-2334767c60da",
+    "asset_name": "Plant - WP417660",
+    "client_name": "Simply Smile Netherton Ltd",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:00:11.429Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "d7344d26-4ce8-4407-9fc1-2332e537153a",
     "asset_name": "Surgery 3 - WH106892",
     "client_name": "Market Place Dental Dunmow",
