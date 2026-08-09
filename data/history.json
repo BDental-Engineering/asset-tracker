@@ -1,5 +1,16 @@
 [
   {
+    "type": "date_change",
+    "asset_uuid": "86f2213b-8e67-4d43-93eb-22d19cc665da",
+    "asset_name": "Decon - LCD2E 3408",
+    "client_name": "Simply Smile Hopvine House Ltd",
+    "field": "PVI Due",
+    "old_value": "2026-05-28",
+    "new_value": "2027-05-31",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:38:13.538Z"
+  },
+  {
     "type": "compliance",
     "asset_uuid": "86f2213b-8e67-4d43-93eb-22d19cc665da",
     "asset_name": "Decon - LCD2E 3408",
