@@ -5,6 +5,17 @@
     "asset_name": "Surgery 4 - AC21C0033",
     "client_name": "A W Brown Dental Practice",
     "field": "Compliance",
+    "old_value": "Expired",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T21:02:16.311Z"
+  },
+  {
+    "type": "compliance",
+    "asset_uuid": "55c53715-4b59-4e6b-8be1-236595a0182a",
+    "asset_name": "Surgery 4 - AC21C0033",
+    "client_name": "A W Brown Dental Practice",
+    "field": "Compliance",
     "old_value": "",
     "new_value": "Expired",
     "changed_by": "Richard Buckingham",
