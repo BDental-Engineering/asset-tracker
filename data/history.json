@@ -1,5 +1,16 @@
 [
   {
+    "type": "date_change",
+    "asset_uuid": "b014579a-089e-4404-8f97-2431caa3d8ba",
+    "asset_name": "Surgery 2 - AC08J0081",
+    "client_name": "The Dental Design Studio North Walsham",
+    "field": "Service Due",
+    "old_value": "2026-05-15",
+    "new_value": "2025-05-15",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:45:11.893Z"
+  },
+  {
     "type": "compliance",
     "asset_uuid": "b014579a-089e-4404-8f97-2431caa3d8ba",
     "asset_name": "Surgery 2 - AC08J0081",
