@@ -8,6 +8,17 @@
     "old_value": "2026-07-27",
     "new_value": "2025-07-27",
     "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:46:04.416Z"
+  },
+  {
+    "type": "date_change",
+    "asset_uuid": "897dcba6-e5b0-430a-8b21-247a5c32101a",
+    "asset_name": "Surgery 1 - 706M5310",
+    "client_name": "The Dental Design Studio North Walsham",
+    "field": "Performance Due",
+    "old_value": "2026-07-27",
+    "new_value": "2025-07-27",
+    "changed_by": "Richard Buckingham",
     "timestamp": "2026-08-09T20:46:03.432Z"
   },
   {
