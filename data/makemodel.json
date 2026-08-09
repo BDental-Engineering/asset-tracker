@@ -190,5 +190,14 @@
     "pvi": "1",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Cattani",
+    "model": "Micro Smart",
+    "service": "1.5",
+    "pvi": "",
+    "validation": "",
+    "performance": "",
+    "emc": ""
   }
 ]
