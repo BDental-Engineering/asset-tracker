@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "1acfe3a8-5c7a-430e-82fe-24735d6e680a",
+    "asset_name": "Decon - LCC-8F-1530",
+    "client_name": "Simply Smile Station House Dental Ltd",
+    "field": "Compliance",
+    "old_value": "Active",
+    "new_value": "Scheduled",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:50:25.973Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "f6801729-8ad8-487e-93af-24538e5ebc0a",
     "asset_name": "X-ray - EH08L1272",
