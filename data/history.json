@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "4b769eb3-3b5e-4b87-a4ed-24540ac9459a",
+    "asset_name": "Surgery 1 - F56470",
+    "client_name": "Leiston Dental Care",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:13:12.577Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "d4f52f24-da4a-42a7-b6b5-245400f905ca",
     "asset_name": "Surgery 3 - F67392",
     "client_name": "Leiston Dental Care",
