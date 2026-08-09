@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "15fd3c23-59fa-4959-ac33-2434f961d48a",
+    "asset_name": "Surgery 2 - XL101045",
+    "client_name": "Red Lodge Dental Surgery",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:14:12.441Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "1bd595b3-8e21-4594-810b-244963fa13fa",
     "asset_name": "Surgery 1 - AD11A0228",
     "client_name": "North Hill Dental Care",
