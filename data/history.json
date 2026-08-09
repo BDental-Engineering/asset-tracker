@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "1bd595b3-8e21-4594-810b-244963fa13fa",
+    "asset_name": "Surgery 1 - AD11A0228",
+    "client_name": "North Hill Dental Care",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:14:06.960Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "f8a95040-be86-4c0a-badc-22cc7b7407da",
     "asset_name": "Surgery 3 - XD64040S",
     "client_name": "Mile End Dental Clinic",
