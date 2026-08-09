@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "461d1eea-a642-466b-b0fa-245409631a1a",
+    "asset_name": "Surgery 2 - F56471",
+    "client_name": "Leiston Dental Care",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:13:04.434Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "f6801729-8ad8-487e-93af-24538e5ebc0a",
     "asset_name": "X-ray - EH08L1272",
     "client_name": "Dr A M Tabrizi Dental Practice",
