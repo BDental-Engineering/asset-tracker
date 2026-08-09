@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "5d0042b6-ab8e-49b3-94b3-2429a2e09e2a",
+    "asset_name": "Surgery 2 - AC17I0097",
+    "client_name": "Wivenhoe Dental Practice",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-09T20:51:26.236Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "1acfe3a8-5c7a-430e-82fe-24735d6e680a",
     "asset_name": "Decon - LCC-8F-1530",
