@@ -235,5 +235,14 @@
     "validation": "",
     "performance": "",
     "emc": ""
+  },
+  {
+    "make": "Durr",
+    "model": "Tornado 2",
+    "service": "0.5",
+    "pvi": "1",
+    "validation": "",
+    "performance": "",
+    "emc": ""
   }
 ]
