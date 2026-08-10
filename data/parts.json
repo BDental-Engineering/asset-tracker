@@ -414,5 +414,13 @@
     "poNumber": "1190",
     "updatedAt": "2026-08-10T17:50:53.616Z",
     "updatedBy": "Rosie Buckingham"
+  },
+  "241222ff-f1b0-4085-ba19-214e0b2d94eb__solenoid": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "1190",
+    "updatedAt": "2026-08-10T17:50:57.866Z",
+    "updatedBy": "Rosie Buckingham"
   }
 }
