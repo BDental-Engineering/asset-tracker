@@ -629,6 +629,13 @@
       "text": "@Rosie Buckingham form done",
       "author": "Richard Buckingham",
       "timestamp": "2026-08-10T18:02:29.755Z"
+    },
+    {
+      "id": "bdcd0287-82fc-4186-81b1-d3e1b4b666b8",
+      "taskId": "019fc368-7d18-7f6f-ab24-33ef4d2bf28d",
+      "text": "🔄 Reassigned from Richard Buckingham to Rosie Buckingham by Richard Buckingham",
+      "author": "Richard Buckingham",
+      "timestamp": "2026-08-10T18:02:36.233Z"
     }
   ]
 }
