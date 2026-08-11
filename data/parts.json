@@ -385,10 +385,10 @@
   },
   "6b4d707b-d1c7-4f42-bd6e-214e0229193b__belmont black tip bulb 24v 60w": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "DW 09/08/26",
-    "updatedAt": "2026-08-09T21:05:27.054Z",
+    "updatedAt": "2026-08-11T20:06:46.746Z",
     "updatedBy": "Rosie Buckingham"
   },
   "6b4d707b-d1c7-4f42-bd6e-214e0229193b__service kit voyager -ii / -ii l/- iii (1p08k2a0)": {
