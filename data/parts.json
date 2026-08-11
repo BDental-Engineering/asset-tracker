@@ -418,9 +418,9 @@
   "241222ff-f1b0-4085-ba19-214e0b2d94eb__solenoid": {
     "ordered": true,
     "received": true,
-    "allocated": true,
+    "allocated": false,
     "poNumber": "1190",
-    "updatedAt": "2026-08-11T20:07:04.424Z",
+    "updatedAt": "2026-08-11T20:07:57.027Z",
     "updatedBy": "Rosie Buckingham"
   }
 }
