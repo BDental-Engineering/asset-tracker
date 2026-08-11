@@ -393,10 +393,10 @@
   },
   "6b4d707b-d1c7-4f42-bd6e-214e0229193b__service kit voyager -ii / -ii l/- iii (1p08k2a0)": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
+    "received": true,
+    "allocated": true,
     "poNumber": "Just DCI3072 left to add",
-    "updatedAt": "2026-08-09T21:05:57.520Z",
+    "updatedAt": "2026-08-11T20:08:37.412Z",
     "updatedBy": "Rosie Buckingham"
   },
   "6b4d707b-d1c7-4f42-bd6e-214e0229193b__solenoid valve \"steam\" for premium-plus evolution": {
