@@ -1,5 +1,16 @@
 [
   {
+    "type": "compliance",
+    "asset_uuid": "5d0b2a47-96be-4ef7-8305-233b04a6b71a",
+    "asset_name": "Surgery 1 - L404589228",
+    "client_name": "Mulberry Clinics",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-13T19:58:02.359Z"
+  },
+  {
     "type": "date_change",
     "asset_uuid": "a26dcaf9-b0b0-49ff-8820-2334767c60da",
     "asset_name": "Plant - WP417660",
