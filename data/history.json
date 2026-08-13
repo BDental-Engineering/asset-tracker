@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "59644645-f8dc-4710-bd4e-2232355485ba",
+    "asset_name": "Decon - 202231-B2463",
+    "client_name": "Cedar Dental & Implant Clinic",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-13T20:11:16.759Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "5d0b2a47-96be-4ef7-8305-233b04a6b71a",
     "asset_name": "Surgery 1 - L404589228",
     "client_name": "Mulberry Clinics",
