@@ -80,6 +80,15 @@
       "taskName": "call daray regarding light arms and pole",
       "commentText": "@Rosie Buckingham we have the info and in talks with issar",
       "timestamp": "2026-08-13T19:39:56.994Z"
+    },
+    {
+      "id": "26d45cb1-e036-491e-beac-352768d97816",
+      "forUser": "Rosie Buckingham",
+      "fromUser": "Richard Buckingham",
+      "taskId": "019f9349-9480-7f6f-ab24-fc7a505dc75d",
+      "taskName": "When invoice is paid, need to book date in with Goodleigh and let RCH know, so they can send Goodleigh the warranty part.",
+      "commentText": "Sent customer an update that we not heard anything on this.",
+      "timestamp": "2026-08-13T20:42:47.397Z"
     }
   ]
 }
