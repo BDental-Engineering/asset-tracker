@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "56679ee3-6873-4393-b47d-233a5e2b162a",
+    "asset_name": "Decon - 138438",
+    "client_name": "The Dental Emporium",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-13T19:58:48.475Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "c7ce29d4-f671-4d40-9a95-233a5d539b6a",
     "asset_name": "Decon - 180053010",
     "client_name": "The Dental Emporium",
