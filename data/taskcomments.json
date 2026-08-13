@@ -769,6 +769,13 @@
       "text": "Sent email reminder today",
       "author": "Richard Buckingham",
       "timestamp": "2026-08-13T20:47:46.704Z"
+    },
+    {
+      "id": "3786338f-b76e-4013-9685-93ae4effdfad",
+      "taskId": "019f9b2a-67b7-7f6f-ab25-4e59a6214f2d",
+      "text": "🔄 Reassigned from Rosie Buckingham to Richard Buckingham by Richard Buckingham",
+      "author": "Richard Buckingham",
+      "timestamp": "2026-08-13T20:47:52.089Z"
     }
   ]
 }
