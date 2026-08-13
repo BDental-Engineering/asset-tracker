@@ -755,6 +755,13 @@
       "text": "Sent customer an update that we not heard anything on this.",
       "author": "Richard Buckingham",
       "timestamp": "2026-08-13T20:42:46.359Z"
+    },
+    {
+      "id": "88578bd3-b651-42d9-8d20-0de4885d088d",
+      "taskId": "019f9349-9480-7f6f-ab24-fc7a505dc75d",
+      "text": "🔄 Reassigned from Rosie Buckingham to Richard Buckingham by Richard Buckingham",
+      "author": "Richard Buckingham",
+      "timestamp": "2026-08-13T20:42:52.280Z"
     }
   ]
 }
