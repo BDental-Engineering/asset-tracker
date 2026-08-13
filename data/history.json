@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "c7ce29d4-f671-4d40-9a95-233a5d539b6a",
+    "asset_name": "Decon - 180053010",
+    "client_name": "The Dental Emporium",
+    "field": "Compliance",
+    "old_value": "",
+    "new_value": "Active",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-13T19:58:45.255Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "5d0b2a47-96be-4ef7-8305-233b04a6b71a",
     "asset_name": "Surgery 1 - L404589228",
     "client_name": "Mulberry Clinics",
