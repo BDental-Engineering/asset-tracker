@@ -1,5 +1,16 @@
 [
   {
+    "type": "date_change",
+    "asset_uuid": "a26dcaf9-b0b0-49ff-8820-2334767c60da",
+    "asset_name": "Plant - WP417660",
+    "client_name": "Simply Smile Netherton Ltd",
+    "field": "Service Due",
+    "old_value": "2026-09-04",
+    "new_value": "2027-07-08",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-13T19:57:54.938Z"
+  },
+  {
     "type": "compliance",
     "asset_uuid": "28915606-dcae-40bc-8b94-245856a082da",
     "asset_name": "Surgery 3 - WC121440",
