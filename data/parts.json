@@ -441,10 +441,10 @@
   },
   "db4d13a5-e373-44c2-84c4-21e395941a8b__bambi vt75 / vt150 / vt250 / vt300 pump service kit (2 kits for vt250 & vt300)": {
     "ordered": true,
-    "received": false,
-    "allocated": false,
-    "poNumber": "1191",
-    "updatedAt": "2026-08-15T17:25:34.712Z",
+    "received": true,
+    "allocated": true,
+    "poNumber": "",
+    "updatedAt": "2026-08-15T17:55:14.316Z",
     "updatedBy": "Rosie Buckingham"
   },
   "db4d13a5-e373-44c2-84c4-21e395941a8b__maintenance set vacuklav 23-b/31-b/23 b+/31 b+": {
