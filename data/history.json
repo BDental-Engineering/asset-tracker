@@ -1,6 +1,17 @@
 [
   {
     "type": "compliance",
+    "asset_uuid": "8c473325-fd28-4e0e-93e9-2324d865476a",
+    "asset_name": "Disposed Surgery 3 - T001717",
+    "client_name": "Market Place Dental Dunmow",
+    "field": "Compliance",
+    "old_value": "Active",
+    "new_value": "Decommissioned",
+    "changed_by": "Richard Buckingham",
+    "timestamp": "2026-08-15T17:15:11.155Z"
+  },
+  {
+    "type": "compliance",
     "asset_uuid": "113fbb7d-da11-4fd9-860f-2293501336ca",
     "asset_name": "Test",
     "client_name": "Toothy Dental",
