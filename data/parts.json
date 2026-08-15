@@ -478,5 +478,13 @@
     "poNumber": "1175",
     "updatedAt": "2026-08-15T17:53:12.977Z",
     "updatedBy": "Rosie Buckingham"
+  },
+  "ea5a19f9-097a-461a-88c4-22421842fcbb__vsa 300s service kit": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "1175",
+    "updatedAt": "2026-08-15T17:53:19.387Z",
+    "updatedBy": "Rosie Buckingham"
   }
 }
