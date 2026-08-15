@@ -818,6 +818,13 @@
       "text": "🔄 Reassigned from Rosie Buckingham to Richard Buckingham by Rosie Buckingham",
       "author": "Rosie Buckingham",
       "timestamp": "2026-08-15T19:37:24.866Z"
+    },
+    {
+      "id": "e8f80fcb-e062-4121-a36a-d88a2398394a",
+      "taskId": "019ffcd5-7e89-7f6f-ab24-82ad6059d55d",
+      "text": "Close #1127 as the dupe job",
+      "author": "Rosie Buckingham",
+      "timestamp": "2026-08-15T19:43:14.733Z"
     }
   ]
 }
