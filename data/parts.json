@@ -502,5 +502,13 @@
     "poNumber": "",
     "updatedAt": "2026-08-15T18:56:56.707Z",
     "updatedBy": "Rosie Buckingham"
+  },
+  "db4d13a5-e373-44c2-84c4-21e395941a8b__syringe repair kit, valve core, autoclavable": {
+    "ordered": true,
+    "received": false,
+    "allocated": false,
+    "poNumber": "DW",
+    "updatedAt": "2026-08-15T18:59:03.742Z",
+    "updatedBy": "Rosie Buckingham"
   }
 }
