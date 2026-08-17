@@ -916,6 +916,13 @@
       "text": "@Rosie Buckingham chair available all day and booked in for pm appointment",
       "author": "Richard Buckingham",
       "timestamp": "2026-08-17T07:58:29.566Z"
+    },
+    {
+      "id": "0211bb64-502c-45f8-b317-76fcac2d6ca2",
+      "taskId": "019ffca9-7acf-7f6f-ab25-3e613e48099d",
+      "text": "🔄 Reassigned from Richard Buckingham to Rosie Buckingham by Richard Buckingham",
+      "author": "Richard Buckingham",
+      "timestamp": "2026-08-17T07:58:35.089Z"
     }
   ]
 }
